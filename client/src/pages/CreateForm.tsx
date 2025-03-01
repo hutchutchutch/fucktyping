@@ -16,7 +16,6 @@ export default function CreateForm() {
   
   const [formName, setFormName] = useState("Untitled Form");
   const [formDescription, setFormDescription] = useState("");
-  const [collectEmail, setCollectEmail] = useState(false);
   
   // Dynamic variables state
   const [variables, setVariables] = useState<string[]>([]);
@@ -43,9 +42,7 @@ export default function CreateForm() {
     options: string[] | null;
   };
   
-  const [questions, setQuestions] = useState<QuestionType[]>([
-    { id: 'q1', text: 'What is your name?', type: 'text', required: true, order: 1, options: null }
-  ]);
+  const [questions, setQuestions] = useState<QuestionType[]>([]);
   
   // Track which questions are being edited
   const [editingQuestions, setEditingQuestions] = useState<Record<string, boolean>>({});
@@ -132,7 +129,6 @@ export default function CreateForm() {
           
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="formName">Form Name</Label>
               <Input 
                 id="formName" 
                 value={formName} 
@@ -141,24 +137,12 @@ export default function CreateForm() {
               />
             </div>
             <div>
-              <Label htmlFor="formDescription">Description</Label>
               <Textarea 
                 id="formDescription" 
                 value={formDescription} 
                 onChange={(e) => setFormDescription(e.target.value)} 
                 placeholder="Enter form description" 
                 rows={3}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="collectEmail">Collect respondent email</Label>
-                <p className="text-sm text-muted-foreground">Ask for email address before form submission</p>
-              </div>
-              <Switch 
-                id="collectEmail" 
-                checked={collectEmail}
-                onCheckedChange={setCollectEmail}
               />
             </div>
           </CardContent>
@@ -284,10 +268,18 @@ export default function CreateForm() {
               <div className="border rounded-md p-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-medium">Questions</h3>
-                  <Button size="sm" onClick={addQuestion} className="h-8 flex items-center gap-1">
-                    <Plus size={16} />
-                    Add Question
-                  </Button>
+                  {questions.length === 0 && (
+                    <Button size="sm" onClick={() => {
+                      const newQuestion = addQuestion();
+                      setEditingQuestions({
+                        ...editingQuestions,
+                        [newQuestion.id]: true
+                      });
+                    }} className="h-8 flex items-center gap-1">
+                      <Plus size={16} />
+                      Add Question
+                    </Button>
+                  )}
                 </div>
                 
                 <div className="space-y-4">
@@ -383,22 +375,46 @@ export default function CreateForm() {
                     );
                   })}
                   
-                  {/* Add Question Button */}
-                  <Button 
-                    variant="outline" 
-                    className="w-full py-6 border-dashed flex items-center justify-center gap-2 hover:bg-muted/50"
-                    onClick={() => {
-                      const newQuestion = addQuestion();
-                      // Automatically open the editor for the new question
-                      setEditingQuestions({
-                        ...editingQuestions,
-                        [newQuestion.id]: true
-                      });
-                    }}
-                  >
-                    <Plus size={18} />
-                    <span>Add Question</span>
-                  </Button>
+                  {/* Individual Add Question Buttons after each question */}
+                  {questions.map((question, index) => (
+                    index === questions.length - 1 && (
+                      <Button 
+                        key={`add-after-${question.id}`}
+                        variant="outline" 
+                        className="w-full mt-2 py-4 border-dashed border-purple-200 flex items-center justify-center gap-2 hover:bg-purple-50/50"
+                        onClick={() => {
+                          const newQuestion = addQuestion();
+                          // Automatically open the editor for the new question
+                          setEditingQuestions({
+                            ...editingQuestions,
+                            [newQuestion.id]: true
+                          });
+                        }}
+                      >
+                        <Plus size={18} />
+                        <span>Add Question</span>
+                      </Button>
+                    )
+                  ))}
+                  
+                  {/* Add First Question Button (shown only when no questions exist) */}
+                  {questions.length === 0 && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full py-6 border-dashed flex items-center justify-center gap-2 hover:bg-muted/50"
+                      onClick={() => {
+                        const newQuestion = addQuestion();
+                        // Automatically open the editor for the new question
+                        setEditingQuestions({
+                          ...editingQuestions,
+                          [newQuestion.id]: true
+                        });
+                      }}
+                    >
+                      <Plus size={18} />
+                      <span>Add Question</span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
