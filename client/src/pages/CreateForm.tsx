@@ -47,6 +47,9 @@ export default function CreateForm() {
     { id: 'q1', text: 'What is your name?', type: 'text', required: true, order: 1, options: null }
   ]);
   
+  // Track which questions are being edited
+  const [editingQuestions, setEditingQuestions] = useState<Record<string, boolean>>({});
+  
   const toggleSection = (section: SectionType) => {
     setIsCollapsed({
       ...isCollapsed,
@@ -64,6 +67,7 @@ export default function CreateForm() {
       options: null
     };
     setQuestions([...questions, newQuestion]);
+    return newQuestion; // Return the new question for reference
   };
   
   const handleSave = () => {
@@ -287,35 +291,114 @@ export default function CreateForm() {
                 </div>
                 
                 <div className="space-y-4">
-                  {questions.map((question, index) => (
-                    <div key={question.id} className="border border-muted rounded-md p-4">
-                      <h4 className="font-medium mb-2">Question {index + 1}</h4>
-                      <div className="space-y-2">
-                        <QuestionEditor 
-                          question={question} 
-                          index={index}
-                          onChange={(updatedQuestion) => {
-                            const newQuestions = [...questions];
-                            newQuestions[index] = updatedQuestion;
-                            setQuestions(newQuestions);
-                          }}
-                          onRemove={() => {
-                            setQuestions(questions.filter(q => q.id !== question.id));
-                          }}
-                        />
-                      </div>
-                      
-                      <div className="mt-4 pt-4 border-t">
-                        <div className="flex justify-between items-center">
-                          <h5 className="text-sm font-medium">Conversation Repair</h5>
-                          <Button size="sm" variant="ghost" className="h-8 text-xs">Configure</Button>
+                  {questions.map((question, index) => {
+                    const isEditing = editingQuestions[question.id] || false;
+                    
+                    const toggleEditing = (e?: React.MouseEvent) => {
+                      if (e) e.stopPropagation();
+                      setEditingQuestions({
+                        ...editingQuestions,
+                        [question.id]: !isEditing
+                      });
+                    };
+                    
+                    return (
+                      <div key={question.id} className="border border-muted rounded-md overflow-hidden">
+                        {/* Question Header - Collapsed View */}
+                        <div 
+                          className="flex justify-between items-center p-4 cursor-pointer hover:bg-muted/40"
+                          onClick={toggleEditing}
+                        >
+                          <div>
+                            <h4 className="font-medium">Question {index + 1}</h4>
+                            <p className={`mt-1 ${isEditing ? "text-muted-foreground" : "font-medium"}`}>
+                              {question.text || "New Question"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0" 
+                              onClick={toggleEditing}
+                            >
+                              {isEditing ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Remove from editing state and filter questions
+                                const newEditingQuestions = {...editingQuestions};
+                                delete newEditingQuestions[question.id];
+                                setEditingQuestions(newEditingQuestions);
+                                setQuestions(questions.filter(q => q.id !== question.id));
+                              }}
+                            >
+                              <X size={18} />
+                            </Button>
+                          </div>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Define how the voice agent should handle unclear or invalid responses
-                        </p>
+                        
+                        {/* Question Editor - Expanded View */}
+                        {isEditing && (
+                          <div className="p-4 pt-0 border-t">
+                            <div className="space-y-4">
+                              <QuestionEditor 
+                                question={question} 
+                                index={index}
+                                onChange={(updatedQuestion) => {
+                                  const newQuestions = [...questions];
+                                  newQuestions[index] = updatedQuestion;
+                                  setQuestions(newQuestions);
+                                }}
+                                onRemove={() => {
+                                  // Remove from editing state and filter questions
+                                  const newEditingQuestions = {...editingQuestions};
+                                  delete newEditingQuestions[question.id];
+                                  setEditingQuestions(newEditingQuestions);
+                                  setQuestions(questions.filter(q => q.id !== question.id));
+                                }}
+                                onCancel={() => {
+                                  // Just close the editor
+                                  toggleEditing();
+                                }}
+                              />
+                              
+                              <div className="mt-4 pt-4 border-t">
+                                <div className="flex justify-between items-center">
+                                  <h5 className="text-sm font-medium">Conversation Repair</h5>
+                                  <Button size="sm" variant="ghost" className="h-8 text-xs">Configure</Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Define how the voice agent should handle unclear or invalid responses
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+                  
+                  {/* Add Question Button */}
+                  <Button 
+                    variant="outline" 
+                    className="w-full py-6 border-dashed flex items-center justify-center gap-2 hover:bg-muted/50"
+                    onClick={() => {
+                      const newQuestion = addQuestion();
+                      // Automatically open the editor for the new question
+                      setEditingQuestions({
+                        ...editingQuestions,
+                        [newQuestion.id]: true
+                      });
+                    }}
+                  >
+                    <Plus size={18} />
+                    <span>Add Question</span>
+                  </Button>
                 </div>
               </div>
             </CardContent>
