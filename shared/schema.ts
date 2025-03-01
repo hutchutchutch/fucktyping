@@ -166,6 +166,11 @@ export const answers = pgTable("answers", {
   responseId: integer("response_id").notNull().references(() => responses.id, { onDelete: "cascade" }),
   questionId: integer("question_id").notNull().references(() => questions.id, { onDelete: "cascade" }),
   answerText: text("answer_text"),
+  answerValue: integer("answer_value"), // For numerical responses like ratings
+  originalTranscript: text("original_transcript"), // For voice responses, the raw transcript
+  confidence: integer("confidence"), // Confidence score for voice processing (0-100)
+  audioUrl: text("audio_url"), // URL to stored audio response
+  processingDetails: jsonb("processing_details"), // Additional processing metadata
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -173,37 +178,66 @@ export const insertAnswerSchema = createInsertSchema(answers).pick({
   responseId: true,
   questionId: true,
   answerText: true,
+  answerValue: true,
+  originalTranscript: true,
+  confidence: true, 
+  audioUrl: true,
+  processingDetails: true,
 });
 
 // Conversation schema
 export const conversations = pgTable("conversations", {
   id: serial("id").primaryKey(),
   responseId: integer("response_id").notNull().references(() => responses.id, { onDelete: "cascade" }),
+  formId: integer("form_id").references(() => forms.id), // Direct reference to form for easier querying
   transcript: text("transcript"),
   state: jsonb("state"), // LangGraph state
+  aiSettings: jsonb("ai_settings"), // AI model settings (temperature, etc)
+  agentPersona: text("agent_persona"), // Persona used for the conversation
+  duration: integer("duration"), // Conversation duration in seconds
+  interactionCount: integer("interaction_count"), // Number of back-and-forth exchanges
+  metadata: jsonb("metadata"), // Additional metadata about the conversation
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertConversationSchema = createInsertSchema(conversations).pick({
   responseId: true,
+  formId: true,
   transcript: true,
   state: true,
+  aiSettings: true,
+  agentPersona: true,
+  duration: true,
+  interactionCount: true,
+  metadata: true,
 });
 
 // Message schema
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+  questionId: integer("question_id").references(() => questions.id), // Related question (if applicable)
   role: text("role").notNull(), // 'system', 'assistant', 'user'
   content: text("content").notNull(),
+  originalAudio: text("original_audio"), // URL to audio if it was a voice message
+  processedContent: text("processed_content"), // Content after any AI processing
+  sentiment: integer("sentiment"), // Sentiment score for this message
+  tokens: integer("tokens"), // Token count for this message
+  metadata: jsonb("metadata"), // Additional metadata about this message
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
 export const insertMessageSchema = createInsertSchema(messages).pick({
   conversationId: true,
+  questionId: true,
   role: true,
   content: true,
+  originalAudio: true,
+  processedContent: true,
+  sentiment: true,
+  tokens: true,
+  metadata: true,
 });
 
 // Types
@@ -248,4 +282,47 @@ export type CategoryWithStats = Category & {
 };
 
 // Response with answers
-export type ResponseWithAnswers = Response & { answers: Answer[] };
+export type ResponseWithAnswers = Response & { 
+  answers: Answer[];
+  form?: Form;
+};
+
+// Enhanced message type with related entities
+export type MessageWithRelations = Message & {
+  question?: Question;
+  conversation: Conversation;
+};
+
+// Conversation with messages and response
+export type ConversationWithMessages = Conversation & {
+  messages: Message[];
+  response: Response;
+  form?: Form;
+};
+
+// Form analytics
+export type FormAnalytics = {
+  totalResponses: number;
+  completionRate: number;
+  averageCompletionTime: number; // in seconds
+  sentimentScore: number; 
+  questionBreakdown: QuestionAnalytics[];
+};
+
+// Question analytics
+export type QuestionAnalytics = {
+  questionId: number;
+  questionText: string;
+  responseRate: number; // percentage of form responses that answered this question
+  averageTimeSpent: number; // in seconds
+  commonAnswers?: string[];
+  sentimentScore?: number;
+};
+
+// Voice metrics
+export type VoiceMetrics = {
+  totalAudioDuration: number; // in seconds
+  averageTranscriptionConfidence: number;
+  totalVoiceResponses: number;
+  percentageOfVoiceResponses: number;
+};
