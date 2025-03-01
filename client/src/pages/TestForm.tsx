@@ -486,9 +486,69 @@ Key Metrics: NPS Score, Feature Satisfaction`;
   };
 
   // Handle voice input
-  const handleTranscriptionComplete = (transcriptText: string) => {
+  const handleTranscriptionComplete = async (transcriptText: string) => {
     setTranscript(transcriptText);
     setInputText(transcriptText);
+    
+    // If we have a form with questions, store the transcript in the database
+    if (form && form.questions && wsConnected) {
+      try {
+        // Get current question context for better processing
+        let questionContext = "";
+        let currentQuestionId = null;
+        
+        if (currentQuestionIndex < form.questions.length) {
+          const currentQuestion = form.questions[currentQuestionIndex];
+          questionContext = currentQuestion.text;
+          currentQuestionId = currentQuestion.id;
+        }
+        
+        // Send the transcript to the backend for processing and storage
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          // First use WebSocket to send the transcript for real-time feedback
+          wsRef.current.send(JSON.stringify({
+            type: 'transcript',
+            text: transcriptText,
+            formId: form.id,
+            questionId: currentQuestionId,
+            questionType: form.questions[currentQuestionIndex]?.type || 'text',
+            questionContext: questionContext,
+            temperature: agentSettings.temperature,
+            maxTokens: agentSettings.maxTokens
+          }));
+          
+          console.log('Transcript sent via WebSocket:', transcriptText);
+        } else {
+          // Fallback to REST API if WebSocket is not available
+          const response = await fetch('/api/conversation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              responseId: form.id * 1000 + Date.now() % 1000, // mock response ID
+              message: transcriptText,
+              questionContext,
+              questionId: currentQuestionId,
+              transcriptionSource: 'Whisper',
+              agentSettings: {
+                temperature: agentSettings.temperature,
+                maxTokens: agentSettings.maxTokens,
+                model: 'grok-2-1212'
+              }
+            }),
+          });
+          
+          if (!response.ok) {
+            console.error('Error storing transcript:', response.statusText);
+          } else {
+            console.log('Transcript stored via REST API:', transcriptText);
+          }
+        }
+      } catch (error) {
+        console.error('Error processing transcript:', error);
+      }
+    }
   };
 
   // Return to forms page

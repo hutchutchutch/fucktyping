@@ -85,22 +85,109 @@ export default function VoiceRecorder({
     setIsRecording(false);
     setIsPaused(false);
     
-    // Process the recorded audio
+    // Process the recorded audio using WebSockets for streaming transcription
     setTimeout(async () => {
       if (audioChunksRef.current.length > 0) {
         const audioBlob = voiceService.createAudioBlob(audioChunksRef.current);
         
         try {
           setIsTranscribing(true);
-          const base64Audio = await blobToBase64(audioBlob);
-          const transcriptText = await voiceService.transcribeAudio(base64Audio);
           
-          setTranscript(transcriptText);
-          onTranscriptionComplete(transcriptText);
+          // Get base64 audio
+          const base64Audio = await blobToBase64(audioBlob);
+          
+          // Check if WebSocket is available to stream the transcription
+          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+          const wsUrl = `${protocol}//${window.location.host}/ws`;
+          
+          // Attempt real-time streaming first, if WebSocket is supported
+          const ws = new WebSocket(wsUrl);
+          
+          ws.onopen = () => {
+            console.log('WebSocket connection opened for audio streaming');
+            
+            // Send audio data for streaming transcription
+            ws.send(JSON.stringify({
+              type: 'audio',
+              audioData: base64Audio,
+              formId: 1, // Replace with actual form ID from props
+              questionId: 1 // Replace with actual question ID from props
+            }));
+          };
+          
+          // Handle streaming transcription updates
+          let finalTranscript = '';
+          const timeoutId = setTimeout(async () => {
+            // Fallback to REST API if WebSocket takes too long
+            console.log('WebSocket taking too long, falling back to REST API');
+            ws.close();
+            
+            // Use standard REST API as fallback
+            const transcriptText = await voiceService.transcribeAudio(base64Audio);
+            finalTranscript = transcriptText;
+            setTranscript(transcriptText);
+            onTranscriptionComplete(transcriptText);
+            setIsTranscribing(false);
+          }, 5000); // 5 second timeout
+          
+          ws.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              
+              if (data.type === 'transcription') {
+                clearTimeout(timeoutId);
+                
+                finalTranscript = data.text;
+                setTranscript(data.text);
+                onTranscriptionComplete(data.text);
+                
+                // Store transcription details (confidence, etc.) if available
+                console.log('Transcription confidence:', data.confidence);
+                console.log('Processing time:', data.processingTime);
+                
+                // Close WebSocket after receiving final transcription
+                ws.close();
+                setIsTranscribing(false);
+              }
+            } catch (error) {
+              console.error('Error parsing WebSocket message:', error);
+            }
+          };
+          
+          ws.onerror = async (error) => {
+            console.error('WebSocket error during transcription:', error);
+            clearTimeout(timeoutId);
+            
+            // Fallback to REST API
+            const transcriptText = await voiceService.transcribeAudio(base64Audio);
+            finalTranscript = transcriptText;
+            setTranscript(transcriptText);
+            onTranscriptionComplete(transcriptText);
+            setIsTranscribing(false);
+          };
+          
+          ws.onclose = () => {
+            console.log('WebSocket connection closed after transcription');
+            clearTimeout(timeoutId);
+            
+            // Only set if we didn't get a transcript yet
+            if (!finalTranscript && isTranscribing) {
+              setIsTranscribing(false);
+            }
+          };
+          
         } catch (error) {
           console.error('Error transcribing audio:', error);
-        } finally {
           setIsTranscribing(false);
+          
+          // Fallback to REST API in case of error
+          try {
+            const transcriptText = await voiceService.transcribeAudio(base64Audio);
+            setTranscript(transcriptText);
+            onTranscriptionComplete(transcriptText);
+          } catch (fallbackError) {
+            console.error('Fallback transcription also failed:', fallbackError);
+          }
         }
       }
     }, 100);
