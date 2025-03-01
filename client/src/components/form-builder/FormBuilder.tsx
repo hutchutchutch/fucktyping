@@ -31,9 +31,9 @@ interface DragEndResult {
 // src/components/form-builder/FormBuilder.tsx
 const FormBuilder: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([
-    { id: 'q1', text: 'What is your name?', type: 'text', required: true, order: 1 },
-    { id: 'q2', text: 'How satisfied are you with our service?', type: 'rating', required: true, order: 2 },
-    { id: 'q3', text: 'Any additional comments?', type: 'textarea', required: false, order: 3 }
+    { id: 'q1', text: 'What is your name?', type: 'text', required: true, order: 1, options: null },
+    { id: 'q2', text: 'How satisfied are you with our service?', type: 'rating', required: true, order: 2, options: null },
+    { id: 'q3', text: 'Any additional comments?', type: 'textarea', required: false, order: 3, options: null }
   ]);
   
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
@@ -60,7 +60,8 @@ const FormBuilder: React.FC = () => {
       text: 'New Question',
       type: 'text',
       required: false,
-      order: questions.length + 1
+      order: questions.length + 1,
+      options: null
     };
     setQuestions([...questions, newQuestion]);
     setCurrentQuestion(newQuestion);

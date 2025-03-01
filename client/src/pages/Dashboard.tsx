@@ -22,7 +22,7 @@ export default function Dashboard() {
             </div>
             <Button 
               className="bg-primary hover:bg-primary/90 text-white" 
-              onClick={() => navigate("/forms/create")}
+              onClick={() => navigate("/forms/new")}
             >
               <PlusIcon className="h-5 w-5 mr-2" />
               Create New Form
@@ -117,7 +117,7 @@ export default function Dashboard() {
             </div>
             <Button 
               className="bg-primary hover:bg-primary/90 text-white" 
-              onClick={() => navigate("/forms/create")}
+              onClick={() => navigate("/forms/new")}
             >
               <PlusIcon className="h-5 w-5 mr-2" />
               Create New Form

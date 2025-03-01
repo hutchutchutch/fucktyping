@@ -7,6 +7,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import MobileNav from "@/components/layout/MobileNav";
 import FormBuilderComponent from "@/components/form-builder/FormBuilder";
 import EmailTemplateEditor from "@/components/form-builder/EmailTemplateEditor";
+// @ts-ignore - Using JSX component without type definitions
 import ResponseOptions from "@/components/form-builder/ResponseOptions";
 
 export default function FormBuilder() {

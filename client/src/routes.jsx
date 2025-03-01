@@ -41,6 +41,10 @@ export default function Routes() {
         {() => <PrivateRoute component={FormBuilder} />}
       </Route>
       
+      <Route path="/forms/new/">
+        {() => <PrivateRoute component={FormBuilder} />}
+      </Route>
+      
       <Route path="/forms/edit/:id">
         {(params) => <PrivateRoute component={FormBuilder} params={params} />}
       </Route>

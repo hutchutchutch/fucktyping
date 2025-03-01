@@ -15,7 +15,7 @@ function Router() {
   const [location] = useLocation();
   
   // Check if the current path is a form responder path, which might need a different layout
-  const needsFullLayout = !location.includes('/forms/') || location.includes('/forms/edit/');
+  const needsFullLayout = !location.includes('/forms/') || location.includes('/forms/edit/') || location.includes('/forms/new') || location.includes('/forms/create');
   
   if (needsFullLayout) {
     return (
@@ -27,7 +27,9 @@ function Router() {
           <Route path="/responses" component={Dashboard} />
           <Route path="/settings" component={Dashboard} />
           <Route path="/help" component={Dashboard} />
+          <Route path="/forms/new/" component={FormBuilder} />
           <Route path="/forms/new" component={FormBuilder} />
+          <Route path="/forms/create/" component={FormBuilder} />
           <Route path="/forms/create" component={FormBuilder} />
           <Route path="/forms/edit/:id" component={FormBuilder} />
           <Route path="/forms/:id/responses" component={ResponseViewer} />
