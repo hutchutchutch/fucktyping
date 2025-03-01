@@ -19,7 +19,7 @@ import {
 
 import { useEffect, useState } from "react";
 
-// Add floating animation style
+// Add animations style
 const floatingAnimation = `
   @keyframes float {
     0% { transform: translateY(0px) rotate(2deg); }
@@ -27,8 +27,17 @@ const floatingAnimation = `
     100% { transform: translateY(0px) rotate(2deg); }
   }
 
+  @keyframes autoScroll {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-1500px); }
+  }
+
   .animate-float {
     animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-autoScroll {
+    animation: autoScroll 45s linear infinite;
   }
 `;
 
@@ -89,7 +98,8 @@ export default function LandingPage() {
                     <X className="h-6 w-6" />
                   </div>
                 </div>
-                <div className="h-[450px] overflow-y-auto scrollbar-thin">
+                <div className="h-[450px] overflow-hidden relative">
+                  <div className="animate-autoScroll absolute w-full">
                   <div className="bg-gray-100 p-3 rounded-t-md sticky top-0 z-10 shadow-md">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -247,7 +257,123 @@ export default function LandingPage() {
                         <button className="px-4 py-2 bg-gray-200 rounded text-gray-600" disabled>Previous</button>
                         <button className="px-4 py-2 bg-indigo-500 text-white rounded">Next Page</button>
                       </div>
+                      
+                      {/* Additional form sections for continuous scrolling */}
+                      <div className="border border-gray-300 p-3 rounded bg-white mt-6">
+                        <div className="text-lg font-bold border-b pb-2 mb-3">4. Employment Information</div>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Current Employer <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Job Title <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-gray-700 text-sm font-bold mb-2">Start Date <span className="text-indigo-500">*</span></label>
+                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="date" />
+                            </div>
+                            <div>
+                              <label className="block text-gray-700 text-sm font-bold mb-2">Annual Income <span className="text-indigo-500">*</span></label>
+                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="$" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="border border-gray-300 p-3 rounded bg-white mt-6">
+                        <div className="text-lg font-bold border-b pb-2 mb-3">5. Education Background</div>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Highest Education Level <span className="text-indigo-500">*</span></label>
+                            <select className="border border-gray-300 rounded w-full py-2 px-3">
+                              <option>Select Education Level</option>
+                              <option>High School</option>
+                              <option>Associate's Degree</option>
+                              <option>Bachelor's Degree</option>
+                              <option>Master's Degree</option>
+                              <option>Doctorate</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Institution Name <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Field of Study <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Graduation Year <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="number" min="1950" max="2030" />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="border border-gray-300 p-3 rounded bg-white mt-6">
+                        <div className="text-lg font-bold border-b pb-2 mb-3">6. Financial Information</div>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Account Type <span className="text-indigo-500">*</span></label>
+                            <select className="border border-gray-300 rounded w-full py-2 px-3">
+                              <option>Select Account Type</option>
+                              <option>Checking</option>
+                              <option>Savings</option>
+                              <option>Investment</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Bank Name <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Account Number <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Routing Number <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="border border-gray-300 p-3 rounded bg-white mt-6">
+                        <div className="text-lg font-bold border-b pb-2 mb-3">7. References</div>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Reference 1 Full Name <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Relationship <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Phone Number <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Email Address <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="email" />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-gray-500 mt-4 flex items-center">
+                        <div className="h-1 bg-gray-300 rounded-full flex-grow mr-2">
+                          <div className="h-1 bg-indigo-500 rounded-full" style={{width: '100%'}}></div>
+                        </div>
+                        <span>Page 7 of 7 (0 fields remaining)</span>
+                      </div>
+                      
+                      <div className="sticky bottom-0 bg-white p-3 border-t border-gray-200 flex justify-between">
+                        <button className="px-4 py-2 bg-gray-200 rounded text-gray-600">Previous</button>
+                        <button className="px-4 py-2 bg-green-500 text-white rounded">Submit Application</button>
+                      </div>
                     </div>
+                  </div>
                   </div>
                 </div>
               </div>
