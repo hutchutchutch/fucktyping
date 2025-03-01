@@ -1,6 +1,6 @@
 // graph.js
-import { StateGraph, START, END } from "langchain/langgraph";
-import { ChatGroq } from "langchain/groq";
+import { StateGraph, START, END } from "@langchain/langgraph";
+import { ChatGroq } from "@langchain/groq";
 import { 
   createOpenActivityNode,
   createQuestionNode,

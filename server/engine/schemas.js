@@ -82,9 +82,11 @@ export const ConversationStateSchema = z.object({
   }).optional()
 });
 
-// Type exports for TypeScript
-export type OpenActivity = z.infer<typeof OpenActivitySchema>;
-export type Question = z.infer<typeof QuestionSchema>;
-export type ClosingActivity = z.infer<typeof ClosingActivitySchema>;
-export type FormConfig = z.infer<typeof FormConfigSchema>;
-export type ConversationState = z.infer<typeof ConversationStateSchema>;
+// Type definitions - using JSDoc for documentation since this is JavaScript
+/**
+ * @typedef {import('zod').infer<typeof OpenActivitySchema>} OpenActivity
+ * @typedef {import('zod').infer<typeof QuestionSchema>} Question
+ * @typedef {import('zod').infer<typeof ClosingActivitySchema>} ClosingActivity
+ * @typedef {import('zod').infer<typeof FormConfigSchema>} FormConfig
+ * @typedef {import('zod').infer<typeof ConversationStateSchema>} ConversationState
+ */

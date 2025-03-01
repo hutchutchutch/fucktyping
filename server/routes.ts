@@ -729,6 +729,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Voice Form Agent API routes
+  app.post("/api/voice-forms", voiceFormController.createVoiceAgent);
+  app.post("/api/voice-forms/:formId/conversations", voiceFormController.startConversation);
+  app.post("/api/voice-conversations/:conversationId/messages", voiceFormController.continueConversation);
+
   // POST conversation message
   app.post("/api/conversation", async (req: Request, res: Response) => {
     try {
