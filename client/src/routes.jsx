@@ -31,24 +31,22 @@ function PrivateRoute({ component: Component, ...rest }) {
 export default function Routes() {
   const [location] = useLocation();
   
-  // Check if the current path is a form responder path, which might need a different layout
-  const needsFullLayout = !location.includes('/forms/') || 
+  // Check if the path needs full layout with sidebar and header
+  const needsFullLayout = location === '/dashboard' ||
+                         location === '/forms' ||
+                         location === '/responses' ||
+                         location === '/settings' ||
+                         location === '/help' ||
                          location.includes('/forms/edit/') || 
                          location.includes('/forms/new') || 
                          location.includes('/forms/create') ||
-                         location.includes('/dashboard') ||
-                         location.includes('/settings') ||
-                         location.includes('/help') ||
-                         location.includes('/responses');
+                         location.includes('/forms/:id/responses');
                          
-  // If it's a path that needs the full layout with sidebar                       
+  // For paths that need the full layout with sidebar
   if (needsFullLayout) {
     return (
       <AppLayout>
         <Switch>
-          <Route path="/" component={LandingPage} />
-          <Route path="/login" component={Login} />
-          
           {/* Protected routes */}
           <Route path="/dashboard">
             {() => <PrivateRoute component={Dashboard} />}
@@ -93,9 +91,13 @@ export default function Routes() {
     );
   }
   
-  // For form responder, use a simplified layout
+  // For all other paths (landing page, login, and form responder)
   return (
     <Switch>
+      {/* Public pages */}
+      <Route path="/" component={LandingPage} />
+      <Route path="/login" component={Login} />
+      
       {/* Public form response page */}
       <Route path="/forms/:id/respond" component={FormResponder} />
       

@@ -22,18 +22,18 @@ const LandingPage = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              className="rounded-full px-8"
-              onClick={() => navigate("/forms/new")}
+              className="rounded-full px-8 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary"
+              onClick={() => navigate("/dashboard")}
             >
-              Create Your Form
+              Get Started
             </Button>
             <Button 
               variant="outline" 
               size="lg" 
               className="rounded-full px-8"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/forms/new")}
             >
-              View Dashboard
+              Create New Form
             </Button>
           </div>
         </div>
