@@ -4,29 +4,98 @@ import AudioVisualizer from './AudioVisualizer';
 import Transcript from './Transcript';
 import voiceService from '@/services/voiceService';
 import { Mic, MicOff, StopCircle, Play } from 'lucide-react';
+import websocketService, { WebSocketService } from '@/services/websocketService';
 
 interface VoiceRecorderProps {
   onTranscriptionComplete: (transcript: string) => void;
   isTranscribing: boolean;
   setIsTranscribing: (value: boolean) => void;
+  formId?: number;
+  questionId?: number;
 }
 
 export default function VoiceRecorder({ 
   onTranscriptionComplete,
   isTranscribing,
-  setIsTranscribing
+  setIsTranscribing,
+  formId = 1,
+  questionId = 1
 }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [audioData, setAudioData] = useState<number[]>([]);
   const [visualizerInterval, setVisualizerInterval] = useState<NodeJS.Timeout | null>(null);
+  const [wsService] = useState(() => new WebSocketService());
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
+  const transcriptReceivedRef = useRef<boolean>(false);
   
-  // Clean up on component unmount
+  // Set up WebSocket handlers
+  useEffect(() => {
+    // Set up the WebSocket response handlers
+    wsService.connect({
+      onTranscription: (data) => {
+        console.log('Received transcription from WebSocket:', data);
+        transcriptReceivedRef.current = true;
+        
+        // Clear any fallback timeout
+        if (timeoutIdRef.current) {
+          clearTimeout(timeoutIdRef.current);
+          timeoutIdRef.current = null;
+        }
+        
+        // Update transcript and notify parent
+        setTranscript(data.text);
+        onTranscriptionComplete(data.text);
+        setIsTranscribing(false);
+        
+        // Log metrics
+        console.log('Transcription metrics:', {
+          confidence: data.confidence,
+          processingTime: data.processingTime,
+          formId: data.formId,
+          questionId: data.questionId
+        });
+      },
+      onError: (error) => {
+        console.error('WebSocket error during voice recording:', error);
+        
+        // Clear any fallback timeout to avoid duplication
+        if (timeoutIdRef.current) {
+          clearTimeout(timeoutIdRef.current);
+          timeoutIdRef.current = null;
+        }
+        
+        // If we haven't received a transcript yet, fall back to REST API
+        if (!transcriptReceivedRef.current && audioChunksRef.current.length > 0) {
+          fallbackToRestApi();
+        }
+      },
+      onClose: () => {
+        console.log('WebSocket connection closed');
+        
+        // If we haven't received a transcript yet, fall back to REST API
+        if (!transcriptReceivedRef.current && isTranscribing && audioChunksRef.current.length > 0) {
+          fallbackToRestApi();
+        }
+      }
+    });
+    
+    // Clean up on unmount
+    return () => {
+      wsService.disconnect();
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  
+  // Clean up audio resources on component unmount
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -38,28 +107,66 @@ export default function VoiceRecorder({
     };
   }, [visualizerInterval]);
   
+  // Fallback to REST API if WebSocket fails
+  const fallbackToRestApi = async () => {
+    console.log('Falling back to REST API for transcription');
+    try {
+      // Get audio data
+      const audioBlob = voiceService.createAudioBlob(audioChunksRef.current);
+      const base64Audio = await blobToBase64(audioBlob);
+      
+      // Use the REST API for transcription
+      const transcriptText = await voiceService.transcribeAudio(base64Audio);
+      
+      // Update transcript and notify parent
+      setTranscript(transcriptText);
+      onTranscriptionComplete(transcriptText);
+      setIsTranscribing(false);
+      transcriptReceivedRef.current = true;
+    } catch (error) {
+      console.error('REST API transcription also failed:', error);
+      setIsTranscribing(false);
+    }
+  };
+  
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Reset transcript state
+      setTranscript('');
+      transcriptReceivedRef.current = false;
+      
+      // Get audio stream
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { 
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
       streamRef.current = stream;
       
-      const mediaRecorder = new MediaRecorder(stream);
+      // Set up media recorder
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm' // More widely supported format
+      });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
       
+      // Handle audio data
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
       
+      // Start recording
       mediaRecorder.start(100); // Collect data every 100ms
       setIsRecording(true);
       setIsPaused(false);
       
       // Start the audio visualizer
       const interval = setInterval(() => {
-        // Generate dummy visualization data (in a real app, this would use actual audio analysis)
+        // Generate dummy visualization data (in a real app, would use AnalyserNode)
         const dummyData = Array(30).fill(0).map(() => Math.random() * 0.7);
         setAudioData(dummyData);
       }, 100);
@@ -74,127 +181,52 @@ export default function VoiceRecorder({
   const stopRecording = async () => {
     if (!mediaRecorderRef.current || !streamRef.current) return;
     
+    // Stop recording
     mediaRecorderRef.current.stop();
     streamRef.current.getTracks().forEach(track => track.stop());
     
+    // Stop visualizer
     if (visualizerInterval) {
       clearInterval(visualizerInterval);
       setVisualizerInterval(null);
     }
     
+    // Update UI state
     setIsRecording(false);
     setIsPaused(false);
     
-    // Process the recorded audio using WebSockets for streaming transcription
+    // Process the recorded audio
     setTimeout(async () => {
       if (audioChunksRef.current.length > 0) {
-        const audioBlob = voiceService.createAudioBlob(audioChunksRef.current);
-        
         try {
           setIsTranscribing(true);
           
           // Get base64 audio
+          const audioBlob = voiceService.createAudioBlob(audioChunksRef.current);
           const base64Audio = await blobToBase64(audioBlob);
           
-          // Check if WebSocket is available to stream the transcription
-          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-          const wsUrl = `${protocol}//${window.location.host}/ws`;
+          // Send audio via WebSocket for transcription
+          console.log('Sending audio for transcription via WebSocket');
+          wsService.sendAudio(base64Audio, formId, questionId);
           
-          // Attempt real-time streaming first, if WebSocket is supported
-          const ws = new WebSocket(wsUrl);
-          
-          ws.onopen = () => {
-            console.log('WebSocket connection opened for audio streaming');
-            
-            // Send audio data for streaming transcription
-            ws.send(JSON.stringify({
-              type: 'audio',
-              audioData: base64Audio,
-              formId: 1, // Replace with actual form ID from props
-              questionId: 1 // Replace with actual question ID from props
-            }));
-          };
-          
-          // Handle streaming transcription updates
-          let finalTranscript = '';
-          const timeoutId = setTimeout(async () => {
-            // Fallback to REST API if WebSocket takes too long
-            console.log('WebSocket taking too long, falling back to REST API');
-            ws.close();
-            
-            // Use standard REST API as fallback
-            const transcriptText = await voiceService.transcribeAudio(base64Audio);
-            finalTranscript = transcriptText;
-            setTranscript(transcriptText);
-            onTranscriptionComplete(transcriptText);
-            setIsTranscribing(false);
-          }, 5000); // 5 second timeout
-          
-          ws.onmessage = (event) => {
-            try {
-              const data = JSON.parse(event.data);
-              
-              if (data.type === 'transcription') {
-                clearTimeout(timeoutId);
-                
-                finalTranscript = data.text;
-                setTranscript(data.text);
-                onTranscriptionComplete(data.text);
-                
-                // Store transcription details (confidence, etc.) if available
-                console.log('Transcription confidence:', data.confidence);
-                console.log('Processing time:', data.processingTime);
-                
-                // Close WebSocket after receiving final transcription
-                ws.close();
-                setIsTranscribing(false);
-              }
-            } catch (error) {
-              console.error('Error parsing WebSocket message:', error);
+          // Set up fallback timeout in case WebSocket fails
+          timeoutIdRef.current = setTimeout(() => {
+            if (!transcriptReceivedRef.current) {
+              console.log('WebSocket transcription taking too long, falling back to REST API');
+              fallbackToRestApi();
             }
-          };
-          
-          ws.onerror = async (error) => {
-            console.error('WebSocket error during transcription:', error);
-            clearTimeout(timeoutId);
-            
-            // Fallback to REST API
-            const transcriptText = await voiceService.transcribeAudio(base64Audio);
-            finalTranscript = transcriptText;
-            setTranscript(transcriptText);
-            onTranscriptionComplete(transcriptText);
-            setIsTranscribing(false);
-          };
-          
-          ws.onclose = () => {
-            console.log('WebSocket connection closed after transcription');
-            clearTimeout(timeoutId);
-            
-            // Only set if we didn't get a transcript yet
-            if (!finalTranscript && isTranscribing) {
-              setIsTranscribing(false);
-            }
-          };
+          }, 7000); // 7 second timeout
           
         } catch (error) {
-          console.error('Error transcribing audio:', error);
+          console.error('Error processing audio:', error);
           setIsTranscribing(false);
-          
-          // Fallback to REST API in case of error
-          try {
-            // Get base64 audio again in case it wasn't available from the outer scope
-            const audioBlob = voiceService.createAudioBlob(audioChunksRef.current);
-            const fallbackBase64Audio = await blobToBase64(audioBlob);
-            
-            const transcriptText = await voiceService.transcribeAudio(fallbackBase64Audio);
-            setTranscript(transcriptText);
-            onTranscriptionComplete(transcriptText);
-          } catch (fallbackError) {
-            console.error('Fallback transcription also failed:', fallbackError);
-          }
+          fallbackToRestApi();
         }
+      } else {
+        console.warn('No audio data recorded');
+        setIsTranscribing(false);
       }
-    }, 100);
+    }, 200); // Give a bit more time for the final audio chunks to be added
   };
   
   const togglePause = () => {

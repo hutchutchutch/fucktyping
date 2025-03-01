@@ -5,7 +5,7 @@
 import { toast } from "../hooks/use-toast";
 
 // Event types supported by the WebSocket
-type WebSocketEventType = 
+export type WebSocketEventType = 
   | 'connection'
   | 'transcript'
   | 'response' 
@@ -91,7 +91,7 @@ type WebSocketEventHandlers = {
   onTranscription?: (data: TranscriptionMessage) => void;
 };
 
-class WebSocketService {
+export class WebSocketService {
   private socket: WebSocket | null = null;
   private url: string;
   private reconnectInterval: number = 5000; // 5 seconds
