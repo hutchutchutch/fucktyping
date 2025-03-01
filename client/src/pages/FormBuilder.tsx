@@ -10,7 +10,11 @@ import { Label } from "../components/ui/label";
 import { Separator } from "../components/ui/separator";
 import { ChevronDown, ChevronUp, Upload, Mic, Edit, Plus, Save, TestTube, Wand2 } from "lucide-react";
 import AppLayout from "../components/layout/AppLayout";
-import QuestionEditor from "../components/form-builder/QuestionEditor";
+import { useForm } from '../hooks/useForm';
+import FormBuilderComponent from '../components/form-builder/FormBuilder';
+import QuestionEditor from '../components/form-builder/QuestionEditor';
+import Modal from '../components/common/Modal';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function FormBuilder() {
   const { id } = useParams<{ id: string }>();
@@ -40,9 +44,28 @@ export default function FormBuilder() {
     options: string[] | null;
   };
   
-  const [questions, setQuestions] = useState<QuestionType[]>([
+  // Integrate the form hooks - this should take precedence
+  const {
+    form,
+    questions: formQuestions,
+    isLoading,
+    showQuestionModal,
+    currentQuestion,
+    setShowQuestionModal,
+    updateFormField,
+    handleAddQuestion,
+    handleEditQuestion,
+    handleDeleteQuestion,
+    handleSaveQuestion,
+    handleSaveForm
+  } = useForm();
+  
+  // Fallback to the simple implementation if the hooks are not available
+  const [localQuestions, setLocalQuestions] = useState<QuestionType[]>([
     { id: 'q1', text: 'What is your name?', type: 'text', required: true, order: 1, options: null }
   ]);
+  
+  const questions = formQuestions || localQuestions;
   
   const toggleSection = (section: SectionType) => {
     setIsCollapsed({
