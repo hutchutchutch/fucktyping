@@ -17,7 +17,7 @@ import { FormWithQuestions } from '@shared/schema';
 import VoiceRecorder from '../components/form-responder/VoiceRecorder';
 import AudioVisualizer from '../components/form-responder/AudioVisualizer';
 import Transcript from '../components/form-responder/Transcript';
-import AppLayout from '../components/layout/AppLayout';
+// TestForm will be wrapped by AppLayout through routes.jsx
 
 interface Message {
   id: string;
@@ -49,6 +49,8 @@ export default function TestForm({ params }: { params?: { id: string } }) {
   // State
   const [form, setForm] = useState<FormWithQuestions | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  
+  console.log("TestForm component mounted with formId:", formId, "params:", params);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [inputText, setInputText] = useState<string>('');
   const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
@@ -60,26 +62,48 @@ export default function TestForm({ params }: { params?: { id: string } }) {
 
   // Load form data
   useEffect(() => {
+    console.log("Loading form data with formId:", formId);
+    console.log("Available forms:", mockForms);
+    
     if (formId) {
-      // Fetch form data
-      const id = parseInt(formId, 10);
-      const foundForm = mockForms.find(f => f.id === id);
-      
-      if (foundForm) {
-        setForm(foundForm);
+      try {
+        // Fetch form data
+        const id = parseInt(formId, 10);
+        console.log("Looking for form with ID:", id);
         
-        // Create opening message
-        const initialMessage: Message = {
-          id: 'opening',
-          sender: 'agent',
-          text: `Welcome to the "${foundForm.title}" form. ${foundForm.description || ''} This form contains ${foundForm.questions?.length || 0} questions. Would you like to begin?`,
-          type: 'opening',
-          timestamp: new Date()
-        };
+        // Ensure mockForms is available and has data
+        if (!mockForms || mockForms.length === 0) {
+          console.error("Mock forms data is empty or unavailable");
+          setLoading(false);
+          return;
+        }
         
-        setMessages([initialMessage]);
+        const foundForm = mockForms.find(f => f.id === id);
+        console.log("Found form:", foundForm);
+        
+        if (foundForm) {
+          setForm(foundForm);
+          
+          // Create opening message
+          const initialMessage: Message = {
+            id: 'opening',
+            sender: 'agent',
+            text: `Welcome to the "${foundForm.title}" form. ${foundForm.description || ''} This form contains ${foundForm.questions?.length || 0} questions. Would you like to begin?`,
+            type: 'opening',
+            timestamp: new Date()
+          };
+          
+          setMessages([initialMessage]);
+        } else {
+          console.error(`Form with ID ${id} not found in mock data`);
+        }
+      } catch (error) {
+        console.error("Error loading form:", error);
       }
       
+      setLoading(false);
+    } else {
+      console.error("No formId provided");
       setLoading(false);
     }
   }, [formId]);
@@ -172,30 +196,25 @@ export default function TestForm({ params }: { params?: { id: string } }) {
   // Render loading state
   if (loading) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center min-h-[calc(100vh-300px)]">
-          <Loader2 className="h-8 w-8 animate-spin mr-2" />
-          <p>Loading form...</p>
-        </div>
-      </AppLayout>
+      <div className="flex items-center justify-center min-h-[calc(100vh-300px)]">
+        <Loader2 className="h-8 w-8 animate-spin mr-2" />
+        <p>Loading form...</p>
+      </div>
     );
   }
 
   // Render form not found
   if (!form) {
     return (
-      <AppLayout>
-        <div className="container max-w-3xl mx-auto py-12 text-center">
-          <h1 className="text-2xl font-bold mb-4">Form Not Found</h1>
-          <p className="mb-6">The form you are trying to access doesn't exist or has been removed.</p>
-          <Button onClick={handleBackToForms}>Back to Forms</Button>
-        </div>
-      </AppLayout>
+      <div className="container max-w-3xl mx-auto py-12 text-center">
+        <h1 className="text-2xl font-bold mb-4">Form Not Found</h1>
+        <p className="mb-6">The form you are trying to access doesn't exist or has been removed.</p>
+        <Button onClick={handleBackToForms}>Back to Forms</Button>
+      </div>
     );
   }
 
   return (
-    <AppLayout>
       <div className="max-w-3xl">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -303,6 +322,5 @@ export default function TestForm({ params }: { params?: { id: string } }) {
         </CardContent>
       </Card>
     </div>
-    </AppLayout>
   );
 }
