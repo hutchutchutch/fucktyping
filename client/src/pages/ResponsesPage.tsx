@@ -49,9 +49,13 @@ import {
   SlidersHorizontal
 } from 'lucide-react';
 import { mockForms, mockResponses } from '../services/mockData';
-import { Form, Question, Response } from '../../shared/schema';
+import { FormWithQuestions, Question, Response } from '../../shared/schema';
 
-interface ResponseData extends Response {
+interface ResponseData {
+  id: number;
+  formId: number;
+  userId: number;
+  createdAt: string;
   respondent: string;
   completedAt: string;
   status: 'complete' | 'partial';
@@ -63,7 +67,7 @@ const ResponsesPage = () => {
   const [, navigate] = useLocation();
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentForm, setCurrentForm] = useState<Form | null>(null);
+  const [currentForm, setCurrentForm] = useState<FormWithQuestions | null>(null);
   const [responses, setResponses] = useState<ResponseData[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [page, setPage] = useState(1);

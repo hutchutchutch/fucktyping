@@ -33,11 +33,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Loader2, BarChart2, ClipboardCheck, MoreVertical, Edit, Trash2, Copy, Eye, Share2 } from 'lucide-react';
 import { mockForms } from '../services/mockData';
-import { Form } from '../../shared/schema';
+import { FormWithQuestions } from '../../shared/schema';
 
 const FormsPage = () => {
   const [, navigate] = useLocation();
-  const [forms, setForms] = useState<Form[]>(mockForms);
+  const [forms, setForms] = useState<FormWithQuestions[]>(mockForms);
   const [isLoading, setIsLoading] = useState(false);
   const [formToDelete, setFormToDelete] = useState<number | null>(null);
 
@@ -78,7 +78,7 @@ const FormsPage = () => {
     }
   };
 
-  const renderFormCard = (form: Form) => (
+  const renderFormCard = (form: FormWithQuestions) => (
     <Card key={form.id} className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
