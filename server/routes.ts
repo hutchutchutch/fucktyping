@@ -1,14 +1,56 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { 
   insertFormSchema, insertQuestionSchema, insertResponseSchema,
   insertAnswerSchema, insertConversationSchema, insertMessageSchema 
 } from "@shared/schema";
 import { z } from "zod";
+import { log } from "./vite";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+  
+  // Create WebSocket server on the same server but different path
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // WebSocket handling
+  wss.on('connection', (ws) => {
+    log('WebSocket client connected');
+    
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        log(`Received message: ${JSON.stringify(data)}`);
+        
+        // Process message based on type
+        if (data.type === 'transcript') {
+          // Simulate AI processing (this would be the actual AI model in production)
+          setTimeout(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'response',
+                text: `I received your message: "${data.text}"`,
+                messageId: Date.now().toString(),
+                stats: {
+                  latency: 230,
+                  processingTime: 450,
+                  tokens: 28
+                }
+              }));
+            }
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      log('WebSocket client disconnected');
+    });
+  });
 
   // GET Forms
   app.get("/api/forms", async (req: Request, res: Response) => {
