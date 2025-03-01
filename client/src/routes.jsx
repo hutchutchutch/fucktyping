@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import FormBuilder from './pages/FormBuilder';
 import CreateForm from './pages/CreateForm';
+import EditForm from './pages/EditForm';
 import TestForm from './pages/TestForm';
 import FormResponder from './pages/FormResponder';
 import ResponseViewer from './pages/ResponseViewer';
@@ -82,7 +83,7 @@ export default function Routes() {
           </Route>
           
           <Route path="/forms/edit/:id">
-            {(params) => <PrivateRoute component={FormBuilder} params={params} />}
+            {(params) => <PrivateRoute component={EditForm} params={params} />}
           </Route>
           
           <Route path="/forms/:id/responses">
