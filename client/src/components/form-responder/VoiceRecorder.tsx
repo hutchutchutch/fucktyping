@@ -182,7 +182,11 @@ export default function VoiceRecorder({
           
           // Fallback to REST API in case of error
           try {
-            const transcriptText = await voiceService.transcribeAudio(base64Audio);
+            // Get base64 audio again in case it wasn't available from the outer scope
+            const audioBlob = voiceService.createAudioBlob(audioChunksRef.current);
+            const fallbackBase64Audio = await blobToBase64(audioBlob);
+            
+            const transcriptText = await voiceService.transcribeAudio(fallbackBase64Audio);
             setTranscript(transcriptText);
             onTranscriptionComplete(transcriptText);
           } catch (fallbackError) {
