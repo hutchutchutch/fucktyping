@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
+import { Button } from "../components/ui/button";
 
 const LandingPage = () => {
   const [, navigate] = useLocation();

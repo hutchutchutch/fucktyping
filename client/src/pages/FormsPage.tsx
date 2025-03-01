@@ -33,7 +33,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Loader2, BarChart2, ClipboardCheck, MoreVertical, Edit, Trash2, Copy, Eye, Share2 } from 'lucide-react';
 import { mockForms } from '../services/mockData';
-import { FormWithQuestions } from '../../shared/schema';
+import { FormWithQuestions } from '../../../shared/schema';
 
 const FormsPage = () => {
   const [, navigate] = useLocation();

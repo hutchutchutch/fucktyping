@@ -1,4 +1,4 @@
-import { Form, Response, Question, FormWithQuestions } from "../../shared/schema";
+import { Form, Response, Question, FormWithQuestions } from "../../../shared/schema";
 
 // Simulate data from Supabase
 export const mockForms: FormWithQuestions[] = [
