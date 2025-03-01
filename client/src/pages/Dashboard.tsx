@@ -18,19 +18,20 @@ export default function Dashboard() {
         <Sidebar />
         
         <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
-          <div className="pb-5 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">Dashboard</h3>
-            <div className="mt-3 flex sm:mt-0 sm:ml-4">
-              <Button onClick={() => navigate("/forms/create")}>
-                <Plus className="h-5 w-5 mr-2" />
-                Create New Form
-              </Button>
-            </div>
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-2xl font-semibold">Dashboard</h1>
+            <Button 
+              className="bg-primary hover:bg-primary/90 text-white" 
+              onClick={() => navigate("/forms/create")}
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Create New Form
+            </Button>
           </div>
 
           <Stats />
           
-          <h2 className="mt-8 text-lg font-medium text-gray-900">Recent Forms</h2>
+          <h2 className="mt-10 mb-6 text-xl font-semibold">Recent Forms</h2>
           <FormsList />
         </main>
       </div>
