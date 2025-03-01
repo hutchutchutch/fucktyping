@@ -11,13 +11,13 @@ export default function Dashboard() {
   const [, navigate] = useLocation();
   
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
+    <div className="min-h-screen bg-gray-50">
+      <Sidebar />
       
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar />
+      <div className="md:pl-64 flex flex-col">
+        <Header />
         
-        <main className="flex-1 overflow-y-auto px-6 py-8 max-w-7xl">
+        <main className="flex-1 px-6 py-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
