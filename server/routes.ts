@@ -485,8 +485,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST process speech to text
   app.post("/api/voice/transcribe", async (req: Request, res: Response) => {
     try {
-      // Import the voice service
-      const voiceService = await import('./services/voiceService.js').then(m => m.default);
+      // Import the voice service directly without .default
+      const voiceService = await import('./services/voiceService');
       
       const { audio } = req.body;
       
@@ -505,7 +505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transcript: result.transcript,
         confidence: result.confidence,
         language: result.language,
-        success: result.success 
+        simulated: result.simulated
       });
     } catch (error) {
       console.error("Error transcribing audio:", error);
@@ -516,8 +516,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST text to speech
   app.post("/api/voice/synthesize", async (req: Request, res: Response) => {
     try {
-      // Import the voice service
-      const voiceService = await import('./services/voiceService.js').then(m => m.default);
+      // Import the voice service directly without .default
+      const voiceService = await import('./services/voiceService');
       
       const { text, voice, speed, quality } = req.body;
       
@@ -540,7 +540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         audioUrl: result.audioUrl,
         format: result.format,
         message: result.message,
-        success: result.success
+        success: true
       });
     } catch (error) {
       console.error("Error synthesizing speech:", error);
@@ -551,8 +551,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST conversation message
   app.post("/api/conversation", async (req: Request, res: Response) => {
     try {
-      // Import the Groq service
-      const groqService = await import('./services/groqService.js').then(m => m.default);
+      // Import the Groq service directly
+      const groqService = await import('./services/groqService');
       
       const { responseId, message, questionContext, agentSettings } = req.body;
       

@@ -11,7 +11,8 @@ type WebSocketEventType =
   | 'response' 
   | 'transcription'
   | 'error'
-  | 'init';
+  | 'init'
+  | 'audio';
 
 // Interfaces for different message types
 interface BaseWebSocketMessage {
@@ -280,7 +281,7 @@ class WebSocketService {
       console.log('Received WebSocket message:', data.type);
 
       // Store connection ID if this is a connection message
-      if (data.type === 'connection' && 'connectionId' in data) {
+      if ('connectionId' in data) {
         this.connectionId = data.connectionId;
       }
 
