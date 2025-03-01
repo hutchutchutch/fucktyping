@@ -117,34 +117,34 @@ export default function LandingPage() {
                         <div className="text-lg font-bold border-b pb-2 mb-3">1. Personal Information</div>
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Legal First Name <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">What's your government-approved identifier? <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="Your typing sucks..." />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Legal Middle Name</label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">That name nobody uses but we need anyway</label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="Nobody cares..." />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Legal Last Name <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Family name or whatever <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="Must match your birth certificate" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Previous Name (if applicable)</label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">What we should call you if we cared</label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="We'll ignore this anyway" />
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-gray-700 text-sm font-bold mb-2">Date of Birth <span className="text-indigo-500">*</span></label>
-                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="date" />
+                              <label className="block text-gray-700 text-sm font-bold mb-2">How old are you, exactly? <span className="text-indigo-500">*</span></label>
+                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="date" placeholder="We need to verify..." />
                             </div>
                             <div>
-                              <label className="block text-gray-700 text-sm font-bold mb-2">Gender <span className="text-indigo-500">*</span></label>
+                              <label className="block text-gray-700 text-sm font-bold mb-2">Select from our limited options <span className="text-indigo-500">*</span></label>
                               <select className="border border-gray-300 rounded w-full py-2 px-3">
-                                <option>Select Gender</option>
+                                <option>Pick one already</option>
                                 <option>Male</option>
                                 <option>Female</option>
                                 <option>Non-binary</option>
-                                <option>Prefer not to say</option>
+                                <option>Rather not deal with this</option>
                               </select>
                             </div>
                           </div>
@@ -152,51 +152,51 @@ export default function LandingPage() {
                       </div>
 
                       <div className="border border-gray-300 p-3 rounded bg-white">
-                        <div className="text-lg font-bold border-b pb-2 mb-3">2. Contact Details</div>
+                        <div className="text-lg font-bold border-b pb-2 mb-3">2. Your Digital Footprint</div>
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Primary Email <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="email" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Where we'll spam you forever <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="email" placeholder="We'll send 5 emails a day" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Confirm Email <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="email" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Type it again because we don't trust you <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="email" placeholder="Make sure it matches!" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Mobile Phone <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Number for our telemarketers <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" placeholder="We call during dinner time" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Home Phone</label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">That landline nobody uses anymore</label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" placeholder="Does anyone still have these?" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Work Phone</label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Number to interrupt you at work</label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" placeholder="For 'urgent' matters only" />
                           </div>
                         </div>
                       </div>
 
                       <div className="border border-gray-300 p-3 rounded bg-white">
-                        <div className="text-lg font-bold border-b pb-2 mb-3">3. Current Address</div>
+                        <div className="text-lg font-bold border-b pb-2 mb-3">3. Where We'll Find You</div>
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Street Address <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Tell me where you live <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="So we can randomly visit..." />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Apt/Suite/Unit</label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Extra details we'll ignore</label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="Apt 2B or whatever" />
                           </div>
                           <div className="grid grid-cols-3 gap-2">
                             <div>
-                              <label className="block text-gray-700 text-sm font-bold mb-2">City <span className="text-indigo-500">*</span></label>
-                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                              <label className="block text-gray-700 text-sm font-bold mb-2">City or village or hamlet <span className="text-indigo-500">*</span></label>
+                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="Don't be pretentious" />
                             </div>
                             <div>
-                              <label className="block text-gray-700 text-sm font-bold mb-2">State <span className="text-indigo-500">*</span></label>
+                              <label className="block text-gray-700 text-sm font-bold mb-2">Pick a rectangle <span className="text-indigo-500">*</span></label>
                               <select className="border border-gray-300 rounded w-full py-2 px-3">
-                                <option>Select State</option>
+                                <option>Some arbitrary region</option>
                                 <option>AL</option>
                                 <option>AK</option>
                                 <option>AZ</option>
@@ -204,33 +204,33 @@ export default function LandingPage() {
                               </select>
                             </div>
                             <div>
-                              <label className="block text-gray-700 text-sm font-bold mb-2">ZIP <span className="text-indigo-500">*</span></label>
-                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                              <label className="block text-gray-700 text-sm font-bold mb-2">Magic mail code <span className="text-indigo-500">*</span></label>
+                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="5 random digits" />
                             </div>
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Country <span className="text-indigo-500">*</span></label>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Where you pledge allegiance <span className="text-indigo-500">*</span></label>
                             <select className="border border-gray-300 rounded w-full py-2 px-3">
-                              <option>United States</option>
-                              <option>Canada</option>
-                              <option>Mexico</option>
+                              <option>🇺🇸 Land of the forms</option>
+                              <option>🇨🇦 Maple syrup land</option>
+                              <option>🇲🇽 Taco Tuesday land</option>
                               {/* Imagine 100+ countries here */}
                             </select>
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Time at current address</label>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">How long until you flee this place?</label>
                             <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <select className="border border-gray-300 rounded w-full py-2 px-3">
-                                  <option>Years</option>
+                                  <option>Too many years</option>
                                   <option>1</option>
                                   <option>2</option>
-                                  <option>3+</option>
+                                  <option>Way too long</option>
                                 </select>
                               </div>
                               <div>
                                 <select className="border border-gray-300 rounded w-full py-2 px-3">
-                                  <option>Months</option>
+                                  <option>Painful months</option>
                                   <option>1</option>
                                   <option>2</option>
                                   <option>3</option>
@@ -241,7 +241,7 @@ export default function LandingPage() {
                           </div>
                           <div className="flex items-center">
                             <input type="checkbox" className="mr-2" />
-                            <label className="text-gray-700 text-sm">I've lived at this address for less than 2 years</label>
+                            <label className="text-gray-700 text-sm">I'm a flight risk (less than 2 years)</label>
                           </div>
                         </div>
                       </div>
@@ -260,103 +260,103 @@ export default function LandingPage() {
                       
                       {/* Additional form sections for continuous scrolling */}
                       <div className="border border-gray-300 p-3 rounded bg-white mt-6">
-                        <div className="text-lg font-bold border-b pb-2 mb-3">4. Employment Information</div>
+                        <div className="text-lg font-bold border-b pb-2 mb-3">4. Soul-Crushing Career Details</div>
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Current Employer <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Who owns your life Monday-Friday <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="We'll check your LinkedIn" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Job Title <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Fancy title that means nothing <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="'Specialist' or whatever" />
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-gray-700 text-sm font-bold mb-2">Start Date <span className="text-indigo-500">*</span></label>
-                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="date" />
+                              <label className="block text-gray-700 text-sm font-bold mb-2">Prison sentence began <span className="text-indigo-500">*</span></label>
+                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="date" placeholder="Day your spirit died" />
                             </div>
                             <div>
-                              <label className="block text-gray-700 text-sm font-bold mb-2">Annual Income <span className="text-indigo-500">*</span></label>
-                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="$" />
+                              <label className="block text-gray-700 text-sm font-bold mb-2">How broke are you? <span className="text-indigo-500">*</span></label>
+                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="Lie if you want, we know" />
                             </div>
                           </div>
                         </div>
                       </div>
                       
                       <div className="border border-gray-300 p-3 rounded bg-white mt-6">
-                        <div className="text-lg font-bold border-b pb-2 mb-3">5. Education Background</div>
+                        <div className="text-lg font-bold border-b pb-2 mb-3">5. Overpriced Knowledge Acquisition</div>
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Highest Education Level <span className="text-indigo-500">*</span></label>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">How deep in debt are you? <span className="text-indigo-500">*</span></label>
                             <select className="border border-gray-300 rounded w-full py-2 px-3">
-                              <option>Select Education Level</option>
-                              <option>High School</option>
-                              <option>Associate's Degree</option>
-                              <option>Bachelor's Degree</option>
-                              <option>Master's Degree</option>
-                              <option>Doctorate</option>
+                              <option>How bad is it?</option>
+                              <option>Got lucky - just high school</option>
+                              <option>2 years of regret</option>
+                              <option>4 years of pain</option>
+                              <option>Extended suffering (Master's)</option>
+                              <option>Life ruined (Doctorate)</option>
                             </select>
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Institution Name <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Overpriced campus name <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="Where you wasted your youth" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Field of Study <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Theoretical knowledge you never use <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="Let's pretend it matters" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Graduation Year <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="number" min="1950" max="2030" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">When they finally released you <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="number" min="1950" max="2030" placeholder="Year of liberation" />
                           </div>
                         </div>
                       </div>
                       
                       <div className="border border-gray-300 p-3 rounded bg-white mt-6">
-                        <div className="text-lg font-bold border-b pb-2 mb-3">6. Financial Information</div>
+                        <div className="text-lg font-bold border-b pb-2 mb-3">6. Where We'll Steal Your Money</div>
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Account Type <span className="text-indigo-500">*</span></label>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Pick your poison <span className="text-indigo-500">*</span></label>
                             <select className="border border-gray-300 rounded w-full py-2 px-3">
-                              <option>Select Account Type</option>
-                              <option>Checking</option>
-                              <option>Savings</option>
-                              <option>Investment</option>
+                              <option>How would you like to be robbed?</option>
+                              <option>Empty checking</option>
+                              <option>LOL "savings"</option>
+                              <option>Future retirement gone</option>
                             </select>
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Bank Name <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Which money vault do you use? <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="Bank of Giving Us Your Cash" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Account Number <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Secret code to your money <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="We promise we won't use it!" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Routing Number <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Magic digits to drain account <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="For totally legitimate purposes" />
                           </div>
                         </div>
                       </div>
                       
                       <div className="border border-gray-300 p-3 rounded bg-white mt-6">
-                        <div className="text-lg font-bold border-b pb-2 mb-3">7. References</div>
+                        <div className="text-lg font-bold border-b pb-2 mb-3">7. People Who'll Lie For You</div>
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Reference 1 Full Name <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Person who'll pretend to know you <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="Your most gullible friend" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Relationship <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">How they'll fake knowing you <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" placeholder="'Oh yeah, great person!'" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Phone Number <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Number they'll never answer <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" placeholder="They'll let it go to voicemail" />
                           </div>
                           <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2">Email Address <span className="text-indigo-500">*</span></label>
-                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="email" />
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Email they'll ignore <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="email" placeholder="Straight to spam folder" />
                           </div>
                         </div>
                       </div>

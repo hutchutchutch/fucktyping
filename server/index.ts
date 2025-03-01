@@ -41,8 +41,8 @@ app.use((req, res, next) => {
   try {
     // Initialize the database before starting the server
     await initializeStorage();
-    console.log('Database initialized successfully');
-    
+    console.log("Database initialized successfully");
+
     const server = await registerRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -62,17 +62,20 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    // ALWAYS serve the app on port 3000
+    // ALWAYS serve the app on port 5000
     // this serves both the API and the client
-    const port = 3000;
-    server.listen({
-      port,
-      host: "0.0.0.0",
-    }, () => {
-      log(`serving on port ${port}`);
-    });
+    const port = 5000;
+    server.listen(
+      {
+        port,
+        host: "0.0.0.0",
+      },
+      () => {
+        log(`serving on port ${port}`);
+      },
+    );
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error("Failed to start server:", error);
     process.exit(1);
   }
 })();
