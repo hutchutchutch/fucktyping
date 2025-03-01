@@ -17,6 +17,7 @@ import { FormWithQuestions } from '@shared/schema';
 import VoiceRecorder from '../components/form-responder/VoiceRecorder';
 import AudioVisualizer from '../components/form-responder/AudioVisualizer';
 import Transcript from '../components/form-responder/Transcript';
+import AppLayout from '../components/layout/AppLayout';
 
 interface Message {
   id: string;
@@ -170,38 +171,43 @@ export default function TestForm() {
   // Render loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-        <Loader2 className="h-8 w-8 animate-spin mr-2" />
-        <p>Loading form...</p>
-      </div>
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-[calc(100vh-300px)]">
+          <Loader2 className="h-8 w-8 animate-spin mr-2" />
+          <p>Loading form...</p>
+        </div>
+      </AppLayout>
     );
   }
 
   // Render form not found
   if (!form) {
     return (
-      <div className="container max-w-3xl mx-auto py-12 text-center">
-        <h1 className="text-2xl font-bold mb-4">Form Not Found</h1>
-        <p className="mb-6">The form you are trying to access doesn't exist or has been removed.</p>
-        <Button onClick={handleBackToForms}>Back to Forms</Button>
-      </div>
+      <AppLayout>
+        <div className="container max-w-3xl mx-auto py-12 text-center">
+          <h1 className="text-2xl font-bold mb-4">Form Not Found</h1>
+          <p className="mb-6">The form you are trying to access doesn't exist or has been removed.</p>
+          <Button onClick={handleBackToForms}>Back to Forms</Button>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="container max-w-3xl mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <Button variant="outline" size="sm" onClick={handleBackToForms}>
-            ← Back to Forms
-          </Button>
-          <h1 className="text-2xl font-bold mt-2">{form.title}</h1>
-          <p className="text-muted-foreground">{form.description}</p>
+    <AppLayout>
+      <div className="max-w-3xl">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <Button variant="outline" size="sm" onClick={handleBackToForms}>
+              ← Back to Forms
+            </Button>
+            <h1 className="text-2xl font-bold mt-2">{form.title}</h1>
+            <p className="text-muted-foreground">{form.description}</p>
+          </div>
+          <Badge variant={form.status === 'active' ? 'default' : 'secondary'}>
+            {form.status === 'active' ? 'Active' : form.status === 'draft' ? 'Draft' : 'Archived'}
+          </Badge>
         </div>
-        <Badge variant={form.status === 'active' ? 'default' : 'secondary'}>
-          {form.status === 'active' ? 'Active' : form.status === 'draft' ? 'Draft' : 'Archived'}
-        </Badge>
-      </div>
 
       <Card className="mb-6">
         <CardHeader>
@@ -296,5 +302,6 @@ export default function TestForm() {
         </CardContent>
       </Card>
     </div>
+    </AppLayout>
   );
 }
