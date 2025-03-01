@@ -33,7 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { 
   Loader2, BarChart2, ClipboardCheck, MoreVertical, Edit, Trash2, Copy, 
   Eye, Share2, Star, Users, Calendar, Megaphone, PlusCircle, Inbox,
-  ChevronRight, Percent, ThumbsUp, MessageSquare, ListFilter
+  ChevronRight, Percent, ThumbsUp, MessageSquare
 } from 'lucide-react';
 import { mockForms } from '../services/mockData';
 import { FormWithQuestions, CategoryWithStats } from '../../../shared/schema';
@@ -44,7 +44,6 @@ import {
   formatPercentage, 
   getSentimentLabel
 } from '../services/categoryData';
-import FormsCategorySidebar from '../components/layout/FormsCategorySidebar';
 
 const FormsPage = () => {
   const [, navigate] = useLocation();
@@ -55,7 +54,6 @@ const FormsPage = () => {
   const [viewMode, setViewMode] = useState<'tabs' | 'categories'>('categories');
   const [activeTab, setActiveTab] = useState('all');
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
-  const [showSidebar, setShowSidebar] = useState<boolean>(true);
 
   // Update forms with category information
   useEffect(() => {
@@ -336,7 +334,6 @@ const FormsPage = () => {
               className="rounded-none border-0"
               onClick={() => {
                 setViewMode('categories');
-                setShowSidebar(true);
               }}
             >
               <Inbox className="h-4 w-4 mr-2" /> 
@@ -348,83 +345,104 @@ const FormsPage = () => {
               className="rounded-none border-0"
               onClick={() => {
                 setViewMode('tabs');
-                setShowSidebar(false);
               }}
             >
               <BarChart2 className="h-4 w-4 mr-2" /> 
               Status
             </Button>
           </div>
-          <Button onClick={() => setShowSidebar(!showSidebar)} variant="outline" size="icon" className="md:hidden">
-            <ListFilter className="h-4 w-4" />
-          </Button>
           <Button onClick={() => navigate("/forms/new")}>
             Create New Form
           </Button>
         </div>
       </div>
 
-      <div className="flex gap-6">
-        {/* Sidebar */}
-        {showSidebar && (
-          <div className="hidden md:block">
-            <FormsCategorySidebar 
-              categories={categories} 
-              activeCategory={activeCategory}
-              onSelectCategory={handleCategorySelect}
-            />
+      {/* Category navigation (horizontal tabs) */}
+      {viewMode === 'categories' && (
+        <div className="mb-6 overflow-x-auto">
+          <div className="flex space-x-2 border-b pb-2">
+            <Button 
+              variant={activeCategory === null ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleCategorySelect(null)}
+              className="whitespace-nowrap"
+            >
+              <Inbox className="h-4 w-4 mr-2" />
+              All Categories
+            </Button>
+            {categories.map(category => (
+              <Button
+                key={category.id}
+                variant={activeCategory === category.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleCategorySelect(category.id)}
+                className="whitespace-nowrap"
+              >
+                <div className="h-4 w-4 mr-2" style={{ color: category.color }}>
+                  {getCategoryIcon(category.icon || '')}
+                </div>
+                {category.name} ({category.forms?.length || 0})
+              </Button>
+            ))}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/categories/new")}
+              className="whitespace-nowrap"
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              New Category
+            </Button>
           </div>
-        )}
-        
-        {/* Mobile sidebar drawer - would be implemented in production */}
-
-        {/* Main content */}
-        <div className="flex-1">
-          {viewMode === 'categories' ? (
-            renderCategoryView()
-          ) : (
-            <Tabs defaultValue={activeTab} className="space-y-4" onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="all">All Forms ({filteredForms.length})</TabsTrigger>
-                <TabsTrigger value="active">Active ({filteredForms.filter(form => form.status === 'active').length})</TabsTrigger>
-                <TabsTrigger value="drafts">Drafts ({filteredForms.filter(form => form.status === 'draft').length})</TabsTrigger>
-                <TabsTrigger value="archived">Archived ({filteredForms.filter(form => form.status === 'archived').length})</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="all" className="space-y-4">
-                {filteredForms.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredForms.map(form => renderFormCard(form))}
-                  </div>
-                ) : renderEmptyState()}
-              </TabsContent>
-              
-              <TabsContent value="active" className="space-y-4">
-                {filteredForms.filter(form => form.status === 'active').length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredForms.filter(form => form.status === 'active').map(form => renderFormCard(form))}
-                  </div>
-                ) : renderEmptyState()}
-              </TabsContent>
-              
-              <TabsContent value="drafts" className="space-y-4">
-                {filteredForms.filter(form => form.status === 'draft').length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredForms.filter(form => form.status === 'draft').map(form => renderFormCard(form))}
-                  </div>
-                ) : renderEmptyState()}
-              </TabsContent>
-              
-              <TabsContent value="archived" className="space-y-4">
-                {filteredForms.filter(form => form.status === 'archived').length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredForms.filter(form => form.status === 'archived').map(form => renderFormCard(form))}
-                  </div>
-                ) : renderEmptyState()}
-              </TabsContent>
-            </Tabs>
-          )}
         </div>
+      )}
+
+      {/* Main content */}
+      <div>
+        {viewMode === 'categories' ? (
+          renderCategoryView()
+        ) : (
+          <Tabs defaultValue={activeTab} className="space-y-4" onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="all">All Forms ({filteredForms.length})</TabsTrigger>
+              <TabsTrigger value="active">Active ({filteredForms.filter(form => form.status === 'active').length})</TabsTrigger>
+              <TabsTrigger value="drafts">Drafts ({filteredForms.filter(form => form.status === 'draft').length})</TabsTrigger>
+              <TabsTrigger value="archived">Archived ({filteredForms.filter(form => form.status === 'archived').length})</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all" className="space-y-4">
+              {filteredForms.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredForms.map(form => renderFormCard(form))}
+                </div>
+              ) : renderEmptyState()}
+            </TabsContent>
+            
+            <TabsContent value="active" className="space-y-4">
+              {filteredForms.filter(form => form.status === 'active').length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredForms.filter(form => form.status === 'active').map(form => renderFormCard(form))}
+                </div>
+              ) : renderEmptyState()}
+            </TabsContent>
+            
+            <TabsContent value="drafts" className="space-y-4">
+              {filteredForms.filter(form => form.status === 'draft').length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredForms.filter(form => form.status === 'draft').map(form => renderFormCard(form))}
+                </div>
+              ) : renderEmptyState()}
+            </TabsContent>
+            
+            <TabsContent value="archived" className="space-y-4">
+              {filteredForms.filter(form => form.status === 'archived').length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredForms.filter(form => form.status === 'archived').map(form => renderFormCard(form))}
+                </div>
+              ) : renderEmptyState()}
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
 
       {/* Delete confirmation dialog */}
