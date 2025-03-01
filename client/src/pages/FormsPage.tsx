@@ -128,43 +128,56 @@ const FormsPage = () => {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="pt-2 flex justify-between">
-        <Button variant="outline" size="sm" onClick={() => handleViewResponses(form.id)}>
-          View Responses
-        </Button>
+      <CardFooter className="pt-2 flex flex-col gap-2">
+        <div className="flex justify-between w-full">
+          <Button variant="outline" size="sm" onClick={() => handleViewResponses(form.id)}>
+            View Responses
+          </Button>
+          
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            onClick={() => navigate(`/forms/demo/test?formId=${form.id}`)}
+          >
+            Test Form
+          </Button>
+        </div>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => handleEditForm(form.id)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Form
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleViewResponses(form.id)}>
-              <Eye className="mr-2 h-4 w-4" />
-              View Responses
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Share2 className="mr-2 h-4 w-4" />
-              Share Form
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Copy className="mr-2 h-4 w-4" />
-              Duplicate
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive" onClick={() => setFormToDelete(form.id)}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex w-full justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => handleEditForm(form.id)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Form
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleViewResponses(form.id)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Responses
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Share2 className="mr-2 h-4 w-4" />
+                Share Form
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Copy className="mr-2 h-4 w-4" />
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive" onClick={() => setFormToDelete(form.id)}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </CardFooter>
     </Card>
   );

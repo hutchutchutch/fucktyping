@@ -1,34 +1,22 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useParams, useLocation } from "wouter";
-import { Card, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Textarea } from "../components/ui/textarea";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Badge } from "../components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
-import { Slider } from "../components/ui/slider";
-import VoiceRecorder from "../components/form-responder/VoiceRecorder";
-import { setupWebSocketConnection, sendWebSocketMessage, closeWebSocketConnection, initializeAIServices } from "../services/aiService";
+import React, { useState, useEffect } from 'react';
+import { useLocation, useRoute } from 'wouter';
 import { 
-  Mic, 
-  MicOff, 
-  Play, 
-  Settings, 
-  Edit, 
-  ChevronLeft, 
-  Save,
-  Maximize, 
-  RefreshCcw, 
-  User,
-  Bot,
-  Clock,
-  Zap,
-  MoveHorizontal,
-  BarChart,
-  Volume2
-} from "lucide-react";
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Loader2, Mic, MicOff, Send, CornerDownLeft } from 'lucide-react';
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { mockForms } from '../services/mockData';
+import { FormWithQuestions } from '@shared/schema';
+import VoiceRecorder from '../components/form-responder/VoiceRecorder';
+import AudioVisualizer from '../components/form-responder/AudioVisualizer';
+import Transcript from '../components/form-responder/Transcript';
 
 interface Message {
   id: string;
@@ -51,465 +39,263 @@ interface Message {
 }
 
 export default function TestForm() {
-  const { formId } = useParams<{ formId: string }>();
-  const [, setLocation] = useLocation();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [activeEditMessage, setActiveEditMessage] = useState<string | null>(null);
-  const [editedPrompt, setEditedPrompt] = useState("");
-  const [editedSettings, setEditedSettings] = useState({
-    temperature: 0.7,
-    maxTokens: 150,
-    voice: "male",
-    speed: 1.0
-  });
-  const [isRecording, setIsRecording] = useState(false);
-  const [userInput, setUserInput] = useState("");
+  // Get form ID from URL query parameter
+  const [, params] = useRoute('/forms/demo/test');
+  const [location, navigate] = useLocation();
+  const urlParams = new URLSearchParams(window.location.search);
+  const formId = urlParams.get('formId');
   
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
+  // State
+  const [form, setForm] = useState<FormWithQuestions | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [inputText, setInputText] = useState<string>('');
+  const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
+  const [transcript, setTranscript] = useState<string>('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+  const [formStarted, setFormStarted] = useState<boolean>(false);
+  const [formCompleted, setFormCompleted] = useState<boolean>(false);
+
+  // Load form data
+  useEffect(() => {
+    if (formId) {
+      // Fetch form data
+      const id = parseInt(formId, 10);
+      const foundForm = mockForms.find(f => f.id === id);
+      
+      if (foundForm) {
+        setForm(foundForm);
+        
+        // Create opening message
+        const initialMessage: Message = {
+          id: 'opening',
+          sender: 'agent',
+          text: `Welcome to the "${foundForm.title}" form. ${foundForm.description || ''} This form contains ${foundForm.questions?.length || 0} questions. Would you like to begin?`,
+          type: 'opening',
+          timestamp: new Date()
+        };
+        
+        setMessages([initialMessage]);
+      }
+      
+      setLoading(false);
+    }
+  }, [formId]);
+
+  // Start the form interaction
+  const startForm = () => {
+    if (!form || !form.questions || form.questions.length === 0) return;
+    
+    setFormStarted(true);
+    
+    // Get the first question
+    const firstQuestion = form.questions[0];
+    
+    // Add question message
+    const questionMessage: Message = {
+      id: `question-${firstQuestion.id}`,
       sender: 'agent',
-      text: "Hello, I'm your form assistant. I'll be guiding you through this form today. What's your name?",
-      type: 'opening',
-      timestamp: new Date(),
-      stats: {
-        latency: 250,
-        processingTime: 420,
-        tokens: 28
-      },
-      promptSettings: {
-        temperature: 0.7,
-        maxTokens: 150,
-        voice: "male",
-        speed: 1.0
-      },
-      originalPrompt: "Introduce yourself as a form assistant and ask for the user's name."
-    }
-  ]);
-
-  // Initialize WebSocket and AI services
-  useEffect(() => {
-    try {
-      // Initialize without real API keys for demo purposes
-      initializeAIServices('', '');
-      
-      // Setup WebSocket connection for real-time voice interaction
-      setupWebSocketConnection('', (data) => {
-        if (data.type === 'response') {
-          try {
-            // Add AI response as a message
-            const agentMessage: Message = {
-              id: `agent-${Date.now()}`,
-              sender: 'agent',
-              text: data.text,
-              type: 'question',
-              timestamp: new Date(),
-              stats: data.stats || {
-                latency: 250,
-                processingTime: 450,
-                tokens: 30
-              }
-            };
-            
-            setMessages(prevMessages => [...prevMessages, agentMessage]);
-          } catch (msgError) {
-            console.error('Error handling message:', msgError);
-          }
-        }
-      });
-      
-      return () => {
-        // Clean up WebSocket connection on unmount
-        try {
-          closeWebSocketConnection();
-        } catch (closeError) {
-          console.error('Error closing WebSocket:', closeError);
-        }
-      };
-    } catch (error) {
-      console.error('Error in WebSocket initialization:', error);
-    }
-  }, []);
-  
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      text: firstQuestion.text,
+      type: 'question',
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, questionMessage]);
   };
 
-  const handleSendMessage = () => {
-    if (userInput.trim() === "") return;
+  // Handle text input submission
+  const handleSubmit = () => {
+    if (!inputText.trim() || !form || !form.questions) return;
     
-    // Add user message
+    // Create user message
     const userMessage: Message = {
-      id: `user-${Date.now()}`,
+      id: `response-${Date.now()}`,
       sender: 'user',
-      text: userInput,
+      text: inputText,
       type: 'response',
       timestamp: new Date()
     };
     
-    setMessages([...messages, userMessage]);
-    setUserInput("");
+    setMessages(prev => [...prev, userMessage]);
+    setInputText('');
     
-    // Simulate agent response after a short delay
-    setTimeout(() => {
-      // Choose response text based on conversation state
-      let responseText = "Thank you for that information. Next question: How would you rate your experience with our service on a scale from 1 to 5?";
-      let responseType: Message['type'] = 'question';
-      
-      if (messages.length > 4) {
-        responseText = "Thank you for completing the form. Your responses have been recorded.";
-        responseType = 'closing';
-      }
-      
-      const agentMessage: Message = {
-        id: `agent-${Date.now()}`,
-        sender: 'agent',
-        text: responseText,
-        type: responseType,
-        timestamp: new Date(),
-        stats: {
-          latency: Math.floor(Math.random() * 300) + 200,
-          processingTime: Math.floor(Math.random() * 500) + 300,
-          tokens: Math.floor(Math.random() * 30) + 15
-        },
-        promptSettings: {
-          temperature: 0.7,
-          maxTokens: 150,
-          voice: "male",
-          speed: 1.0
-        },
-        originalPrompt: "Ask the user to rate their experience on a scale from 1 to 5."
-      };
-      
-      setMessages(prevMessages => [...prevMessages, agentMessage]);
-    }, 1000);
-  };
-
-  const startEditing = (messageId: string) => {
-    const message = messages.find(m => m.id === messageId);
-    if (message && message.originalPrompt) {
-      setEditedPrompt(message.originalPrompt);
-      setEditedSettings(message.promptSettings || {
-        temperature: 0.7,
-        maxTokens: 150,
-        voice: "male",
-        speed: 1.0
-      });
-      setActiveEditMessage(messageId);
+    // Move to next question or end the form
+    const nextIndex = currentQuestionIndex + 1;
+    
+    if (nextIndex < form.questions.length) {
+      // Add next question
+      setTimeout(() => {
+        const nextQuestion = form.questions[nextIndex];
+        
+        // Add question message
+        const questionMessage: Message = {
+          id: `question-${nextQuestion.id}`,
+          sender: 'agent',
+          text: nextQuestion.text,
+          type: 'question',
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, questionMessage]);
+        setCurrentQuestionIndex(nextIndex);
+      }, 1000);
+    } else {
+      // Form is completed
+      setTimeout(() => {
+        const closingMessage: Message = {
+          id: 'closing',
+          sender: 'agent',
+          text: `Thank you for completing the "${form.title}" form. Your responses have been recorded.`,
+          type: 'closing',
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, closingMessage]);
+        setFormCompleted(true);
+      }, 1000);
     }
   };
 
-  const saveEdits = (messageId: string) => {
-    setMessages(prevMessages => 
-      prevMessages.map(msg => 
-        msg.id === messageId 
-          ? {
-              ...msg,
-              originalPrompt: editedPrompt,
-              promptSettings: editedSettings,
-              text: "Hello, I'm your form assistant. I'll be guiding you through this form today. What's your name?", // In a real app, this would be regenerated
-            }
-          : msg
-      )
+  // Handle voice input
+  const handleTranscriptionComplete = (transcriptText: string) => {
+    setTranscript(transcriptText);
+    setInputText(transcriptText);
+  };
+
+  // Return to forms page
+  const handleBackToForms = () => {
+    navigate('/forms');
+  };
+
+  // Render loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-8 w-8 animate-spin mr-2" />
+        <p>Loading form...</p>
+      </div>
     );
-    setActiveEditMessage(null);
-  };
+  }
 
-  const regenerateMessage = (messageId: string) => {
-    // In a real app, this would call the API to regenerate
-    alert("Message would be regenerated with current settings");
-  };
-
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
-  
-  const handleVoiceRecording = () => {
-    setShowVoiceRecorder(!showVoiceRecorder);
-  };
-  
-  const handleTranscriptionComplete = (transcript: string) => {
-    setUserInput(transcript);
-    setShowVoiceRecorder(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  const goBackToForm = () => {
-    setLocation(`/forms/new`);
-  };
+  // Render form not found
+  if (!form) {
+    return (
+      <div className="container max-w-3xl mx-auto py-12 text-center">
+        <h1 className="text-2xl font-bold mb-4">Form Not Found</h1>
+        <p className="mb-6">The form you are trying to access doesn't exist or has been removed.</p>
+        <Button onClick={handleBackToForms}>Back to Forms</Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Header */}
-      <div className="p-4 border-b flex items-center justify-between bg-background">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={goBackToForm}>
-            <ChevronLeft className="h-5 w-5 mr-1" />
-            Back to Form Editor
+    <div className="container max-w-3xl mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <Button variant="outline" size="sm" onClick={handleBackToForms}>
+            ← Back to Forms
           </Button>
-          <h1 className="text-xl font-semibold">Test Form: {formId || "Untitled Form"}</h1>
+          <h1 className="text-2xl font-bold mt-2">{form.title}</h1>
+          <p className="text-muted-foreground">{form.description}</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <RefreshCcw className="h-4 w-4 mr-2" />
-            Reset Test
-          </Button>
-          <Button>
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
-          </Button>
-        </div>
+        <Badge variant={form.status === 'active' ? 'default' : 'secondary'}>
+          {form.status === 'active' ? 'Active' : form.status === 'draft' ? 'Draft' : 'Archived'}
+        </Badge>
       </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto p-4 bg-muted/20">
-        <div className="max-w-3xl mx-auto space-y-4">
-          {messages.map((message) => (
-            <div 
-              key={message.id} 
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`max-w-[80%] ${message.sender === 'agent' ? 'w-full' : ''}`}>
-                {message.sender === 'agent' && (
-                  <div className="flex items-center gap-1 mb-1 text-xs text-muted-foreground">
-                    <Badge variant="outline" className="text-xs font-normal">
-                      {message.type === 'opening' ? 'Opening Activity' : 
-                       message.type === 'question' ? 'Question' : 'Closing Activity'}
-                    </Badge>
-                    
-                    <div className="flex items-center ml-2">
-                      <Clock className="h-3 w-3 mr-1" />
-                      <span>{message.stats?.latency}ms latency</span>
-                    </div>
-                    
-                    <div className="flex items-center ml-2">
-                      <Zap className="h-3 w-3 mr-1" />
-                      <span>{message.stats?.processingTime}ms processing</span>
-                    </div>
-                    
-                    <div className="flex items-center ml-2">
-                      <MoveHorizontal className="h-3 w-3 mr-1" />
-                      <span>{message.stats?.tokens} tokens</span>
-                    </div>
-                  </div>
-                )}
-                
-                <div 
-                  className={`p-4 rounded-lg shadow ${
-                    message.sender === 'agent' 
-                      ? 'bg-card border' 
-                      : 'bg-primary text-primary-foreground ml-auto'
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Form Test Mode</CardTitle>
+          <CardDescription>
+            This is a test environment for your form. Try responding to questions using text or voice.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${
+                  message.sender === 'agent' ? 'justify-start' : 'justify-end'
+                }`}
+              >
+                <div
+                  className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                    message.sender === 'agent'
+                      ? 'bg-secondary text-secondary-foreground'
+                      : 'bg-primary text-primary-foreground'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className={`rounded-full p-2 flex-shrink-0 ${
-                      message.sender === 'agent' 
-                        ? 'bg-primary/10 text-primary' 
-                        : 'bg-primary-foreground/20 text-primary-foreground'
-                    }`}>
-                      {message.sender === 'agent' ? (
-                        <Bot className="h-5 w-5" />
-                      ) : (
-                        <User className="h-5 w-5" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p>{message.text}</p>
-                    </div>
-                  </div>
-                  
-                  {message.sender === 'agent' && (
-                    <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
-                      <div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-xs h-8"
-                          onClick={() => startEditing(message.id)}
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Edit Prompt
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-xs h-8">
-                          <Volume2 className="h-3 w-3 mr-1" />
-                          Play Audio
-                        </Button>
-                      </div>
-                      <div>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="text-xs h-8"
-                            >
-                              <Settings className="h-3 w-3 mr-1" />
-                              Voice Settings
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-80">
-                            <div className="space-y-4">
-                              <h4 className="font-medium">Voice Settings</h4>
-                              <div className="space-y-2">
-                                <Label>Voice</Label>
-                                <Tabs defaultValue="male" className="w-full">
-                                  <TabsList className="grid grid-cols-3 w-full">
-                                    <TabsTrigger value="male">Male</TabsTrigger>
-                                    <TabsTrigger value="female">Female</TabsTrigger>
-                                    <TabsTrigger value="neutral">Neutral</TabsTrigger>
-                                  </TabsList>
-                                </Tabs>
-                              </div>
-                              <div className="space-y-2">
-                                <div className="flex justify-between">
-                                  <Label>Speed</Label>
-                                  <span className="text-sm">1.0x</span>
-                                </div>
-                                <Slider 
-                                  defaultValue={[1]} 
-                                  max={2} 
-                                  min={0.5} 
-                                  step={0.1} 
-                                  className="w-full" 
-                                />
-                              </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-xs h-8"
-                          onClick={() => regenerateMessage(message.id)}
-                        >
-                          <RefreshCcw className="h-3 w-3 mr-1" />
-                          Regenerate
-                        </Button>
-                      </div>
+                  <p>{message.text}</p>
+                  {message.type === 'question' && (
+                    <div className="text-xs mt-1 opacity-70">
+                      Question {currentQuestionIndex + 1} of {form.questions?.length}
                     </div>
                   )}
                 </div>
-                
-                {/* Editor panel for agent messages */}
-                {message.sender === 'agent' && activeEditMessage === message.id && (
-                  <Card className="mt-3 border-primary/20">
-                    <CardContent className="p-4 space-y-4">
-                      <div>
-                        <Label htmlFor="prompt-editor">System Prompt</Label>
-                        <Textarea 
-                          id="prompt-editor"
-                          value={editedPrompt}
-                          onChange={(e) => setEditedPrompt(e.target.value)}
-                          className="mt-1"
-                          rows={3}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <Label>Temperature</Label>
-                            <span className="text-sm">{editedSettings.temperature}</span>
-                          </div>
-                          <Slider 
-                            value={[editedSettings.temperature]} 
-                            max={1} 
-                            min={0} 
-                            step={0.1} 
-                            className="w-full"
-                            onValueChange={(value) => setEditedSettings({...editedSettings, temperature: value[0]})}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <Label>Max Tokens</Label>
-                            <span className="text-sm">{editedSettings.maxTokens}</span>
-                          </div>
-                          <Slider 
-                            value={[editedSettings.maxTokens]} 
-                            max={500} 
-                            min={10} 
-                            step={10} 
-                            className="w-full"
-                            onValueChange={(value) => setEditedSettings({...editedSettings, maxTokens: value[0]})}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setActiveEditMessage(null)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button 
-                          onClick={() => saveEdits(message.id)}
-                        >
-                          Save & Regenerate
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
               </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
+            ))}
+          </div>
 
-      {/* Input Area */}
-      <div className="p-4 border-t bg-background">
-        <div className="max-w-3xl mx-auto">
-          {showVoiceRecorder ? (
-            <VoiceRecorder 
-              onTranscriptionComplete={handleTranscriptionComplete}
-              isTranscribing={isTranscribing}
-              setIsTranscribing={setIsTranscribing}
-            />
-          ) : (
-            <div className="flex items-end gap-2">
-              <div className="flex-1">
+          {!formStarted && !formCompleted && (
+            <div className="mt-6 text-center">
+              <Button onClick={startForm} className="bg-gradient-to-r from-purple-600 to-indigo-600">
+                Start Form
+              </Button>
+            </div>
+          )}
+
+          {formStarted && !formCompleted && (
+            <div className="mt-6 space-y-4">
+              <div className="relative">
                 <Textarea
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Type your response..."
-                  className="min-h-[60px] resize-none"
-                  rows={1}
+                  placeholder="Type your response here..."
+                  className="min-h-[100px] pr-12"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
                 />
-              </div>
-              <div className="flex gap-2">
                 <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleVoiceRecording}
-                  className="h-10 w-10"
+                  className="absolute bottom-3 right-3 h-6 w-6 p-0"
+                  onClick={handleSubmit}
                 >
-                  <Mic className="h-5 w-5" />
+                  <Send className="h-4 w-4" />
+                  <span className="sr-only">Send</span>
                 </Button>
-                <Button 
-                  onClick={handleSendMessage}
-                  disabled={userInput.trim() === ""}
-                  className="h-10"
-                >
-                  Send
-                </Button>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <div className="flex-1">
+                  {transcript && <Transcript text={transcript} />}
+                </div>
+                <div className="flex space-x-2 items-center">
+                  <AudioVisualizer isRecording={isRecording} />
+                  <VoiceRecorder
+                    onTranscriptionComplete={handleTranscriptionComplete}
+                    isTranscribing={isTranscribing}
+                    setIsTranscribing={setIsTranscribing}
+                  />
+                </div>
               </div>
             </div>
           )}
-        </div>
-      </div>
+
+          {formCompleted && (
+            <div className="mt-6 text-center">
+              <p className="mb-4">Thank you for completing this form.</p>
+              <Button onClick={handleBackToForms} variant="outline">
+                Back to Forms
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
