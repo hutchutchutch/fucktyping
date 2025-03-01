@@ -1,125 +1,361 @@
 import React, { useState } from "react";
 import { useParams } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
-import MobileNav from "@/components/layout/MobileNav";
-import FormBuilderComponent from "@/components/form-builder/FormBuilder";
-import EmailTemplateEditor from "@/components/form-builder/EmailTemplateEditor";
-// @ts-ignore - Using JSX component without type definitions
-import ResponseOptions from "@/components/form-builder/ResponseOptions";
+import { Button } from "../components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
+import { Switch } from "../components/ui/switch";
+import { Label } from "../components/ui/label";
+import { Separator } from "../components/ui/separator";
+import { ChevronDown, ChevronUp, Upload, Mic, Edit, Plus, Save, TestTube, Wand2 } from "lucide-react";
+import AppLayout from "../components/layout/AppLayout";
+import QuestionEditor from "../components/form-builder/QuestionEditor";
 
 export default function FormBuilder() {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState("builder");
+  const [activeTab, setActiveTab] = useState("details");
   const [formName, setFormName] = useState(id ? "Edit Form" : "Untitled Form");
-  const [isEditing, setIsEditing] = useState(false);
-
+  const [formDescription, setFormDescription] = useState("");
+  type SectionType = 'details' | 'variables' | 'opening' | 'questions' | 'closing';
+  
+  type SectionState = {
+    [key in SectionType]: boolean;
+  };
+  
+  const [isCollapsed, setIsCollapsed] = useState<SectionState>({
+    details: false,
+    variables: true,
+    opening: true,
+    questions: true,
+    closing: true
+  });
+  
+  type QuestionType = {
+    id: string;
+    text: string;
+    type: string;
+    required: boolean;
+    order: number;
+    options: string[] | null;
+  };
+  
+  const [questions, setQuestions] = useState<QuestionType[]>([
+    { id: 'q1', text: 'What is your name?', type: 'text', required: true, order: 1, options: null }
+  ]);
+  
+  const toggleSection = (section: SectionType) => {
+    setIsCollapsed({
+      ...isCollapsed,
+      [section]: !isCollapsed[section]
+    });
+  };
+  
+  const addQuestion = () => {
+    const newQuestion: QuestionType = {
+      id: `q${questions.length + 1}`,
+      text: 'New Question',
+      type: 'text',
+      required: false,
+      order: questions.length + 1,
+      options: null
+    };
+    setQuestions([...questions, newQuestion]);
+  };
+  
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar />
-        
-        <main className="flex-1 overflow-y-auto bg-background p-4 sm:p-6 lg:p-8">
-          <div className="pb-5 border-b mb-6 flex justify-between items-center">
-            {isEditing ? (
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  className="text-2xl font-bold bg-transparent border-b border-primary px-1 focus:outline-none"
-                  autoFocus
-                />
-                <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} className="ml-2">
-                  Save
-                </Button>
-              </div>
-            ) : (
-              <h2 className="text-2xl font-bold flex items-center">
-                {formName}
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="ml-2 text-muted-foreground hover:text-foreground"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                  </svg>
-                </button>
-              </h2>
-            )}
+    <AppLayout>
+      <div className="container mx-auto py-6 max-w-5xl">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">
+              {formName}
+            </h1>
+            <p className="text-muted-foreground">Create a new form with five simple steps</p>
           </div>
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="mb-2">
-              <TabsTrigger value="builder">Build Form</TabsTrigger>
-              <TabsTrigger value="settings">Response Settings</TabsTrigger>
-              <TabsTrigger value="emails">Email Notifications</TabsTrigger>
-              <TabsTrigger value="share">Share</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="builder" className="space-y-6">
-              <div className="bg-card shadow rounded-lg overflow-hidden p-6">
-                <FormBuilderComponent />
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex items-center gap-2">
+              <TestTube size={18} />
+              Test Form
+            </Button>
+            <Button className="flex items-center gap-2">
+              <Wand2 size={18} />
+              Generate Form
+            </Button>
+          </div>
+        </div>
+        
+        <div className="space-y-6">
+          {/* Form Details Section */}
+          <Card>
+            <CardHeader 
+              className="cursor-pointer flex flex-row items-center justify-between" 
+              onClick={() => toggleSection('details')}
+            >
+              <div>
+                <CardTitle className="text-xl flex items-center">
+                  1. Form Details
+                </CardTitle>
+                <CardDescription>Basic information about your form</CardDescription>
               </div>
-            </TabsContent>
-
-            <TabsContent value="settings" className="space-y-6">
-              <div className="bg-card shadow rounded-lg overflow-hidden p-6">
-                <ResponseOptions />
+              {isCollapsed.details ? <ChevronDown /> : <ChevronUp />}
+            </CardHeader>
+            
+            {!isCollapsed.details && (
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="formName">Form Name</Label>
+                  <Input 
+                    id="formName" 
+                    value={formName} 
+                    onChange={(e) => setFormName(e.target.value)} 
+                    placeholder="Enter form name" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="formDescription">Description</Label>
+                  <Textarea 
+                    id="formDescription" 
+                    value={formDescription} 
+                    onChange={(e) => setFormDescription(e.target.value)} 
+                    placeholder="Enter form description" 
+                    rows={3}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="collectEmail">Collect respondent email</Label>
+                    <p className="text-sm text-muted-foreground">Ask for email address before form submission</p>
+                  </div>
+                  <Switch id="collectEmail" />
+                </div>
+              </CardContent>
+            )}
+          </Card>
+          
+          {/* Dynamic Variables Section */}
+          <Card>
+            <CardHeader 
+              className="cursor-pointer flex flex-row items-center justify-between" 
+              onClick={() => toggleSection('variables')}
+            >
+              <div>
+                <CardTitle className="text-xl flex items-center">
+                  2. Dynamic Variables
+                </CardTitle>
+                <CardDescription>Define variables to be used in questions and prompts</CardDescription>
               </div>
-            </TabsContent>
-
-            <TabsContent value="emails" className="space-y-6">
-              <div className="bg-card shadow rounded-lg overflow-hidden">
-                <EmailTemplateEditor />
+              {isCollapsed.variables ? <ChevronDown /> : <ChevronUp />}
+            </CardHeader>
+            
+            {!isCollapsed.variables && (
+              <CardContent className="space-y-4">
+                <div className="border rounded-md p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-medium">Variables</h3>
+                    <Button size="sm" variant="outline" className="h-8 flex items-center gap-1">
+                      <Plus size={16} />
+                      Add Variable
+                    </Button>
+                  </div>
+                  
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No variables added yet</p>
+                    <p className="text-sm">Variables can be used in questions and prompts with {'{variable_name}'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+          
+          {/* Opening Activity (Voice Agent) */}
+          <Card>
+            <CardHeader 
+              className="cursor-pointer flex flex-row items-center justify-between" 
+              onClick={() => toggleSection('opening')}
+            >
+              <div>
+                <CardTitle className="text-xl flex items-center">
+                  3. Opening Activity
+                </CardTitle>
+                <CardDescription>Configure how the voice agent introduces itself</CardDescription>
               </div>
-            </TabsContent>
-
-            <TabsContent value="share" className="space-y-6">
-              <div className="bg-card shadow rounded-lg overflow-hidden p-6">
-                <h2 className="text-2xl font-bold mb-6">Share Your Form</h2>
-                
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-medium mb-3">Form Link</h3>
-                    <div className="flex">
-                      <input
-                        type="text"
-                        value="https://voiceformgenie.com/form/abc123"
-                        readOnly
-                        className="w-full p-2 border rounded-l-md bg-muted/30"
-                      />
-                      <Button className="rounded-l-none">Copy</Button>
+              {isCollapsed.opening ? <ChevronDown /> : <ChevronUp />}
+            </CardHeader>
+            
+            {!isCollapsed.opening && (
+              <CardContent className="space-y-4">
+                <div className="border rounded-md p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="border rounded-full p-3 h-12 w-12 flex items-center justify-center bg-gray-50">
+                      <Mic size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <h3 className="font-medium">Voice Agent Introduction</h3>
+                        <Button size="sm" variant="ghost" className="h-8 gap-1">
+                          <Edit size={14} />
+                          Edit
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Hello, I'm your form assistant. I'll be guiding you through this form today. What's your name?
+                      </p>
                     </div>
                   </div>
                   
-                  <div>
-                    <h3 className="text-lg font-medium mb-3">QR Code</h3>
-                    <div className="flex items-center justify-between">
-                      <div className="border p-4 rounded-md bg-white">
-                        <div className="w-32 h-32 bg-muted/30 flex items-center justify-center">
-                          QR Code Placeholder
+                  <div className="mt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <Label htmlFor="voice-type">Voice Type</Label>
+                    </div>
+                    <Tabs defaultValue="male" className="w-full">
+                      <TabsList className="grid grid-cols-4 w-full">
+                        <TabsTrigger value="male">Male</TabsTrigger>
+                        <TabsTrigger value="female">Female</TabsTrigger>
+                        <TabsTrigger value="neutral">Neutral</TabsTrigger>
+                        <TabsTrigger value="custom">Custom</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+          
+          {/* Questions */}
+          <Card>
+            <CardHeader 
+              className="cursor-pointer flex flex-row items-center justify-between" 
+              onClick={() => toggleSection('questions')}
+            >
+              <div>
+                <CardTitle className="text-xl flex items-center">
+                  4. Questions
+                </CardTitle>
+                <CardDescription>Define the questions for your form</CardDescription>
+              </div>
+              {isCollapsed.questions ? <ChevronDown /> : <ChevronUp />}
+            </CardHeader>
+            
+            {!isCollapsed.questions && (
+              <CardContent className="space-y-4">
+                <div className="border rounded-md p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-medium">Questions</h3>
+                    <Button size="sm" onClick={addQuestion} className="h-8 flex items-center gap-1">
+                      <Plus size={16} />
+                      Add Question
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {questions.map((question, index) => (
+                      <div key={question.id} className="border border-muted rounded-md p-4">
+                        <h4 className="font-medium mb-2">Question {index + 1}</h4>
+                        <div className="space-y-2">
+                          <QuestionEditor 
+                            question={question} 
+                            index={index}
+                            onChange={(updatedQuestion) => {
+                              const newQuestions = [...questions];
+                              newQuestions[index] = updatedQuestion;
+                              setQuestions(newQuestions);
+                            }}
+                            onRemove={() => {
+                              setQuestions(questions.filter(q => q.id !== question.id));
+                            }}
+                          />
+                        </div>
+                        
+                        <div className="mt-4 pt-4 border-t">
+                          <div className="flex justify-between items-center">
+                            <h5 className="text-sm font-medium">Conversation Repair</h5>
+                            <Button size="sm" variant="ghost" className="h-8 text-xs">Configure</Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Define how the voice agent should handle unclear or invalid responses
+                          </p>
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <Button className="w-full">Download PNG</Button>
-                        <Button variant="outline" className="w-full">Download SVG</Button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+          
+          {/* Closing Activity */}
+          <Card>
+            <CardHeader 
+              className="cursor-pointer flex flex-row items-center justify-between" 
+              onClick={() => toggleSection('closing')}
+            >
+              <div>
+                <CardTitle className="text-xl flex items-center">
+                  5. Closing Activity
+                </CardTitle>
+                <CardDescription>Configure how the voice agent ends the conversation</CardDescription>
+              </div>
+              {isCollapsed.closing ? <ChevronDown /> : <ChevronUp />}
+            </CardHeader>
+            
+            {!isCollapsed.closing && (
+              <CardContent className="space-y-4">
+                <div className="border rounded-md p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="border rounded-full p-3 h-12 w-12 flex items-center justify-center bg-gray-50">
+                      <Mic size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <h3 className="font-medium">Closing Message</h3>
+                        <Button size="sm" variant="ghost" className="h-8 gap-1">
+                          <Edit size={14} />
+                          Edit
+                        </Button>
                       </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Thank you for completing this form! Your responses have been recorded.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium">Knowledge Base</h3>
+                      <Button size="sm" variant="outline" className="h-8 flex items-center gap-1">
+                        <Upload size={16} />
+                        Upload Document
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Upload documents to help the voice agent answer follow-up questions
+                    </p>
+                    
+                    <div className="border border-dashed rounded-md p-6 mt-4 text-center">
+                      <div className="mx-auto w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center mb-3">
+                        <Upload size={20} className="text-muted-foreground" />
+                      </div>
+                      <p className="text-sm font-medium">Drag and drop your documents here</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Supports PDF, Word, PowerPoint, and text files (up to 10MB each)
+                      </p>
                     </div>
                   </div>
                 </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </main>
+              </CardContent>
+            )}
+          </Card>
+          
+          <div className="flex justify-end gap-3 mt-8">
+            <Button variant="outline">Cancel</Button>
+            <Button className="flex items-center gap-2">
+              <Save size={16} />
+              Save Form
+            </Button>
+          </div>
+        </div>
       </div>
-      
-      <MobileNav />
-    </div>
+    </AppLayout>
   );
 }
