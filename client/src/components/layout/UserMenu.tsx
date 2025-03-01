@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useAuthContext } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { 
@@ -20,11 +21,13 @@ import {
 import { 
   ArrowRightOnRectangleIcon, 
   UserCircleIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  QuestionMarkCircleIcon
 } from "@heroicons/react/24/outline";
 
 export default function UserMenu() {
   const { user, isAuthenticated, login, logout } = useAuthContext();
+  const [, navigate] = useLocation();
   const [loginOpen, setLoginOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -124,9 +127,20 @@ export default function UserMenu() {
           <span>Account</span>
         </DropdownMenuItem>
         
-        <DropdownMenuItem className="py-2 cursor-pointer">
+        <DropdownMenuItem 
+          onClick={() => navigate("/settings")}
+          className="py-2 cursor-pointer"
+        >
           <Cog6ToothIcon className="h-4 w-4 mr-2 text-gray-600" />
           <span>Settings</span>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem 
+          onClick={() => navigate("/help")}
+          className="py-2 cursor-pointer"
+        >
+          <QuestionMarkCircleIcon className="h-4 w-4 mr-2 text-gray-600" />
+          <span>Help & Support</span>
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />

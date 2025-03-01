@@ -46,21 +46,6 @@ function Sidebar() {
         },
       ],
     },
-    {
-      section: "Account",
-      items: [
-        {
-          name: "Settings",
-          path: "/settings",
-          icon: <Settings className="h-4 w-4 mr-3" />,
-        },
-        {
-          name: "Help & Support",
-          path: "/help",
-          icon: <HelpCircle className="h-4 w-4 mr-3" />,
-        },
-      ],
-    },
   ];
 
   return (

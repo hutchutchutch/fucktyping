@@ -1,0 +1,144 @@
+
+import React, { useState } from 'react';
+import QuestionEditor from './QuestionEditor';
+import ResponseOptions from './ResponseOptions';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { Button } from "@/components/ui/button";
+
+// src/components/form-builder/FormBuilder.tsx
+const FormBuilder = () => {
+  const [questions, setQuestions] = useState([
+    { id: 'q1', text: 'What is your name?', type: 'text' },
+    { id: 'q2', text: 'How satisfied are you with our service?', type: 'rating' },
+    { id: 'q3', text: 'Any additional comments?', type: 'textarea' }
+  ]);
+  
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(questions);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    setQuestions(items);
+  };
+  
+  const addQuestion = () => {
+    const newQuestion = {
+      id: `q${questions.length + 1}`,
+      text: 'New Question',
+      type: 'text'
+    };
+    setQuestions([...questions, newQuestion]);
+    setCurrentQuestion(newQuestion);
+  };
+  
+  const editQuestion = (id) => {
+    const question = questions.find(q => q.id === id);
+    setCurrentQuestion(question);
+  };
+  
+  const deleteQuestion = (id) => {
+    setQuestions(questions.filter(q => q.id !== id));
+    if (currentQuestion && currentQuestion.id === id) {
+      setCurrentQuestion(null);
+    }
+  };
+  
+  return (
+    <div className="flex flex-col lg:flex-row gap-6">
+      <div className="lg:w-1/2 space-y-6">
+        <div className="bg-card p-6 rounded-lg shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">Form Questions</h2>
+            <Button onClick={addQuestion} className="rounded-md">Add Question</Button>
+          </div>
+          
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="questions">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="space-y-3"
+                >
+                  {questions.map((question, index) => (
+                    <Draggable key={question.id} draggableId={question.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className="bg-muted/30 p-4 rounded-md flex justify-between items-center"
+                        >
+                          <div>
+                            <p className="font-medium">{question.text}</p>
+                            <p className="text-sm text-muted-foreground">{question.type}</p>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button variant="ghost" size="sm" onClick={() => editQuestion(question.id)}>Edit</Button>
+                            <Button variant="ghost" size="sm" onClick={() => deleteQuestion(question.id)}>Delete</Button>
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </div>
+        
+        <div className="bg-card p-6 rounded-lg shadow-sm">
+          <h2 className="text-2xl font-bold mb-4">Form Settings</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Form Title</label>
+              <input type="text" className="w-full p-2 border rounded-md" placeholder="Enter form title" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Description</label>
+              <textarea className="w-full p-2 border rounded-md h-20" placeholder="Enter form description"></textarea>
+            </div>
+            <div className="flex items-center">
+              <input type="checkbox" id="collect-email" className="mr-2" />
+              <label htmlFor="collect-email">Collect respondent email</label>
+            </div>
+            <div className="flex items-center">
+              <input type="checkbox" id="allow-multiple" className="mr-2" />
+              <label htmlFor="allow-multiple">Allow multiple submissions</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="lg:w-1/2">
+        {currentQuestion ? (
+          <div className="bg-card p-6 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-bold mb-6">Edit Question</h2>
+            <QuestionEditor question={currentQuestion} />
+            {(currentQuestion.type === 'radio' || currentQuestion.type === 'checkbox' || currentQuestion.type === 'dropdown') && (
+              <ResponseOptions />
+            )}
+          </div>
+        ) : (
+          <div className="bg-card p-6 rounded-lg shadow-sm h-64 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 11l.01-.011M17 7l.01-.011M12 7l.01-.011M7 11l.01-.011M11 17l.01-.011"/>
+                <path d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5z"/>
+              </svg>
+            </div>
+            <h3 className="font-medium">No Question Selected</h3>
+            <p className="text-sm text-muted-foreground mt-1">Select a question to edit or create a new one</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default FormBuilder;
