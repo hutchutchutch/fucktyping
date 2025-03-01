@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import VoiceRecorder from './VoiceRecorder';
-import { Check, ArrowRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Mic, MicOff, Send, Loader2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import AudioVisualizer from './AudioVisualizer';
+import { useToast } from '@/hooks/use-toast';
 
 interface VoiceInterfaceProps {
   question?: {
@@ -26,134 +26,173 @@ export default function VoiceInterface({
   isLastQuestion = false,
   isProcessing = false,
   detectedAnswer,
-  standalone = false,
+  standalone = false
 }: VoiceInterfaceProps) {
-  const [transcript, setTranscript] = useState('');
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const [hasAnswered, setHasAnswered] = useState(false);
-  const [parsedAnswer, setParsedAnswer] = useState<any>(null);
-  
-  // Reset state when the question changes
-  useEffect(() => {
-    setTranscript('');
-    setHasAnswered(false);
-    setParsedAnswer(null);
-  }, [question?.id]);
-  
-  // Handle new detected answer from parent
-  useEffect(() => {
-    if (detectedAnswer) {
-      setParsedAnswer(detectedAnswer);
-    }
-  }, [detectedAnswer]);
-  
-  const handleTranscriptionComplete = (text: string) => {
-    setTranscript(text);
-    
-    // In a real app, we would use AI to extract the answer based on
-    // the question type. For this example, just use the transcript directly
-    setParsedAnswer({
-      questionId: question?.id,
-      value: text,
-      confidence: 0.9,
-      rawTranscript: text
-    });
-  };
-  
-  const handleSubmitAnswer = async () => {
-    if (!onAnswer || !parsedAnswer) return;
-    
+  const [isRecording, setIsRecording] = useState(false);
+  const [textInput, setTextInput] = useState('');
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioData, setAudioData] = useState<number[]>([]);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const { toast } = useToast();
+  const visualizerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Set up audio recording
+  const startRecording = async () => {
     try {
-      setHasAnswered(true);
-      await onAnswer(parsedAnswer);
+      // Reset state
+      audioChunksRef.current = [];
+      setAudioData([]);
+      
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Create media recorder
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      
+      // Set up event handlers
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        setAudioBlob(audioBlob);
+        
+        // Clean up
+        if (visualizerRef.current) {
+          clearInterval(visualizerRef.current);
+          visualizerRef.current = null;
+        }
+        
+        // For demo purposes, create simple visualization data
+        setAudioData(Array(30).fill(0)); 
+        
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      // Start recording
+      mediaRecorder.start();
+      setIsRecording(true);
+      
+      // Generate dummy audio data for visualization
+      visualizerRef.current = setInterval(() => {
+        const dummyData = Array(30).fill(0).map(() => Math.random() * 0.8);
+        setAudioData(dummyData);
+      }, 100);
+      
     } catch (error) {
-      console.error('Error submitting answer:', error);
-      setHasAnswered(false);
+      console.error('Error starting recording:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not access microphone. Please check permissions.',
+        variant: 'destructive'
+      });
     }
   };
   
-  const renderQuestionInfo = () => {
-    if (!question) return null;
-    
-    return (
-      <div className="mb-4">
-        <h3 className="text-lg font-medium mb-2">{question.text}</h3>
-        
-        {question.type === 'multiple_choice' && question.options && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {question.options.map((option, index) => (
-              <Badge 
-                key={index} 
-                variant="outline"
-                className={parsedAnswer?.value === option ? 'bg-primary/20' : ''}
-              >
-                {option}
-              </Badge>
-            ))}
-          </div>
-        )}
-        
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Badge variant="outline" className="mr-2">
-            {question.type.replace('_', ' ')}
-          </Badge>
-          {question.required && <span>Required</span>}
-        </div>
-      </div>
-    );
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      // When we stop, we should have the audio blob
+      // Pass it up for processing
+      if (onAnswer && audioChunksRef.current.length > 0) {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        onAnswer(audioBlob);
+      }
+    }
   };
   
-  const renderAnswerPreview = () => {
-    if (!parsedAnswer) return null;
-    
-    return (
-      <div className="mt-4 p-3 bg-secondary/10 rounded-md">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium">Detected Answer:</h4>
-          <Badge variant="outline" className="text-xs">
-            {Math.round(parsedAnswer.confidence * 100)}% confidence
-          </Badge>
-        </div>
-        <p className="mt-2">{parsedAnswer.value}</p>
-      </div>
-    );
+  const handleTextInputSubmit = () => {
+    if (textInput.trim() && onAnswer) {
+      onAnswer(textInput.trim());
+      setTextInput('');
+    }
   };
   
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleTextInputSubmit();
+    }
+  };
+  
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (visualizerRef.current) {
+        clearInterval(visualizerRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <Card className={standalone ? 'w-full max-w-2xl mx-auto' : 'w-full'}>
-      <CardContent className="pt-6">
-        {renderQuestionInfo()}
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2">
+          <Textarea
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            placeholder="Type your answer here..."
+            className="flex-1"
+            disabled={isRecording || isProcessing}
+            onKeyDown={handleKeyDown}
+          />
+          <Button
+            onClick={handleTextInputSubmit}
+            disabled={!textInput.trim() || isRecording || isProcessing}
+            className="self-end"
+            size="icon"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+      
+      <div className="flex justify-between items-center gap-2">
+        <div className="flex-1">
+          <AudioVisualizer isRecording={isRecording} audioData={audioData} />
+        </div>
         
-        <VoiceRecorder 
-          onTranscriptionComplete={handleTranscriptionComplete} 
-          isTranscribing={isTranscribing}
-          setIsTranscribing={setIsTranscribing}
-        />
+        <Button
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={isProcessing}
+          variant={isRecording ? "destructive" : "default"}
+          className="min-w-24"
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : isRecording ? (
+            <>
+              <MicOff className="mr-2 h-4 w-4" />
+              Stop
+            </>
+          ) : (
+            <>
+              <Mic className="mr-2 h-4 w-4" />
+              Record
+            </>
+          )}
+        </Button>
         
-        {renderAnswerPreview()}
-        
-        {parsedAnswer && !hasAnswered && (
-          <div className="flex justify-end mt-4">
-            <Button
-              onClick={handleSubmitAnswer}
-              disabled={isProcessing || isTranscribing}
-              className="flex items-center"
-            >
-              {isLastQuestion ? (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  {isLastQuestion ? 'Complete' : 'Submit'}
-                </>
-              ) : (
-                <>
-                  Next
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </Button>
-          </div>
+        {isLastQuestion && standalone && (
+          <Button 
+            onClick={() => onAnswer && onAnswer('finish')}
+            disabled={isProcessing || isRecording}
+            variant="outline"
+          >
+            Finish
+          </Button>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
