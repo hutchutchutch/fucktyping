@@ -13,9 +13,9 @@ interface DigitalRainProps {
 
 export default function DigitalRain({ 
   color = '#4338ca', // default: indigo-700 color
-  speed = 0.7,  // reduced from 1.1 for slower animation
-  density = 0.05,
-  opacity = 0.25,
+  speed = 0.2,  // significantly reduced for slow motion effect
+  density = 0.03, // reduced density for slower feel
+  opacity = 0.35, // slightly increased opacity for better visibility at slow speed
   fontSize = 16,
   className = ''
 }: DigitalRainProps) {
@@ -64,8 +64,8 @@ export default function DigitalRain({
         const x = i * fontSize;
         const y = drops[i];
         
-        // Add gradient effect for depth
-        const gradientLength = 6; // How many characters to fade (increased for more visible trails)
+        // Add gradient effect for depth - longer trails for slow motion effect
+        const gradientLength = 10; // Extended trail length for slow motion effect
         
         if (y > 0) { // Only draw if visible
           // Draw leading character (brightest)
@@ -89,8 +89,8 @@ export default function DigitalRain({
           drops[i] = 0;
         }
         
-        // Increment y coordinate with variable speed
-        drops[i] += fontSize * speed * (Math.random() * 0.5 + 0.75);
+        // Increment y coordinate with reduced variability for smoother slow motion
+        drops[i] += fontSize * speed * (Math.random() * 0.3 + 0.7);
       }
       
       requestAnimationFrame(draw);
