@@ -1,4 +1,5 @@
-import { Form, Response, Question, FormWithQuestions } from "../../../shared/schema";
+import { Form, Response, Question, FormWithQuestions, Category, CategoryWithStats } from "../../../shared/schema";
+import { Star, Users, Calendar, Megaphone, Inbox } from 'lucide-react';
 
 // Simulate data from Supabase
 export const mockForms: FormWithQuestions[] = [
@@ -7,6 +8,7 @@ export const mockForms: FormWithQuestions[] = [
     title: "Customer Satisfaction",
     description: "Survey to collect feedback about our customer service",
     userId: 1,
+    categoryId: 1, // Customer Feedback
     status: 'active', // active, draft, archived
     isActive: true,
     emailNotificationEnabled: true,
@@ -54,6 +56,7 @@ export const mockForms: FormWithQuestions[] = [
     title: "Job Application",
     description: "Application form for software developer position",
     userId: 1,
+    categoryId: 2, // Human Resources
     status: 'active',
     isActive: true,
     emailNotificationEnabled: true,
@@ -107,6 +110,7 @@ export const mockForms: FormWithQuestions[] = [
     title: "Event Feedback",
     description: "Feedback form for our annual conference",
     userId: 1,
+    categoryId: 3, // Events
     status: 'active',
     isActive: true,
     emailNotificationEnabled: true,
@@ -410,4 +414,134 @@ export const getRelativeTimeString = (date: Date | null): string => {
   
   const diffInDays = Math.floor(diffInHours / 24);
   return `${diffInDays}d ago`;
+};
+
+// Mock categories data
+export const mockCategories: Category[] = [
+  {
+    id: 1,
+    userId: 1,
+    name: "Customer Feedback",
+    description: "Forms for gathering customer input and feedback",
+    color: "#3B82F6", // blue
+    icon: "star",
+    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  },
+  {
+    id: 2,
+    userId: 1,
+    name: "Human Resources",
+    description: "Forms related to HR processes and recruiting",
+    color: "#8B5CF6", // purple
+    icon: "users",
+    createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000)
+  },
+  {
+    id: 3,
+    userId: 1,
+    name: "Events",
+    description: "Forms for event planning, feedback, and management",
+    color: "#EC4899", // pink
+    icon: "calendar",
+    createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
+  },
+  {
+    id: 4,
+    userId: 1,
+    name: "Marketing",
+    description: "Forms for marketing surveys and campaigns",
+    color: "#10B981", // green
+    icon: "megaphone",
+    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
+  }
+];
+
+// Mock categories with statistics
+export const mockCategoriesWithStats: CategoryWithStats[] = [
+  {
+    id: 1,
+    userId: 1,
+    name: "Customer Feedback",
+    description: "Forms for gathering customer input and feedback",
+    color: "#3B82F6", // blue
+    icon: "star",
+    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    forms: [],
+    formCount: 2,
+    responseRate: 0.75,
+    completionRate: 0.92,
+    averageSentiment: 0.85
+  },
+  {
+    id: 2,
+    userId: 1,
+    name: "Human Resources",
+    description: "Forms related to HR processes and recruiting",
+    color: "#8B5CF6", // purple
+    icon: "users",
+    createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+    forms: [],
+    formCount: 1,
+    responseRate: 0.64,
+    completionRate: 0.78,
+    averageSentiment: 0.70
+  },
+  {
+    id: 3,
+    userId: 1,
+    name: "Events",
+    description: "Forms for event planning, feedback, and management",
+    color: "#EC4899", // pink
+    icon: "calendar",
+    createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+    forms: [],
+    formCount: 1,
+    responseRate: 0.55,
+    completionRate: 0.68,
+    averageSentiment: 0.75
+  },
+  {
+    id: 4,
+    userId: 1,
+    name: "Marketing",
+    description: "Forms for marketing surveys and campaigns",
+    color: "#10B981", // green
+    icon: "megaphone",
+    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+    forms: [],
+    formCount: 1,
+    responseRate: 0.82,
+    completionRate: 0.95,
+    averageSentiment: 0.80
+  }
+];
+
+// Helper functions for categories
+export const getCategoryIcon = (iconName: string) => {
+  switch (iconName) {
+    case 'star':
+      return Star;
+    case 'users':
+      return Users;
+    case 'calendar':
+      return Calendar;
+    case 'megaphone':
+      return Megaphone;
+    default:
+      return Inbox;
+  }
+};
+
+// Format percentage for display
+export const formatPercentage = (value: number): string => {
+  return `${Math.round(value * 100)}%`;
+};
+
+// Get sentiment label based on value
+export const getSentimentLabel = (value: number): string => {
+  if (value >= 0.8) return "Very Positive";
+  if (value >= 0.6) return "Positive";
+  if (value >= 0.4) return "Neutral";
+  if (value >= 0.2) return "Negative";
+  return "Very Negative";
 };
