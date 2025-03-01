@@ -131,6 +131,11 @@ export default function TestForm({ params }: { params?: { id: string } }) {
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   
+  // WebSocket state
+  const [wsConnected, setWsConnected] = useState<boolean>(false);
+  const [wsError, setWsError] = useState<string | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  
   // Default agent settings
   const [agentSettings, setAgentSettings] = useState({
     temperature: 0.7,
@@ -148,6 +153,70 @@ export default function TestForm({ params }: { params?: { id: string } }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+  
+  // Set up WebSocket connection
+  useEffect(() => {
+    // Create WebSocket connection
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    
+    console.log('Connecting to WebSocket:', wsUrl);
+    
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+    
+    // Connection opened
+    ws.addEventListener('open', () => {
+      console.log('WebSocket connection established');
+      setWsConnected(true);
+      setWsError(null);
+      
+      // Send initial message
+      ws.send(JSON.stringify({
+        type: 'init',
+        formId: formId || 'unknown',
+        clientId: `client-${Date.now()}`
+      }));
+    });
+    
+    // Listen for messages
+    ws.addEventListener('message', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('WebSocket message received:', data);
+        
+        // Process different message types
+        if (data.type === 'transcription') {
+          setTranscript(data.text);
+        } else if (data.type === 'aiResponse') {
+          // Handle AI response
+          // This would be implemented when the backend sends AI responses
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    });
+    
+    // Handle errors
+    ws.addEventListener('error', (error) => {
+      console.error('WebSocket error:', error);
+      setWsConnected(false);
+      setWsError('Connection error');
+    });
+    
+    // Connection closed
+    ws.addEventListener('close', () => {
+      console.log('WebSocket connection closed');
+      setWsConnected(false);
+    });
+    
+    // Clean up on component unmount
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, [formId]);
 
   // Load form data
   useEffect(() => {
@@ -472,6 +541,10 @@ Key Metrics: NPS Score, Feature Satisfaction`;
           <p className="text-muted-foreground">{form.description}</p>
         </div>
         <div className="flex items-center space-x-2">
+          <div className="flex items-center mr-2" title={wsConnected ? "WebSocket Connected" : (wsError || "WebSocket Disconnected")}>
+            <div className={`h-2 w-2 rounded-full mr-1 ${wsConnected ? 'bg-green-500' : (wsError ? 'bg-red-500' : 'bg-yellow-500')}`}></div>
+            <span className="text-xs text-muted-foreground">{wsConnected ? "Connected" : "Disconnected"}</span>
+          </div>
           <Badge variant={form.status === 'active' ? 'default' : 'secondary'}>
             {form.status === 'active' ? 'Active' : form.status === 'draft' ? 'Draft' : 'Archived'}
           </Badge>
