@@ -49,7 +49,7 @@ import {
   SlidersHorizontal
 } from 'lucide-react';
 import { mockForms, mockResponses } from '../services/mockData';
-import { FormWithQuestions, Question, Response } from '../../shared/schema';
+import { FormWithQuestions, Question, Response } from '../../../shared/schema';
 
 interface ResponseData {
   id: number;
@@ -113,6 +113,7 @@ const ResponsesPage = () => {
             options: ['multiple_choice'].includes(['multiple_choice', 'text', 'rating'][Math.floor(Math.random() * 3)]) 
               ? ['Option 1', 'Option 2', 'Option 3'] 
               : null,
+            createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000),
           }));
           
           setQuestions(dummyQuestions);
