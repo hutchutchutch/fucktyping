@@ -14,6 +14,9 @@ import { log } from "./vite";
 import * as groqService from './services/groqService';
 import * as voiceService from './services/voiceService';
 
+// Import voice form controllers
+import * as voiceFormController from './controllers/voiceFormController.js';
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
