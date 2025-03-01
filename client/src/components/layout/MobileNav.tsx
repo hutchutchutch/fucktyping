@@ -1,60 +1,72 @@
+import React from "react";
 import { useLocation } from "wouter";
-import {
-  HomeIcon,
-  ClipboardDocumentListIcon,
-  ChatBubbleLeftRightIcon,
-  Cog6ToothIcon,
-  PlusIcon
-} from "@heroicons/react/24/outline";
+import { Home, PlusSquare, List, BarChart, User, Settings } from "lucide-react";
 
 export default function MobileNav() {
   const [location, navigate] = useLocation();
 
   const isActive = (path: string) => {
-    return location === path;
+    return location === path || location.startsWith(`${path}/`);
   };
 
+  // Navigation items configuration
+  const navItems = [
+    {
+      name: "Dashboard",
+      path: "/dashboard",
+      icon: <Home className="h-5 w-5" />,
+    },
+    {
+      name: "Forms",
+      path: "/forms",
+      icon: <List className="h-5 w-5" />,
+    },
+    {
+      name: "Create",
+      path: "/forms/new",
+      icon: <PlusSquare className="h-5 w-5" />,
+      special: true
+    },
+    {
+      name: "Responses",
+      path: "/responses",
+      icon: <BarChart className="h-5 w-5" />,
+    },
+    {
+      name: "Settings",
+      path: "/settings",
+      icon: <Settings className="h-5 w-5" />,
+    }
+  ];
+
   return (
-    <div className="md:hidden border-t border-gray-200 bg-white fixed bottom-0 w-full z-50">
+    <nav className="md:hidden border-t border-gray-200 bg-white fixed bottom-0 w-full z-50">
       <div className="flex justify-around">
-        <div 
-          onClick={() => navigate("/")}
-          className={`flex flex-col items-center py-3 px-2 cursor-pointer ${isActive("/") ? "text-primary" : "text-gray-500"}`}
-        >
-          <HomeIcon className="h-5 w-5" />
-          <span className="text-xs mt-1">Home</span>
-        </div>
-        <div 
-          onClick={() => navigate("/forms")}
-          className={`flex flex-col items-center py-3 px-2 cursor-pointer ${isActive("/forms") ? "text-primary" : "text-gray-500"}`}
-        >
-          <ClipboardDocumentListIcon className="h-5 w-5" />
-          <span className="text-xs mt-1">Forms</span>
-        </div>
-        <div 
-          onClick={() => navigate("/forms/create")}
-          className="flex flex-col items-center py-3 px-2 cursor-pointer"
-        >
-          <div className="bg-primary rounded-full p-2 -mt-8 shadow-lg border-4 border-white">
-            <PlusIcon className="h-5 w-5 text-white" />
+        {navItems.map((item) => (
+          <div 
+            key={item.path}
+            onClick={() => navigate(item.path)}
+            className={`flex flex-col items-center py-3 px-2 cursor-pointer ${
+              item.special 
+                ? "" 
+                : isActive(item.path) 
+                  ? "text-primary" 
+                  : "text-gray-500"
+            }`}
+          >
+            {item.special ? (
+              <div className="bg-primary rounded-full p-2 -mt-8 shadow-lg border-4 border-white">
+                {React.cloneElement(item.icon, { className: "text-white" })}
+              </div>
+            ) : (
+              item.icon
+            )}
+            <span className={`text-xs mt-1 ${item.special ? "text-primary" : ""}`}>
+              {item.name}
+            </span>
           </div>
-          <span className="text-xs mt-1 text-primary">Create</span>
-        </div>
-        <div 
-          onClick={() => navigate("/responses")}
-          className={`flex flex-col items-center py-3 px-2 cursor-pointer ${isActive("/responses") ? "text-primary" : "text-gray-500"}`}
-        >
-          <ChatBubbleLeftRightIcon className="h-5 w-5" />
-          <span className="text-xs mt-1">Responses</span>
-        </div>
-        <div 
-          onClick={() => navigate("/settings")}
-          className={`flex flex-col items-center py-3 px-2 cursor-pointer ${isActive("/settings") ? "text-primary" : "text-gray-500"}`}
-        >
-          <Cog6ToothIcon className="h-5 w-5" />
-          <span className="text-xs mt-1">Settings</span>
-        </div>
+        ))}
       </div>
-    </div>
+    </nav>
   );
 }

@@ -1,73 +1,106 @@
 import { useLocation } from "wouter";
+import { cn } from "@/lib/utils";
+import { useAuthContext } from "../../context/AuthContext";
 import {
-  HomeIcon,
-  DocumentDuplicateIcon,
-  ChatBubbleLeftRightIcon,
-  Cog6ToothIcon,
-} from "@heroicons/react/24/outline";
+  BarChart,
+  FileEdit,
+  FileQuestion,
+  Home,
+  Settings,
+  MessageSquare
+} from "lucide-react";
 import AIChatAssistant from "./AIChatAssistant";
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();
+  const { user } = useAuthContext();
 
   const isActive = (path: string) => {
-    return location === path;
+    return location === path || location.startsWith(`${path}/`);
   };
 
+  // Navigation items organized by sections
   const navItems = [
-    { name: "Dashboard", path: "/", icon: HomeIcon },
-    { name: "My Forms", path: "/forms", icon: DocumentDuplicateIcon },
-    { name: "Responses", path: "/responses", icon: ChatBubbleLeftRightIcon },
-    { name: "Settings", path: "/settings", icon: Cog6ToothIcon },
+    {
+      section: "Main",
+      items: [
+        {
+          name: "Dashboard",
+          path: "/dashboard",
+          icon: <Home className="h-5 w-5 mr-3" />,
+        },
+        {
+          name: "Create Form",
+          path: "/forms/new",
+          icon: <FileEdit className="h-5 w-5 mr-3" />,
+        },
+        {
+          name: "My Forms",
+          path: "/forms",
+          icon: <FileQuestion className="h-5 w-5 mr-3" />,
+        },
+        {
+          name: "Responses",
+          path: "/responses",
+          icon: <BarChart className="h-5 w-5 mr-3" />,
+        },
+        {
+          name: "Settings",
+          path: "/settings",
+          icon: <Settings className="h-5 w-5 mr-3" />,
+        }
+      ],
+    },
   ];
 
   return (
-    <aside className="hidden md:block md:w-64 md:fixed md:inset-y-0 md:z-50">
-      <div className="flex flex-col h-full border-r border-gray-200 bg-white shadow-sm">
-        {/* Logo */}
-        <div 
-          className="flex items-center h-16 px-4 border-b border-gray-200 cursor-pointer" 
-          onClick={() => navigate("/")}
-        >
-          <div className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-            </svg>
-            <span className="ml-2 text-lg font-semibold text-gray-900">Voice Form Agent</span>
+    <aside className="hidden md:flex md:flex-col md:w-64 bg-white border-r border-gray-200 h-screen">
+      <div 
+        className="p-4 border-b border-gray-200 cursor-pointer"
+        onClick={() => navigate("/")}
+      >
+        <div className="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+          </svg>
+          <h1 className="text-xl font-bold font-sans">Voice Form Agent</h1>
+        </div>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto p-4">
+        {navItems.map((section) => (
+          <div key={section.section} className="mb-8">
+            <h3 className="text-xs uppercase font-semibold text-gray-500 mb-2">
+              {section.section}
+            </h3>
+            <ul>
+              {section.items.map((item) => (
+                <li key={item.path} className="mb-1">
+                  <div
+                    onClick={() => navigate(item.path)}
+                    className={cn(
+                      "flex items-center px-3 py-2 text-sm rounded-md cursor-pointer",
+                      isActive(item.path)
+                        ? "text-primary bg-primary/10 font-medium"
+                        : "text-gray-700 hover:bg-gray-100"
+                    )}
+                  >
+                    <span className={cn(
+                      isActive(item.path) ? "text-primary" : "text-gray-700"
+                    )}>
+                      {item.icon}
+                    </span>
+                    {item.name}
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-        
-        {/* Navigation section */}
-        <div className="px-4 py-3">
-          <h2 className="text-xs font-medium uppercase tracking-wider text-gray-500">Navigation</h2>
-        </div>
-        <nav className="flex-1 space-y-1 px-2">
-          {navItems.map((item) => (
-            <div
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer ${
-                isActive(item.path)
-                  ? "bg-primary text-white"
-                  : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-              }`}
-            >
-              <item.icon
-                className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                  isActive(item.path)
-                    ? "text-white"
-                    : "text-gray-500 group-hover:text-gray-500"
-                }`}
-              />
-              {item.name}
-            </div>
-          ))}
-        </nav>
-        
-        {/* AI Chat Assistant at the bottom of sidebar */}
-        <div className="mt-auto border-t border-gray-200">
-          <AIChatAssistant />
-        </div>
+        ))}
+      </nav>
+
+      <div className="mt-auto border-t border-gray-200">
+        <AIChatAssistant />
       </div>
     </aside>
   );
