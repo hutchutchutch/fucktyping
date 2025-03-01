@@ -9,22 +9,41 @@ import {
   Settings,
   MessageSquare,
   PlusCircle,
-  ChartBarIcon,
   TestTube,
   LineChart,
-  PieChart,
-  MoveRight
+  MoveRight,
+  Bot,
+  Sparkles,
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import AIChatAssistant from "./AIChatAssistant";
-import ProductTour from "@/components/onboarding/ProductTour";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import AIAssistantPopup from "@/components/ai/AIAssistantPopup";
+import SimpleTour from "@/components/onboarding/SimpleTour";
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();
   const { user } = useAuthContext();
+  const [showAssistant, setShowAssistant] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  
+  // Check if this is the first visit (in a real app, this would check user preferences)
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('hasSeenTour');
+    if (!hasSeenTour) {
+      // Wait a moment before showing the tour to let the page load
+      const timer = setTimeout(() => {
+        setShowTour(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+  
+  const completeTour = () => {
+    setShowTour(false);
+    localStorage.setItem('hasSeenTour', 'true');
+  };
 
   const isActive = (path: string) => {
     return location === path || location.startsWith(`${path}/`);
@@ -86,18 +105,21 @@ export default function Sidebar() {
     }
   ];
 
-  const startTour = () => {
-    setShowTour(true);
-  };
-
   return (
     <>
+      {/* Product Tour */}
       {showTour && (
-        <ProductTour 
-          onComplete={() => setShowTour(false)} 
-          onSkip={() => setShowTour(false)} 
+        <SimpleTour 
+          onComplete={completeTour} 
+          onSkip={completeTour} 
         />
       )}
+      
+      {/* AI Assistant Popup */}
+      <AIAssistantPopup 
+        isOpen={showAssistant} 
+        onClose={() => setShowAssistant(false)} 
+      />
       
       <aside className="hidden md:flex md:flex-col md:w-64 bg-white border-r border-gray-200 h-screen">
         <div 
@@ -221,8 +243,29 @@ export default function Sidebar() {
           </Card>
         </div>
 
-        <div className="mt-auto border-t border-gray-200">
-          <AIChatAssistant onStartTour={startTour} />
+        <div className="p-4 border-t border-gray-200 flex gap-2">
+          <Button 
+            variant="outline"
+            size="sm" 
+            className="flex-1 flex items-center justify-start gap-2 h-10 ai-assistant-trigger"
+            onClick={() => setShowAssistant(true)}
+          >
+            <Bot className="h-4 w-4 text-primary" />
+            <div className="flex flex-col items-start">
+              <span className="text-sm font-medium">AI Assistant</span>
+              <span className="text-xs text-muted-foreground">Get help</span>
+            </div>
+            <Sparkles className="h-3 w-3 text-yellow-500 ml-auto" />
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 w-10 flex-shrink-0"
+            onClick={() => setShowTour(true)}
+          >
+            <HelpCircle className="h-4 w-4" />
+          </Button>
         </div>
       </aside>
     </>
