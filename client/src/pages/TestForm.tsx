@@ -39,11 +39,12 @@ interface Message {
   originalPrompt?: string;
 }
 
-export default function TestForm() {
-  // Get form ID from URL query parameter
+export default function TestForm({ params }: { params?: { id: string } }) {
+  // Get form ID from URL params or query parameter
   const [location, navigate] = useLocation();
   const urlParams = new URLSearchParams(window.location.search);
-  const formId = urlParams.get('formId');
+  const queryFormId = urlParams.get('formId');
+  const formId = params?.id || queryFormId;
   
   // State
   const [form, setForm] = useState<FormWithQuestions | null>(null);

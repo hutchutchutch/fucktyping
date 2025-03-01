@@ -90,11 +90,13 @@ export default function Routes() {
             {(params) => <PrivateRoute component={ResponseViewer} params={params} />}
           </Route>
           
+          <Route path="/forms/draft/test/:id">
+            {(params) => <PrivateRoute component={TestForm} params={params} />}
+          </Route>
+          
           <Route path="/forms/draft/test">
             {() => <PrivateRoute component={TestForm} />}
           </Route>
-          
-
           
           {/* Fallback to 404 */}
           <Route component={NotFound} />

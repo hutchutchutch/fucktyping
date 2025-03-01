@@ -116,19 +116,19 @@ export default function EditForm() {
           
           setFormName(formData.title);
           setFormDescription(formData.description || "");
-          setCollectEmail(formData.emailNotificationEnabled);
+          setCollectEmail(formData.emailNotificationEnabled || false);
           
           // Convert API questions to the format expected by the component
           const formattedQuestions = formData.questions.map((q: Question) => ({
             id: q.id,
             text: q.text,
             type: q.type,
-            required: q.required,
+            required: q.required === null ? false : q.required,
             order: q.order,
             options: Array.isArray(q.options) ? q.options : null
-          }));
+          } as QuestionType));
           
-          setQuestions(formattedQuestions);
+          setQuestions(formattedQuestions as QuestionType[]);
         } catch (error) {
           console.error("Error loading form data:", error);
           toast({
