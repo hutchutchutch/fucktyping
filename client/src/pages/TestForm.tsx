@@ -42,15 +42,34 @@ interface Message {
 export default function TestForm({ params }: { params?: { id: string } }) {
   // Get form ID from URL params or query parameter
   const [location, navigate] = useLocation();
+  
+  // Get the ID from the route params
+  const pathParts = location.split('/');
+  let routeFormId = null;
+  
+  // Extract ID from URL path - handle multiple potential URL formats
+  if (pathParts.length > 3) {
+    if (pathParts.includes('test') && pathParts.indexOf('test') + 1 < pathParts.length) {
+      // Get the ID that comes after "test" in the URL
+      const testIndex = pathParts.indexOf('test');
+      routeFormId = pathParts[testIndex + 1];
+    }
+  }
+  
+  // Fallback to query param if not in path
   const urlParams = new URLSearchParams(window.location.search);
   const queryFormId = urlParams.get('formId');
-  const formId = params?.id || queryFormId;
+  
+  // Use the first available ID source
+  const formId = params?.id || routeFormId || queryFormId;
   
   // State
   const [form, setForm] = useState<FormWithQuestions | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   
-  console.log("TestForm component mounted with formId:", formId, "params:", params);
+  console.log("TestForm component mounted - URL path:", location);
+  console.log("Form ID sources - params:", params?.id, "route:", routeFormId, "query:", queryFormId);
+  console.log("Using form ID:", formId);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [inputText, setInputText] = useState<string>('');
   const [isTranscribing, setIsTranscribing] = useState<boolean>(false);

@@ -45,9 +45,35 @@ export default function Routes() {
                          location.includes('/forms/edit/') || 
                          location.includes('/forms/new') || 
                          location.includes('/forms/create') ||
-                         location.includes('/forms/draft/test') ||
                          (location.includes('/forms/') && location.includes('/responses'));
                          
+  // Special case for test form - exclude it from full layout
+  const isTestForm = location.includes('/forms/draft/test') || location.includes('/forms/test');
+                         
+  // For test form paths, don't include the app layout to avoid duplication
+  if (isTestForm) {
+    return (
+      <Switch>
+        <Route path="/forms/draft/test/:id">
+          {(params) => <PrivateRoute component={TestForm} params={params} />}
+        </Route>
+        
+        <Route path="/forms/draft/test">
+          {() => <PrivateRoute component={TestForm} />}
+        </Route>
+        
+        <Route path="/forms/test">
+          {() => <PrivateRoute component={TestForm} />}
+        </Route>
+
+        {/* Fallback for all other routes */}
+        <Route>
+          {() => <Redirect to="/forms" />}
+        </Route>
+      </Switch>
+    );
+  }
+  
   // For paths that need the full layout with sidebar
   if (needsFullLayout) {
     return (
@@ -90,14 +116,6 @@ export default function Routes() {
             {(params) => <PrivateRoute component={ResponseViewer} params={params} />}
           </Route>
           
-          <Route path="/forms/draft/test/:id">
-            {(params) => <PrivateRoute component={TestForm} params={params} />}
-          </Route>
-          
-          <Route path="/forms/draft/test">
-            {() => <PrivateRoute component={TestForm} />}
-          </Route>
-          
           {/* Fallback to 404 */}
           <Route component={NotFound} />
         </Switch>
@@ -114,11 +132,6 @@ export default function Routes() {
       
       {/* Public form response page */}
       <Route path="/forms/:id/respond" component={FormResponder} />
-      
-      {/* Test form interface */}
-      <Route path="/forms/test">
-        {() => <PrivateRoute component={TestForm} />}
-      </Route>
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />
