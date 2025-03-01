@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import FormBuilder from './pages/FormBuilder';
 import CreateForm from './pages/CreateForm';
+import TestForm from './pages/TestForm';
 import FormResponder from './pages/FormResponder';
 import ResponseViewer from './pages/ResponseViewer';
 import FormsPage from './pages/FormsPage';
@@ -43,7 +44,7 @@ export default function Routes() {
                          location.includes('/forms/edit/') || 
                          location.includes('/forms/new') || 
                          location.includes('/forms/create') ||
-                         location.includes('/forms/:id/responses');
+                         (location.includes('/forms/') && location.includes('/responses'));
                          
   // For paths that need the full layout with sidebar
   if (needsFullLayout) {
@@ -87,6 +88,8 @@ export default function Routes() {
             {(params) => <PrivateRoute component={ResponseViewer} params={params} />}
           </Route>
           
+
+          
           {/* Fallback to 404 */}
           <Route component={NotFound} />
         </Switch>
@@ -103,6 +106,11 @@ export default function Routes() {
       
       {/* Public form response page */}
       <Route path="/forms/:id/respond" component={FormResponder} />
+      
+      {/* Test form interface */}
+      <Route path="/forms/:id/test">
+        {(params) => <PrivateRoute component={TestForm} params={params} />}
+      </Route>
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />

@@ -82,7 +82,11 @@ export default function CreateForm() {
           <p className="text-muted-foreground">Create a new form with five simple steps</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={() => setLocation("/forms/draft/test")}
+          >
             <TestTube size={18} />
             Test Form
           </Button>
