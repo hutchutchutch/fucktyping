@@ -213,6 +213,37 @@ const FormsPage = () => {
     );
   };
 
+  // Function to get suggested form template based on category
+  const getSuggestedForm = (categoryName: string) => {
+    const suggestions: Record<string, { title: string, description: string }> = {
+      "Feedback": {
+        title: "Customer Satisfaction Survey",
+        description: "Gather actionable feedback from customers about their experience with your product or service."
+      },
+      "HR": {
+        title: "Employee Engagement Survey",
+        description: "Measure how engaged your employees are and identify areas for workplace improvement."
+      },
+      "Marketing": {
+        title: "Marketing Campaign Effectiveness",
+        description: "Evaluate the impact and reach of your latest marketing campaign."
+      },
+      "Education": {
+        title: "Course Evaluation Form",
+        description: "Collect student feedback to improve course content and teaching methods."
+      },
+      "Events": {
+        title: "Event Registration Form",
+        description: "Streamline your event registration process with this customizable form."
+      }
+    };
+    
+    return suggestions[categoryName] || {
+      title: `New ${categoryName} Form`,
+      description: `Create a form tailored to your ${categoryName.toLowerCase()} needs.`
+    };
+  };
+
   // Function to render a category section
   const renderCategorySection = (category: CategoryWithStats) => {
     // Get forms for this category
@@ -220,10 +251,13 @@ const FormsPage = () => {
     
     if (categoryForms.length === 0) return null;
     
+    // Get suggested form for this category
+    const suggestedForm = getSuggestedForm(category.name);
+    
     return (
       <div key={category.id} className="mb-10">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center">
+        <div className="mb-4">
+          <div className="flex items-center mb-2">
             <div className="p-2 rounded-md mr-3" style={{ backgroundColor: category.color + '20' }}>
               <div className="h-6 w-6" style={{ color: category.color }}>
                 {getCategoryIcon(category.icon || '')}
@@ -234,7 +268,9 @@ const FormsPage = () => {
               <p className="text-sm text-muted-foreground">{category.description}</p>
             </div>
           </div>
-          <div className="flex flex-col gap-1">
+          
+          {/* Horizontal Stats Bar */}
+          <div className="flex gap-6 mt-3 px-3 py-2 bg-muted/30 rounded-md">
             <div className="flex items-center gap-2 text-sm">
               <Percent className="h-4 w-4 text-blue-500" />
               <span className="font-medium">Response Rate:</span>
@@ -250,6 +286,11 @@ const FormsPage = () => {
               <span className="font-medium">Sentiment:</span>
               <span>{renderSentimentBadge(category.averageSentiment || 0)}</span>
             </div>
+            <div className="flex items-center gap-2 text-sm">
+              <MessageSquare className="h-4 w-4 text-indigo-500" />
+              <span className="font-medium">Forms:</span>
+              <span>{categoryForms.length}</span>
+            </div>
           </div>
         </div>
         
@@ -260,15 +301,41 @@ const FormsPage = () => {
                 {renderFormCard(form)}
               </div>
             ))}
-            <div className="min-w-[320px] max-w-[320px] flex items-center justify-center">
-              <Button 
-                variant="outline" 
-                className="border-dashed flex flex-col h-40 w-full gap-2"
-                onClick={() => navigate("/forms/new")}
-              >
-                <PlusCircle className="h-6 w-6" />
-                <span>Add New Form</span>
-              </Button>
+            <div className="min-w-[320px] max-w-[320px]">
+              <Card className="h-full hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="font-bold">{suggestedForm.title}</CardTitle>
+                      <CardDescription className="mt-1">
+                        Suggested Template
+                      </CardDescription>
+                    </div>
+                    <Badge variant="outline" className="text-xs">Template</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pb-2">
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {suggestedForm.description}
+                  </p>
+                  
+                  <div className="flex items-center mt-4 text-sm text-muted-foreground">
+                    <div className="flex items-center">
+                      <ClipboardCheck className="h-4 w-4 mr-1" />
+                      <span>Pre-built Questions</span>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="pt-2 flex flex-col gap-2">
+                  <Button 
+                    className="w-full bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
+                    onClick={() => navigate("/forms/new")}
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Generate Form
+                  </Button>
+                </CardFooter>
+              </Card>
             </div>
           </div>
         </div>
