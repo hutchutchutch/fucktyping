@@ -1,166 +1,310 @@
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Trash, Plus } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import React, { useState, useEffect } from "react";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { X, Plus, Trash, Shuffle } from "lucide-react";
 
 interface QuestionEditorProps {
-  question: {
+  question?: {
     id: string | number;
     text: string;
     type: string;
     order: number;
     options: string[] | null;
     required: boolean;
+    description?: string;
+    validation?: {
+      min: number;
+      max: number;
+    };
   };
-  index: number;
+  index?: number;
   onChange: (question: any) => void;
-  onRemove: () => void;
+  onRemove?: () => void;
+  onCancel?: () => void;
 }
 
 export default function QuestionEditor({ 
   question, 
-  index, 
+  index = 0, 
   onChange, 
-  onRemove 
+  onRemove,
+  onCancel 
 }: QuestionEditorProps) {
-  const [options, setOptions] = useState<string[]>(
-    question.options && Array.isArray(question.options) ? question.options : [""]
-  );
-
-  const handleQuestionTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({
-      ...question,
-      text: e.target.value,
-    });
-  };
-
-  const handleTypeChange = (value: string) => {
-    let newOptions = options;
-    
-    // Initialize options array if switching to multiple choice
-    if (value === "multiple_choice" && (!options || options.length === 0)) {
-      newOptions = [""];
+  // Initialize with default values or from question prop
+  const [localQuestion, setLocalQuestion] = useState({
+    id: question?.id || `q${Date.now()}`,
+    text: question?.text || "",
+    description: question?.description || "",
+    type: question?.type || "text",
+    required: question?.required !== undefined ? question?.required : false,
+    options: question?.options || ["Option 1"],
+    order: question?.order || index + 1,
+    validation: question?.validation || {
+      min: 1,
+      max: 5,
+    },
+  });
+  
+  // Update local state when parent component passes new question
+  useEffect(() => {
+    if (question) {
+      setLocalQuestion({
+        id: question.id || localQuestion.id,
+        text: question.text || "",
+        description: question.description || "",
+        type: question.type || "text",
+        required: question.required !== undefined ? question.required : localQuestion.required,
+        options: question.options || localQuestion.options,
+        order: question.order || index + 1,
+        validation: question.validation || localQuestion.validation,
+      });
     }
+  }, [question, index]);
+  
+  const handleQuestionChange = (key: string, value: any) => {
+    const updatedQuestion = {
+      ...localQuestion,
+      [key]: value,
+    };
+    setLocalQuestion(updatedQuestion);
     
-    onChange({
-      ...question,
-      type: value,
-      options: value === "multiple_choice" ? newOptions : null,
-    });
+    // Notify parent component about the changes
+    if (onChange) {
+      onChange(updatedQuestion);
+    }
   };
-
+  
   const handleOptionChange = (index: number, value: string) => {
-    const newOptions = [...options];
-    newOptions[index] = value;
-    setOptions(newOptions);
-    onChange({
-      ...question,
-      options: newOptions,
-    });
+    const updatedOptions = [...localQuestion.options];
+    updatedOptions[index] = value;
+    
+    const updatedQuestion = {
+      ...localQuestion,
+      options: updatedOptions,
+    };
+    
+    setLocalQuestion(updatedQuestion);
+    
+    // Notify parent component about the changes
+    if (onChange) {
+      onChange(updatedQuestion);
+    }
   };
-
+  
   const addOption = () => {
-    const newOptions = [...options, ""];
-    setOptions(newOptions);
-    onChange({
-      ...question,
-      options: newOptions,
-    });
+    const updatedOptions = [...localQuestion.options, `Option ${localQuestion.options.length + 1}`];
+    
+    const updatedQuestion = {
+      ...localQuestion,
+      options: updatedOptions,
+    };
+    
+    setLocalQuestion(updatedQuestion);
+    
+    // Notify parent component about the changes
+    if (onChange) {
+      onChange(updatedQuestion);
+    }
   };
-
+  
   const removeOption = (index: number) => {
-    const newOptions = options.filter((_, i) => i !== index);
-    setOptions(newOptions);
-    onChange({
-      ...question,
-      options: newOptions,
-    });
+    const updatedOptions = [...localQuestion.options];
+    updatedOptions.splice(index, 1);
+    
+    const updatedQuestion = {
+      ...localQuestion,
+      options: updatedOptions,
+    };
+    
+    setLocalQuestion(updatedQuestion);
+    
+    // Notify parent component about the changes
+    if (onChange) {
+      onChange(updatedQuestion);
+    }
   };
-
+  
+  const shuffleOptions = () => {
+    const shuffled = [...localQuestion.options].sort(() => Math.random() - 0.5);
+    
+    const updatedQuestion = {
+      ...localQuestion,
+      options: shuffled,
+    };
+    
+    setLocalQuestion(updatedQuestion);
+    
+    // Notify parent component about the changes
+    if (onChange) {
+      onChange(updatedQuestion);
+    }
+  };
+  
   return (
-    <div className="bg-gray-50 p-4 rounded-md mb-4">
-      <div className="flex justify-between items-start">
-        <div className="w-full">
-          <div className="mb-3">
-            <label className="block text-sm font-medium text-gray-700">
-              Question {index + 1}
-            </label>
-            <Input
-              value={question.text}
-              onChange={handleQuestionTextChange}
-              className="mt-1 block w-full"
-              placeholder="Enter question text"
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="block text-sm font-medium text-gray-700">
-              Question Type
-            </label>
-            <Select
-              value={question.type}
-              onValueChange={handleTypeChange}
-            >
-              <SelectTrigger className="mt-1 w-full">
-                <SelectValue placeholder="Select question type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
-                <SelectItem value="text">Text</SelectItem>
-                <SelectItem value="rating">Rating</SelectItem>
-                <SelectItem value="date">Date</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {question.type === "multiple_choice" && (
-            <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700">
-                Options
-              </label>
-              <div className="mt-1 space-y-2">
-                {options.map((option, optIndex) => (
-                  <div key={optIndex} className="flex items-center">
-                    <Input
-                      value={option}
-                      onChange={(e) => handleOptionChange(optIndex, e.target.value)}
-                      className="block w-full"
-                      placeholder={`Option ${optIndex + 1}`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeOption(optIndex)}
-                      className="ml-2 inline-flex items-center p-1 border border-transparent rounded-full text-gray-400 hover:text-gray-500"
-                    >
-                      <Trash className="h-5 w-5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={addOption}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Option
-              </Button>
-            </div>
-          )}
+    <Card className="mt-6">
+      <CardContent className="space-y-4 pt-6">
+        <div className="space-y-2">
+          <Label htmlFor="question-title">Question</Label>
+          <Input
+            id="question-title"
+            value={localQuestion.text}
+            onChange={(e) => handleQuestionChange("text", e.target.value)}
+            placeholder="Enter your question"
+          />
         </div>
-        <div className="ml-4 flex-shrink-0 flex">
-          <button
-            type="button"
-            onClick={onRemove}
-            className="inline-flex items-center p-1 border border-transparent rounded-full text-gray-400 hover:text-gray-500"
+        
+        <div className="space-y-2">
+          <Label htmlFor="question-description">Description (Optional)</Label>
+          <Textarea
+            id="question-description"
+            value={localQuestion.description || ""}
+            onChange={(e) => handleQuestionChange("description", e.target.value)}
+            placeholder="Add a description or instructions"
+            rows={2}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="question-type">Question Type</Label>
+          <Select
+            value={localQuestion.type}
+            onValueChange={(value) => handleQuestionChange("type", value)}
           >
-            <Trash className="h-6 w-6" />
-          </button>
+            <SelectTrigger id="question-type">
+              <SelectValue placeholder="Select question type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="text">Text</SelectItem>
+              <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
+              <SelectItem value="dropdown">Dropdown</SelectItem>
+              <SelectItem value="yes_no">Yes/No</SelectItem>
+              <SelectItem value="rating">Rating</SelectItem>
+              <SelectItem value="date">Date</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </div>
-    </div>
+        
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="question-required"
+            checked={localQuestion.required}
+            onCheckedChange={(checked) => handleQuestionChange("required", checked)}
+          />
+          <Label htmlFor="question-required">Required question</Label>
+        </div>
+        
+        {(localQuestion.type === "multiple_choice" || localQuestion.type === "dropdown") && (
+          <div className="space-y-3">
+            <Separator />
+            
+            <div className="flex items-center justify-between">
+              <Label>Answer Options</Label>
+              <div className="space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={shuffleOptions}
+                  className="h-8"
+                >
+                  <Shuffle size={14} className="mr-1" />
+                  Shuffle
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={addOption}
+                  className="h-8"
+                >
+                  <Plus size={14} className="mr-1" />
+                  Add Option
+                </Button>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {localQuestion.options.map((option, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <Input
+                    value={option}
+                    onChange={(e) => handleOptionChange(index, e.target.value)}
+                    placeholder={`Option ${index + 1}`}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeOption(index)}
+                    disabled={localQuestion.options.length <= 1}
+                    className="h-10 w-10 shrink-0"
+                  >
+                    <Trash size={16} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {localQuestion.type === "rating" && (
+          <div className="space-y-4">
+            <Separator />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="min-rating">Min Rating</Label>
+                <Select
+                  value={localQuestion.validation?.min?.toString() || "1"}
+                  onValueChange={(value) => 
+                    handleQuestionChange("validation", {
+                      ...localQuestion.validation,
+                      min: parseInt(value),
+                    })
+                  }
+                >
+                  <SelectTrigger id="min-rating">
+                    <SelectValue placeholder="Min" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0</SelectItem>
+                    <SelectItem value="1">1</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="max-rating">Max Rating</Label>
+                <Select
+                  value={localQuestion.validation?.max?.toString() || "5"}
+                  onValueChange={(value) => 
+                    handleQuestionChange("validation", {
+                      ...localQuestion.validation,
+                      max: parseInt(value),
+                    })
+                  }
+                >
+                  <SelectTrigger id="max-rating">
+                    <SelectValue placeholder="Max" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+      
+      <CardFooter className="border-t p-4 flex justify-end space-x-2">
+        {onRemove && <Button variant="outline" onClick={onRemove}>Delete Question</Button>}
+        {onCancel && <Button variant="outline" onClick={onCancel}>Cancel</Button>}
+        <Button onClick={() => onChange && onChange(localQuestion)}>Apply Changes</Button>
+      </CardFooter>
+    </Card>
   );
 }

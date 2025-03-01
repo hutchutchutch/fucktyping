@@ -1,107 +1,136 @@
-import { useState, useEffect, useRef } from "react";
-import { apiRequest } from "@/lib/queryClient";
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-export function useAudio() {
+interface UseAudioReturnType {
+  isRecording: boolean;
+  isPaused: boolean;
+  audioUrl: string | null;
+  audioBlob: Blob | null;
+  transcript: string;
+  audioData: number[];
+  startRecording: () => Promise<void>;
+  stopRecording: () => Promise<void>;
+  resetRecording: () => void;
+  togglePause: () => void;
+}
+
+export function useAudio(): UseAudioReturnType {
   const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState("");
+  const [isPaused, setIsPaused] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [transcript, setTranscript] = useState('');
+  const [audioData, setAudioData] = useState<number[]>([]);
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   
-  // Request microphone permissions when component mounts
-  useEffect(() => {
-    return () => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-        mediaRecorderRef.current.stop();
-      }
-    };
-  }, []);
-  
-  const startRecording = async () => {
+  // Start the recording
+  const startRecording = useCallback(async () => {
     try {
-      // Reset transcript when starting a new recording
-      setTranscript("");
-      
-      // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
       
-      // Create media recorder
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
       
-      // Handle data available event
+      chunksRef.current = [];
+      
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
+          chunksRef.current.push(event.data);
         }
       };
       
-      // Handle recording stop event
-      mediaRecorder.onstop = async () => {
-        // Create audio blob from collected chunks
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        setAudioBlob(blob);
+        setAudioUrl(url);
         
-        // In a real app, upload this blob to the speech-to-text API
-        try {
-          // Simulate sending to API
-          // In a real app, you would send the actual audioBlob
-          const response = await apiRequest("POST", "/api/voice/transcribe", {
-            audio: "base64encodedaudiodatawouldgohere",
-            // For demo, include mock text so we get a response
-            text: getMockTranscript()
-          });
-          
-          const data = await response.json();
-          if (data.transcript) {
-            setTranscript(data.transcript);
-          }
-        } catch (error) {
-          console.error("Error transcribing audio:", error);
-          // Fallback to mock transcript if API fails
-          setTranscript(getMockTranscript());
-        }
-        
-        // Close the media stream
-        stream.getTracks().forEach(track => track.stop());
+        // Simulate receiving a transcript after a short delay
+        setTimeout(() => {
+          setTranscript('This is a mock transcript for testing.');
+        }, 1000);
       };
       
-      // Start recording
       mediaRecorder.start();
       setIsRecording(true);
+      setIsPaused(false);
+      
+      // Generate mock audio data for visualization
+      const intervalId = setInterval(() => {
+        if (isRecording && !isPaused) {
+          const newData = Array(30).fill(0).map(() => Math.random() * 0.5);
+          setAudioData(newData);
+        }
+      }, 100);
+      
+      // Store the interval ID to clear it later, but don't return anything
+      // to match the Promise<void> return type
+      const cleanupFunc = () => clearInterval(intervalId);
+      setTimeout(cleanupFunc, 10000); // Auto cleanup after 10 seconds if not cleared
     } catch (error) {
-      console.error("Error starting recording:", error);
-      // If there's an error with the microphone, simulate with mock data
-      setIsRecording(true);
+      console.error('Error starting recording:', error);
     }
-  };
+  }, [isRecording, isPaused]);
   
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+  // Stop the recording
+  const stopRecording = useCallback(async () => {
+    if (mediaRecorderRef.current && streamRef.current) {
       mediaRecorderRef.current.stop();
-    } else {
-      // If we're in a simulated recording mode, generate mock transcript
-      setTranscript(getMockTranscript());
+      streamRef.current.getTracks().forEach(track => track.stop());
+      setIsRecording(false);
     }
-    setIsRecording(false);
-  };
+  }, []);
   
-  // Function to generate random mock transcripts for demo purposes
-  const getMockTranscript = () => {
-    const mockTranscripts = [
-      "I would rate my experience as excellent. The customer service representative was very helpful and resolved my issue quickly.",
-      "My experience was good overall. The product works as expected, but the setup was a bit confusing.",
-      "I think your website could be improved by making the navigation simpler and adding more product details.",
-      "The shipping was incredibly fast, and the packaging was excellent. Very satisfied with my purchase.",
-      "I'd like to see more color options available for this product."
-    ];
-    
-    return mockTranscripts[Math.floor(Math.random() * mockTranscripts.length)];
-  };
+  // Reset the recording
+  const resetRecording = useCallback(() => {
+    if (isRecording) {
+      stopRecording();
+    }
+    setAudioUrl(null);
+    setAudioBlob(null);
+    setTranscript('');
+    setAudioData([]);
+    chunksRef.current = [];
+  }, [isRecording, stopRecording]);
+  
+  // Toggle paused state
+  const togglePause = useCallback(() => {
+    if (isRecording && mediaRecorderRef.current) {
+      if (isPaused) {
+        mediaRecorderRef.current.resume();
+        setIsPaused(false);
+      } else {
+        mediaRecorderRef.current.pause();
+        setIsPaused(true);
+      }
+    }
+  }, [isRecording, isPaused]);
+  
+  // Clean up resources when component unmounts
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [audioUrl]);
   
   return {
     isRecording,
+    isPaused,
+    audioUrl,
+    audioBlob,
     transcript,
+    audioData,
     startRecording,
-    stopRecording
+    stopRecording,
+    resetRecording,
+    togglePause
   };
 }

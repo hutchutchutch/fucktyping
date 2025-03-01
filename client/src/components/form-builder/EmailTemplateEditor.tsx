@@ -1,22 +1,127 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
-// src/components/form-builder/EmailTemplateEditor.tsx
-const EmailTemplateEditor = () => {
-  const [subject, setSubject] = useState("Your form response has been received");
-  const [confirmationBody, setConfirmationBody] = useState(
+interface EmailTemplateEditorProps {
+  emailSubject?: string;
+  emailRecipients?: string;
+  emailTemplate?: string;
+  onUpdate?: (field: string, value: string) => void;
+}
+
+const EmailTemplateEditor: React.FC<EmailTemplateEditorProps> = ({ 
+  emailSubject = "", 
+  emailRecipients = "", 
+  emailTemplate = "",
+  onUpdate
+}) => {
+  // If using standalone mode (without onUpdate function)
+  const [subject, setSubject] = useState<string>("Your form response has been received");
+  const [confirmationBody, setConfirmationBody] = useState<string>(
     "Thank you for completing our form. We have received your responses and will process them shortly."
   );
-  const [notificationBody, setNotificationBody] = useState(
+  const [notificationBody, setNotificationBody] = useState<string>(
     "A new response has been submitted to your form. View the response in your dashboard."
   );
+
+  // Default template if empty
+  const defaultTemplate = `A new response has been submitted to your form.
+
+{formName}
+Submitted by: {respondent}
+Date: {submissionDate}
+
+View the full response on your dashboard.`;
 
   // Mock variables for preview
   const mockRespondent = "John Doe";
   const mockFormTitle = "Customer Feedback Survey";
   const mockDate = new Date().toLocaleDateString();
 
+  // Handling changes based on whether we're used standalone or with a parent controller
+  const handleSubjectChange = (value: string) => {
+    if (onUpdate) {
+      onUpdate('emailSubject', value);
+    } else {
+      setSubject(value);
+    }
+  };
+
+  const handleRecipientsChange = (value: string) => {
+    if (onUpdate) {
+      onUpdate('emailRecipients', value);
+    }
+  };
+
+  const handleTemplateChange = (value: string) => {
+    if (onUpdate) {
+      onUpdate('emailTemplate', value);
+    } else {
+      setNotificationBody(value);
+    }
+  };
+
+  // Determine if we're in standalone or controlled mode
+  const isControlled = !!onUpdate;
+
+  // If controlled, use simple template
+  if (isControlled) {
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Email Template</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="emailSubject" className="mb-1">Email Subject</Label>
+              <Input 
+                type="text" 
+                id="emailSubject" 
+                value={emailSubject} 
+                onChange={(e) => handleSubjectChange(e.target.value)}
+                placeholder="New form response received"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="emailRecipients" className="mb-1">Recipients</Label>
+              <Input 
+                type="text" 
+                id="emailRecipients" 
+                value={emailRecipients} 
+                onChange={(e) => handleRecipientsChange(e.target.value)}
+                placeholder="email@example.com"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Separate multiple email addresses with commas
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="emailTemplate" className="mb-1">Email Body</Label>
+              <Textarea 
+                id="emailTemplate" 
+                rows={4} 
+                value={emailTemplate || defaultTemplate}
+                onChange={(e) => handleTemplateChange(e.target.value)}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Available variables: {'{formName}'}, {'{respondent}'}, {'{submissionDate}'}, {'{responseLink}'}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Standalone version with tabs for multiple templates
   return (
     <div className="bg-card p-6 rounded-lg shadow-sm">
       <h2 className="text-2xl font-bold mb-4">Email Notifications</h2>
@@ -33,22 +138,23 @@ const EmailTemplateEditor = () => {
         <TabsContent value="confirmation">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Email Subject</label>
-              <input 
+              <Label htmlFor="confirmation-subject" className="mb-1">Email Subject</Label>
+              <Input 
+                id="confirmation-subject"
                 type="text" 
-                className="w-full p-2 border rounded-md"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-1">Email Body</label>
-              <textarea 
-                className="w-full p-2 border rounded-md h-40"
+              <Label htmlFor="confirmation-body" className="mb-1">Email Body</Label>
+              <Textarea 
+                id="confirmation-body"
+                className="h-40"
                 value={confirmationBody}
                 onChange={(e) => setConfirmationBody(e.target.value)}
-              ></textarea>
+              />
               <p className="text-xs text-muted-foreground mt-1">
                 You can use the following variables: {'{respondent}'}, {'{formTitle}'}, {'{date}'}, {'{responseLink}'}
               </p>
@@ -78,30 +184,32 @@ const EmailTemplateEditor = () => {
         <TabsContent value="notification">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Admin Email Address</label>
-              <input 
+              <Label htmlFor="admin-email" className="mb-1">Admin Email Address</Label>
+              <Input 
+                id="admin-email"
                 type="email" 
-                className="w-full p-2 border rounded-md"
                 placeholder="Enter email address"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-1">Email Subject</label>
-              <input 
+              <Label htmlFor="notification-subject" className="mb-1">Email Subject</Label>
+              <Input 
+                id="notification-subject"
                 type="text" 
-                className="w-full p-2 border rounded-md"
                 value="New form submission received"
+                readOnly
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-1">Email Body</label>
-              <textarea 
-                className="w-full p-2 border rounded-md h-40"
+              <Label htmlFor="notification-body" className="mb-1">Email Body</Label>
+              <Textarea 
+                id="notification-body"
+                className="h-40"
                 value={notificationBody}
                 onChange={(e) => setNotificationBody(e.target.value)}
-              ></textarea>
+              />
               <p className="text-xs text-muted-foreground mt-1">
                 You can use the following variables: {'{respondent}'}, {'{formTitle}'}, {'{date}'}, {'{responseLink}'}
               </p>
