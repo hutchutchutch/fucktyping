@@ -16,8 +16,35 @@ import {
   Users 
 } from "lucide-react";
 
+
+import { useEffect, useState } from "react";
+
+// Add floating animation style
+const floatingAnimation = `
+  @keyframes float {
+    0% { transform: translateY(0px) rotate(2deg); }
+    50% { transform: translateY(-10px) rotate(1deg); }
+    100% { transform: translateY(0px) rotate(2deg); }
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+`;
+
 export default function LandingPage() {
   const [, navigate] = useLocation();
+  
+  // Add the style for floating animation
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = floatingAnimation;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
   
   // Use auth context if it's available
   let isAuthenticated = false;
@@ -35,12 +62,12 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Bold Hero Section with Large Headlines */}
-      <header className="relative overflow-hidden bg-gradient-to-b from-gray-50 via-white to-transparent text-gray-900">
-        <div className="absolute inset-0 opacity-80">
-          <DigitalRain color="#4f46e5" opacity={0.3} speed={1.2} density={0.08} fontSize={18} />
+      <header className="relative overflow-hidden bg-gradient-to-b from-gray-50 via-white to-transparent text-gray-900 min-h-screen">
+        <div className="absolute inset-0 opacity-80 animate-pulse" style={{animationDuration: '10s'}}>
+          <DigitalRain color="#4f46e5" opacity={0.3} speed={0.7} density={0.08} fontSize={18} />
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10 h-[calc(100vh-100px)] flex items-center">
+          <div className="flex flex-col lg:flex-row items-center w-full">
             <div className="w-full lg:w-1/2 pr-0 lg:pr-12 mb-10 lg:mb-0">
               <div className="text-left">
                 <h2 className="text-5xl sm:text-6xl font-extrabold text-gray-900 mb-2 drop-shadow-sm">Users Hate Forms</h2>
@@ -56,13 +83,13 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="w-full lg:w-1/2">
-              <div className="bg-white p-4 rounded-lg shadow-xl transform rotate-2 opacity-85 relative max-h-[500px] overflow-hidden">
+              <div className="bg-white p-4 rounded-lg shadow-xl transform rotate-2 opacity-85 relative max-h-[450px] overflow-hidden animate-float">
                 <div className="absolute -top-3 -right-3">
                   <div className="bg-indigo-500 text-white rounded-full p-2">
                     <X className="h-6 w-6" />
                   </div>
                 </div>
-                <div className="h-[500px] overflow-y-auto scrollbar-thin">
+                <div className="h-[450px] overflow-y-auto scrollbar-thin">
                   <div className="bg-gray-100 p-3 rounded-t-md sticky top-0 z-10 shadow-md">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
