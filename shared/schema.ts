@@ -53,10 +53,25 @@ export const forms = pgTable("forms", {
   description: text("description"),
   status: text("status").default('draft'), // 'draft', 'active', 'archived'
   isActive: boolean("is_active").default(true),
+  collectEmail: boolean("collect_email").default(false),
+  
+  // Opening Activity
+  openingMessage: text("opening_message"),
+  voiceType: text("voice_type").default('neutral'), // 'male', 'female', 'neutral', 'custom'
+  
+  // Email Notification Settings
   emailNotificationEnabled: boolean("email_notification_enabled").default(false),
   emailRecipients: text("email_recipients"),
   emailSubject: text("email_subject"),
   emailTemplate: text("email_template"),
+  
+  // Closing Activity
+  closingMessage: text("closing_message"),
+  knowledgeBase: jsonb("knowledge_base"), // For storing document references/paths
+  
+  // Dynamic Variables
+  dynamicVariables: jsonb("dynamic_variables"),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -68,10 +83,24 @@ export const insertFormSchema = createInsertSchema(forms).pick({
   description: true,
   status: true,
   isActive: true,
+  collectEmail: true,
+  
+  // Opening Activity
+  openingMessage: true,
+  voiceType: true,
+  
+  // Email notification
   emailNotificationEnabled: true,
   emailRecipients: true,
   emailSubject: true,
   emailTemplate: true,
+  
+  // Closing Activity
+  closingMessage: true,
+  knowledgeBase: true,
+  
+  // Dynamic Variables
+  dynamicVariables: true,
 });
 
 // Question schema
@@ -83,6 +112,9 @@ export const questions = pgTable("questions", {
   order: integer("order").notNull(),
   options: jsonb("options"), // For multiple choice questions
   required: boolean("required").default(true),
+  description: text("description"), // Optional description/instructions for the question
+  validation: jsonb("validation"), // For validation rules like min/max for ratings
+  conversationRepair: jsonb("conversation_repair"), // For handling unclear responses
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -93,6 +125,9 @@ export const insertQuestionSchema = createInsertSchema(questions).pick({
   order: true,
   options: true,
   required: true,
+  description: true,
+  validation: true,
+  conversationRepair: true,
 });
 
 export const questionTypeEnum = z.enum(['multiple_choice', 'text', 'rating', 'date']);
@@ -103,6 +138,12 @@ export const responses = pgTable("responses", {
   formId: integer("form_id").notNull().references(() => forms.id, { onDelete: "cascade" }),
   respondentName: text("respondent_name"),
   respondentEmail: text("respondent_email"),
+  status: text("status").default('complete'), // 'complete', 'partial'
+  starred: boolean("starred").default(false),
+  sentiment: integer("sentiment"), // Sentiment score from -100 to 100
+  ipAddress: text("ip_address"), // To track unique respondents
+  device: text("device"), // Device information
+  browser: text("browser"), // Browser information
   completedAt: timestamp("completed_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -111,6 +152,12 @@ export const insertResponseSchema = createInsertSchema(responses).pick({
   formId: true,
   respondentName: true,
   respondentEmail: true,
+  status: true,
+  starred: true,
+  sentiment: true,
+  ipAddress: true,
+  device: true,
+  browser: true,
 });
 
 // Answer schema
