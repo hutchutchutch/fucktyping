@@ -38,7 +38,7 @@ export default function VoiceRecorder({
   useEffect(() => {
     // Set up the WebSocket response handlers
     wsService.connect({
-      onTranscription: (data) => {
+      onTranscription: (data: { text: string; confidence: number; processingTime: number; formId?: number; questionId?: number }) => {
         console.log('Received transcription from WebSocket:', data);
         transcriptReceivedRef.current = true;
         
@@ -61,8 +61,8 @@ export default function VoiceRecorder({
           questionId: data.questionId
         });
       },
-      onError: (error) => {
-        console.error('WebSocket error during voice recording:', error);
+      onError: (errorEvent: Event) => {
+        console.error('WebSocket error during voice recording:', errorEvent);
         
         // Clear any fallback timeout to avoid duplication
         if (timeoutIdRef.current) {

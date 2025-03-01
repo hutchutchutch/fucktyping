@@ -281,7 +281,7 @@ export class WebSocketService {
       console.log('Received WebSocket message:', data.type);
 
       // Store connection ID if this is a connection message
-      if ('connectionId' in data) {
+      if ('connectionId' in data && typeof data.connectionId === 'string') {
         this.connectionId = data.connectionId;
       }
 

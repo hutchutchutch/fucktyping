@@ -104,7 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }));
             }
-          } catch (error) {
+          } catch (error: any) {
             console.error('Error generating response:', error);
             
             // Send error message
@@ -113,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 type: 'error',
                 messageId: Date.now().toString(),
                 error: 'Failed to generate response',
-                details: error.message
+                details: error.message || 'Unknown error'
               }));
             }
           }
@@ -134,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 questionId: data.questionId
               }));
             }
-          } catch (error) {
+          } catch (error: any) {
             console.error('Error transcribing audio:', error);
             
             if (ws.readyState === WebSocket.OPEN) {
@@ -142,7 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 type: 'error',
                 messageId: Date.now().toString(),
                 error: 'Failed to transcribe audio',
-                details: error.message
+                details: error.message || 'Unknown error'
               }));
             }
           }
@@ -161,14 +161,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }));
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error processing WebSocket message:', error);
         
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({
             type: 'error',
             error: 'Failed to process message',
-            details: error.message
+            details: error.message || 'Unknown error'
           }));
         }
       }
