@@ -25,10 +25,30 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const formStatusEnum = z.enum(['draft', 'active', 'archived']);
 export type FormStatus = z.infer<typeof formStatusEnum>;
 
+// Categories schema
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  color: text("color").default('#6366F1'), // Default color for the category
+  icon: text("icon"), // Icon name or identifier
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertCategorySchema = createInsertSchema(categories).pick({
+  userId: true,
+  name: true,
+  description: true,
+  color: true,
+  icon: true,
+});
+
 // Form schema
 export const forms = pgTable("forms", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
+  categoryId: integer("category_id").references(() => categories.id),
   title: text("title").notNull(),
   description: text("description"),
   status: text("status").default('draft'), // 'draft', 'active', 'archived'
@@ -43,6 +63,7 @@ export const forms = pgTable("forms", {
 
 export const insertFormSchema = createInsertSchema(forms).pick({
   userId: true,
+  categoryId: true,
   title: true,
   description: true,
   status: true,
@@ -142,6 +163,9 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
+export type Category = typeof categories.$inferSelect;
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+
 export type Form = typeof forms.$inferSelect;
 export type InsertForm = z.infer<typeof insertFormSchema>;
 
@@ -164,6 +188,16 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type FormWithQuestions = Form & { 
   questions: Question[]; 
   responseCount?: number;
+  category?: Category;
+};
+
+// Extended Category types
+export type CategoryWithStats = Category & {
+  forms: Form[];
+  formCount: number;
+  responseRate: number;
+  completionRate: number;
+  averageSentiment?: number;
 };
 
 // Response with answers

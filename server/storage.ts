@@ -1,8 +1,8 @@
 import {
-  User, InsertUser, Form, InsertForm, Question, InsertQuestion,
-  Response, InsertResponse, Answer, InsertAnswer, Conversation,
-  InsertConversation, Message, InsertMessage, FormWithQuestions,
-  ResponseWithAnswers
+  User, InsertUser, Category, InsertCategory, Form, InsertForm, 
+  Question, InsertQuestion, Response, InsertResponse, Answer, 
+  InsertAnswer, Conversation, InsertConversation, Message, 
+  InsertMessage, FormWithQuestions, ResponseWithAnswers, CategoryWithStats
 } from "@shared/schema";
 
 export interface IStorage {
@@ -11,10 +11,20 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
+  // Category operations
+  getCategory(id: number): Promise<Category | undefined>;
+  getCategoriesByUserId(userId: number): Promise<Category[]>;
+  getCategoryWithStats(id: number): Promise<CategoryWithStats | undefined>;
+  getAllCategoriesWithStats(userId: number): Promise<CategoryWithStats[]>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: number): Promise<boolean>;
+  
   // Form operations
   getForm(id: number): Promise<Form | undefined>;
   getFormWithQuestions(id: number): Promise<FormWithQuestions | undefined>;
   getFormsByUserId(userId: number): Promise<Form[]>;
+  getFormsByCategoryId(categoryId: number): Promise<Form[]>;
   createForm(form: InsertForm): Promise<Form>;
   updateForm(id: number, form: Partial<InsertForm>): Promise<Form | undefined>;
   deleteForm(id: number): Promise<boolean>;
@@ -51,6 +61,7 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<number, User> = new Map();
+  private categories: Map<number, Category> = new Map();
   private forms: Map<number, Form> = new Map();
   private questions: Map<number, Question> = new Map();
   private responses: Map<number, Response> = new Map();
@@ -59,6 +70,7 @@ export class MemStorage implements IStorage {
   private messages: Map<number, Message> = new Map();
   
   private userIdCounter = 1;
+  private categoryIdCounter = 1;
   private formIdCounter = 1;
   private questionIdCounter = 1;
   private responseIdCounter = 1;
@@ -89,6 +101,94 @@ export class MemStorage implements IStorage {
     return user;
   }
   
+  // Category operations
+  async getCategory(id: number): Promise<Category | undefined> {
+    return this.categories.get(id);
+  }
+  
+  async getCategoriesByUserId(userId: number): Promise<Category[]> {
+    return Array.from(this.categories.values())
+      .filter(category => category.userId === userId);
+  }
+  
+  async getCategoryWithStats(id: number): Promise<CategoryWithStats | undefined> {
+    const category = this.categories.get(id);
+    if (!category) return undefined;
+    
+    const forms = await this.getFormsByCategoryId(id);
+    
+    // Calculate stats
+    const formCount = forms.length;
+    let responseCount = 0;
+    let completedResponseCount = 0;
+    
+    for (const form of forms) {
+      const responses = await this.getResponsesByFormId(form.id);
+      responseCount += responses.length;
+      completedResponseCount += responses.filter(r => r.completedAt !== null).length;
+    }
+    
+    const responseRate = formCount > 0 ? responseCount / formCount : 0;
+    const completionRate = responseCount > 0 ? completedResponseCount / responseCount : 0;
+    
+    return {
+      ...category,
+      forms,
+      formCount,
+      responseRate,
+      completionRate,
+      averageSentiment: 0.75, // Mock value for sentiment analysis
+    };
+  }
+  
+  async getAllCategoriesWithStats(userId: number): Promise<CategoryWithStats[]> {
+    const categories = await this.getCategoriesByUserId(userId);
+    const result: CategoryWithStats[] = [];
+    
+    for (const category of categories) {
+      const categoryWithStats = await this.getCategoryWithStats(category.id);
+      if (categoryWithStats) {
+        result.push(categoryWithStats);
+      }
+    }
+    
+    return result;
+  }
+  
+  async createCategory(insertCategory: InsertCategory): Promise<Category> {
+    const id = this.categoryIdCounter++;
+    const timestamp = new Date();
+    const category: Category = {
+      id,
+      ...insertCategory,
+      createdAt: timestamp
+    };
+    this.categories.set(id, category);
+    return category;
+  }
+  
+  async updateCategory(id: number, categoryUpdate: Partial<InsertCategory>): Promise<Category | undefined> {
+    const category = this.categories.get(id);
+    if (!category) return undefined;
+    
+    const updatedCategory: Category = {
+      ...category,
+      ...categoryUpdate
+    };
+    this.categories.set(id, updatedCategory);
+    return updatedCategory;
+  }
+  
+  async deleteCategory(id: number): Promise<boolean> {
+    // First, update all forms in this category to have no category
+    const forms = await this.getFormsByCategoryId(id);
+    for (const form of forms) {
+      await this.updateForm(form.id, { categoryId: null });
+    }
+    
+    return this.categories.delete(id);
+  }
+  
   // Form operations
   async getForm(id: number): Promise<Form | undefined> {
     return this.forms.get(id);
@@ -108,6 +208,11 @@ export class MemStorage implements IStorage {
   async getFormsByUserId(userId: number): Promise<Form[]> {
     return Array.from(this.forms.values())
       .filter(form => form.userId === userId);
+  }
+  
+  async getFormsByCategoryId(categoryId: number): Promise<Form[]> {
+    return Array.from(this.forms.values())
+      .filter(form => form.categoryId === categoryId);
   }
   
   async createForm(insertForm: InsertForm): Promise<Form> {
