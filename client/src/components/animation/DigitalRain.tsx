@@ -13,7 +13,7 @@ interface DigitalRainProps {
 
 export default function DigitalRain({ 
   color = '#4338ca', // default: indigo-700 color
-  speed = 1.1,
+  speed = 0.7,  // reduced from 1.1 for slower animation
   density = 0.05,
   opacity = 0.25,
   fontSize = 16,

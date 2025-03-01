@@ -35,7 +35,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Bold Hero Section with Large Headlines */}
-      <header className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white text-gray-900">
+      <header className="relative overflow-hidden bg-gradient-to-b from-gray-50 via-white to-transparent text-gray-900">
         <div className="absolute inset-0 opacity-80">
           <DigitalRain color="#4f46e5" opacity={0.3} speed={1.2} density={0.08} fontSize={18} />
         </div>
@@ -46,7 +46,7 @@ export default function LandingPage() {
                 <h2 className="text-5xl sm:text-6xl font-extrabold text-gray-900 mb-2 drop-shadow-sm">Users Hate Forms</h2>
                 <h3 className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-4 drop-shadow-sm">Leads Slip Away</h3>
                 <h1 className="text-7xl sm:text-8xl md:text-9xl font-black tracking-tight mt-2 mb-10 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600 drop-shadow">
-                  fck typing
+                  fuck typing
                 </h1>
                 <Link href="/forms/new">
                   <Button size="lg" className="px-8 py-6 text-xl font-bold bg-indigo-600 hover:bg-indigo-700 shadow-xl rounded-xl">
@@ -227,6 +227,7 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
       </header>
 
       {/* Pain Points Section */}
