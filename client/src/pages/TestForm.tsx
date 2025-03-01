@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { 
   Card, 
@@ -6,18 +6,59 @@ import {
   CardDescription, 
   CardFooter, 
   CardHeader, 
-  CardTitle 
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Loader2, Mic, MicOff, Send, CornerDownLeft } from 'lucide-react';
+  CardTitle
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { 
+  Loader2, 
+  Mic, 
+  MicOff, 
+  Send, 
+  CornerDownLeft, 
+  Settings, 
+  ChevronRight, 
+  ChevronDown, 
+  Edit, 
+  Clock, 
+  Zap, 
+  BarChart, 
+  VolumeX,
+  Volume2,
+  Sliders
+} from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger 
+} from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { mockForms } from '../services/mockData';
 import { FormWithQuestions } from '@shared/schema';
 import VoiceRecorder from '../components/form-responder/VoiceRecorder';
 import AudioVisualizer from '../components/form-responder/AudioVisualizer';
 import Transcript from '../components/form-responder/Transcript';
-// TestForm will be wrapped by AppLayout through routes.jsx
 
 interface Message {
   id: string;
@@ -29,6 +70,7 @@ interface Message {
     latency: number;
     processingTime: number;
     tokens: number;
+    audioLength?: number;
   };
   promptSettings?: {
     temperature: number;
@@ -37,11 +79,20 @@ interface Message {
     speed: number;
   };
   originalPrompt?: string;
+  context?: string;
 }
+
+// Voice options
+const VOICE_OPTIONS = [
+  { id: 'male', name: 'Male (Adam)' },
+  { id: 'female', name: 'Female (Emma)' },
+  { id: 'neutral', name: 'Neutral (Sam)' }
+];
 
 export default function TestForm({ params }: { params?: { id: string } }) {
   // Get form ID from URL params or query parameter
   const [location, navigate] = useLocation();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get the ID from the route params
   const pathParts = location.split('/');
@@ -66,10 +117,6 @@ export default function TestForm({ params }: { params?: { id: string } }) {
   // State
   const [form, setForm] = useState<FormWithQuestions | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  
-  console.log("TestForm component mounted - URL path:", location);
-  console.log("Form ID sources - params:", params?.id, "route:", routeFormId, "query:", queryFormId);
-  console.log("Using form ID:", formId);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [inputText, setInputText] = useState<string>('');
   const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
@@ -78,17 +125,34 @@ export default function TestForm({ params }: { params?: { id: string } }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [formStarted, setFormStarted] = useState<boolean>(false);
   const [formCompleted, setFormCompleted] = useState<boolean>(false);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  
+  // Default agent settings
+  const [agentSettings, setAgentSettings] = useState({
+    temperature: 0.7,
+    maxTokens: 150,
+    voice: 'female',
+    speed: 1.0,
+    useCustomPrompts: false,
+    customOpeningPrompt: '',
+    customQuestionPrompt: '',
+    customClosingPrompt: '',
+    includeFormContext: true
+  });
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Load form data
   useEffect(() => {
-    console.log("Loading form data with formId:", formId);
-    console.log("Available forms:", mockForms);
-    
     if (formId) {
       try {
         // Fetch form data
         const id = parseInt(formId, 10);
-        console.log("Looking for form with ID:", id);
         
         // Ensure mockForms is available and has data
         if (!mockForms || mockForms.length === 0) {
@@ -98,18 +162,37 @@ export default function TestForm({ params }: { params?: { id: string } }) {
         }
         
         const foundForm = mockForms.find(f => f.id === id);
-        console.log("Found form:", foundForm);
         
         if (foundForm) {
           setForm(foundForm);
           
-          // Create opening message
+          // Sample form context for the background
+          const formContext = `Form Type: ${foundForm.title} Survey
+Categories: Customer Feedback, Product Research
+Target Audience: Current Customers
+Goals: Measure satisfaction, identify improvement areas
+Key Metrics: NPS Score, Feature Satisfaction`;
+          
+          // Create opening message with stats for demo
           const initialMessage: Message = {
             id: 'opening',
             sender: 'agent',
             text: `Welcome to the "${foundForm.title}" form. ${foundForm.description || ''} This form contains ${foundForm.questions?.length || 0} questions. Would you like to begin?`,
             type: 'opening',
-            timestamp: new Date()
+            timestamp: new Date(),
+            stats: {
+              latency: 125, // ms
+              processingTime: 250, // ms
+              tokens: 42
+            },
+            promptSettings: {
+              temperature: 0.7,
+              maxTokens: 150,
+              voice: 'female',
+              speed: 1.0
+            },
+            originalPrompt: `You are a helpful voice assistant conducting a survey about "${foundForm.title}". Begin by greeting the user, briefly explaining the purpose, and asking if they would like to start.`,
+            context: formContext
           };
           
           setMessages([initialMessage]);
@@ -136,13 +219,26 @@ export default function TestForm({ params }: { params?: { id: string } }) {
     // Get the first question
     const firstQuestion = form.questions[0];
     
-    // Add question message
+    // Add question message with stats
     const questionMessage: Message = {
       id: `question-${firstQuestion.id}`,
       sender: 'agent',
       text: firstQuestion.text,
       type: 'question',
-      timestamp: new Date()
+      timestamp: new Date(),
+      stats: {
+        latency: 78, // ms
+        processingTime: 189, // ms
+        tokens: 36
+      },
+      promptSettings: {
+        temperature: agentSettings.temperature,
+        maxTokens: agentSettings.maxTokens,
+        voice: agentSettings.voice,
+        speed: agentSettings.speed
+      },
+      originalPrompt: `Ask the user the following question: "${firstQuestion.text}". Wait for their response before proceeding.`,
+      context: agentSettings.includeFormContext ? `Question Type: ${firstQuestion.type}\nRequired: ${firstQuestion.required ? 'Yes' : 'No'}\nOrder: ${firstQuestion.order}` : undefined
     };
     
     setMessages(prev => [...prev, questionMessage]);
@@ -163,14 +259,20 @@ export default function TestForm({ params }: { params?: { id: string } }) {
     
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
+    setTranscript('');
     
     // Move to next question or end the form
     const nextIndex = currentQuestionIndex + 1;
     
     if (nextIndex < form.questions.length) {
-      // Add next question
+      // Add next question with simulated stats
       setTimeout(() => {
         const nextQuestion = form.questions[nextIndex];
+        
+        // Random KPI values for demo purposes
+        const latency = 50 + Math.floor(Math.random() * 100);
+        const processingTime = 150 + Math.floor(Math.random() * 200);
+        const tokens = 30 + Math.floor(Math.random() * 20);
         
         // Add question message
         const questionMessage: Message = {
@@ -178,7 +280,20 @@ export default function TestForm({ params }: { params?: { id: string } }) {
           sender: 'agent',
           text: nextQuestion.text,
           type: 'question',
-          timestamp: new Date()
+          timestamp: new Date(),
+          stats: {
+            latency,
+            processingTime,
+            tokens
+          },
+          promptSettings: {
+            temperature: agentSettings.temperature,
+            maxTokens: agentSettings.maxTokens,
+            voice: agentSettings.voice,
+            speed: agentSettings.speed
+          },
+          originalPrompt: `Ask the user the following question: "${nextQuestion.text}". Wait for their response before proceeding.`,
+          context: agentSettings.includeFormContext ? `Question Type: ${nextQuestion.type}\nRequired: ${nextQuestion.required ? 'Yes' : 'No'}\nOrder: ${nextQuestion.order}` : undefined
         };
         
         setMessages(prev => [...prev, questionMessage]);
@@ -187,12 +302,30 @@ export default function TestForm({ params }: { params?: { id: string } }) {
     } else {
       // Form is completed
       setTimeout(() => {
+        // Random KPI values for demo purposes
+        const latency = 50 + Math.floor(Math.random() * 100);
+        const processingTime = 150 + Math.floor(Math.random() * 200);
+        const tokens = 40 + Math.floor(Math.random() * 30);
+        
         const closingMessage: Message = {
           id: 'closing',
           sender: 'agent',
           text: `Thank you for completing the "${form.title}" form. Your responses have been recorded.`,
           type: 'closing',
-          timestamp: new Date()
+          timestamp: new Date(),
+          stats: {
+            latency,
+            processingTime,
+            tokens
+          },
+          promptSettings: {
+            temperature: agentSettings.temperature,
+            maxTokens: agentSettings.maxTokens,
+            voice: agentSettings.voice,
+            speed: agentSettings.speed
+          },
+          originalPrompt: `Thank the user for completing the survey, inform them that their responses have been recorded, and end the conversation politely.`,
+          context: agentSettings.includeFormContext ? `Form completion statistics:\nCompletion Time: ${Math.floor(Math.random() * 5) + 1} minutes\nQuestions Answered: ${form.questions.length}` : undefined
         };
         
         setMessages(prev => [...prev, closingMessage]);
@@ -211,7 +344,20 @@ export default function TestForm({ params }: { params?: { id: string } }) {
   const handleBackToForms = () => {
     navigate('/forms');
   };
-
+  
+  // Update agent settings
+  const updateAgentSettings = (setting: string, value: any) => {
+    setAgentSettings(prev => ({
+      ...prev,
+      [setting]: value
+    }));
+  };
+  
+  // Toggle message details
+  const toggleMessageDetails = (messageId: string) => {
+    setSelectedMessageId(selectedMessageId === messageId ? null : messageId);
+  };
+  
   // Render loading state
   if (loading) {
     return (
@@ -234,19 +380,201 @@ export default function TestForm({ params }: { params?: { id: string } }) {
   }
 
   return (
-      <div className="max-w-3xl">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <Button variant="outline" size="sm" onClick={handleBackToForms}>
-              ← Back to Forms
-            </Button>
-            <h1 className="text-2xl font-bold mt-2">{form.title}</h1>
-            <p className="text-muted-foreground">{form.description}</p>
-          </div>
+    <div className="mx-auto max-w-4xl mb-12">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <Button variant="outline" size="sm" onClick={handleBackToForms}>
+            ← Back to Forms
+          </Button>
+          <h1 className="text-2xl font-bold mt-2">{form.title}</h1>
+          <p className="text-muted-foreground">{form.description}</p>
+        </div>
+        <div className="flex items-center space-x-2">
           <Badge variant={form.status === 'active' ? 'default' : 'secondary'}>
             {form.status === 'active' ? 'Active' : form.status === 'draft' ? 'Draft' : 'Archived'}
           </Badge>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Agent Settings
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => setIsMuted(!isMuted)}
+          >
+            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </Button>
         </div>
+      </div>
+
+      {showSettings && (
+        <Card className="mb-6 border-dashed border-primary/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center">
+              <Sliders className="h-5 w-5 mr-2" />
+              Voice Agent Settings
+            </CardTitle>
+            <CardDescription>
+              Configure how the voice agent behaves during form testing
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="voice">
+              <TabsList className="mb-4">
+                <TabsTrigger value="voice">Voice & Tone</TabsTrigger>
+                <TabsTrigger value="prompts">Prompts</TabsTrigger>
+                <TabsTrigger value="context">Context</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="voice">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="voice-select">Voice</Label>
+                      <select 
+                        id="voice-select"
+                        className="w-full p-2 rounded-md border border-input bg-background"
+                        value={agentSettings.voice}
+                        onChange={(e) => updateAgentSettings('voice', e.target.value)}
+                      >
+                        {VOICE_OPTIONS.map(voice => (
+                          <option key={voice.id} value={voice.id}>
+                            {voice.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between mb-2">
+                        <Label htmlFor="speed-slider">Speech Speed ({agentSettings.speed}x)</Label>
+                      </div>
+                      <Slider
+                        id="speed-slider"
+                        min={0.5}
+                        max={2}
+                        step={0.1}
+                        value={[agentSettings.speed]}
+                        onValueChange={(value) => updateAgentSettings('speed', value[0])}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between mb-2">
+                        <Label htmlFor="temperature-slider">Temperature ({agentSettings.temperature})</Label>
+                      </div>
+                      <Slider
+                        id="temperature-slider"
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        value={[agentSettings.temperature]}
+                        onValueChange={(value) => updateAgentSettings('temperature', value[0])}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Lower values are more focused, higher values are more creative
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between mb-2">
+                        <Label htmlFor="tokens-slider">Max Tokens ({agentSettings.maxTokens})</Label>
+                      </div>
+                      <Slider
+                        id="tokens-slider"
+                        min={50}
+                        max={500}
+                        step={10}
+                        value={[agentSettings.maxTokens]}
+                        onValueChange={(value) => updateAgentSettings('maxTokens', value[0])}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="prompts">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="custom-prompts" 
+                      checked={agentSettings.useCustomPrompts}
+                      onCheckedChange={(checked) => updateAgentSettings('useCustomPrompts', checked)}
+                    />
+                    <Label htmlFor="custom-prompts">Use custom prompts</Label>
+                  </div>
+                  
+                  {agentSettings.useCustomPrompts && (
+                    <div className="space-y-4 mt-4">
+                      <div>
+                        <Label htmlFor="opening-prompt">Opening Prompt</Label>
+                        <Textarea 
+                          id="opening-prompt"
+                          placeholder="Enter custom opening prompt..."
+                          className="mt-1"
+                          value={agentSettings.customOpeningPrompt}
+                          onChange={(e) => updateAgentSettings('customOpeningPrompt', e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="question-prompt">Question Prompt Template</Label>
+                        <Textarea 
+                          id="question-prompt"
+                          placeholder="Enter custom question prompt template... Use {{question}} to insert the actual question."
+                          className="mt-1"
+                          value={agentSettings.customQuestionPrompt}
+                          onChange={(e) => updateAgentSettings('customQuestionPrompt', e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="closing-prompt">Closing Prompt</Label>
+                        <Textarea 
+                          id="closing-prompt"
+                          placeholder="Enter custom closing prompt..."
+                          className="mt-1"
+                          value={agentSettings.customClosingPrompt}
+                          onChange={(e) => updateAgentSettings('customClosingPrompt', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="context">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="include-context" 
+                      checked={agentSettings.includeFormContext}
+                      onCheckedChange={(checked) => updateAgentSettings('includeFormContext', checked)}
+                    />
+                    <Label htmlFor="include-context">Include form context in prompts</Label>
+                  </div>
+                  
+                  <div className="text-sm text-muted-foreground">
+                    <p>When enabled, the agent will have access to additional context about the form and questions:</p>
+                    <ul className="list-disc ml-5 mt-2">
+                      <li>Form type and purpose</li>
+                      <li>Question type (multiple choice, text, etc.)</li>
+                      <li>Whether questions are required</li>
+                      <li>Question order and placement in the form</li>
+                    </ul>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="mb-6">
         <CardHeader>
@@ -256,35 +584,135 @@ export default function TestForm({ params }: { params?: { id: string } }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col space-y-4">
-            {messages.map((message) => (
+          <div className="flex flex-col space-y-4 mb-4">
+            {messages.map((message, index) => (
               <div
                 key={message.id}
-                className={`flex ${
-                  message.sender === 'agent' ? 'justify-start' : 'justify-end'
+                className={`flex flex-col ${
+                  message.sender === 'agent' ? 'items-start' : 'items-end'
                 }`}
               >
-                <div
-                  className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                    message.sender === 'agent'
-                      ? 'bg-secondary text-secondary-foreground'
-                      : 'bg-primary text-primary-foreground'
-                  }`}
-                >
-                  <p>{message.text}</p>
-                  {message.type === 'question' && (
-                    <div className="text-xs mt-1 opacity-70">
-                      Question {currentQuestionIndex + 1} of {form.questions?.length}
+                {/* Agent KPI Stats (for agent messages only) */}
+                {message.sender === 'agent' && message.stats && (
+                  <div className="flex space-x-4 text-xs text-muted-foreground px-2 mb-1">
+                    <div className="flex items-center">
+                      <Clock className="h-3 w-3 mr-1" />
+                      <span>Latency: {message.stats.latency}ms</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Zap className="h-3 w-3 mr-1" />
+                      <span>Processing: {message.stats.processingTime}ms</span>
+                    </div>
+                    <div className="flex items-center">
+                      <BarChart className="h-3 w-3 mr-1" />
+                      <span>Tokens: {message.stats.tokens}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Message Bubble Container */}
+                <div className="flex">
+                  {/* Message Content */}
+                  <div
+                    className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                      message.sender === 'agent'
+                        ? 'bg-secondary text-secondary-foreground'
+                        : 'bg-primary text-primary-foreground'
+                    }`}
+                  >
+                    <p>{message.text}</p>
+                    {message.type === 'question' && (
+                      <div className="text-xs mt-1 opacity-70">
+                        Question {currentQuestionIndex + 1} of {form.questions?.length}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Settings/Edit button for agent messages */}
+                  {message.sender === 'agent' && (
+                    <div className="ml-2 flex flex-col justify-start mt-1">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                              onClick={() => toggleMessageDetails(message.id)}
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>View prompt settings</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   )}
                 </div>
+                
+                {/* Expandable message details */}
+                {message.sender === 'agent' && selectedMessageId === message.id && (
+                  <div className="mt-2 mb-4 ml-2 max-w-[90%] bg-muted/50 rounded-md border border-border p-3 text-sm">
+                    <Tabs defaultValue="prompt">
+                      <TabsList className="mb-2">
+                        <TabsTrigger value="prompt">Prompt</TabsTrigger>
+                        <TabsTrigger value="settings">Settings</TabsTrigger>
+                        {message.context && <TabsTrigger value="context">Context</TabsTrigger>}
+                      </TabsList>
+                      
+                      <TabsContent value="prompt">
+                        <p className="text-xs font-medium mb-1">Original Prompt:</p>
+                        <div className="p-2 bg-background rounded border border-border text-xs font-mono">
+                          {message.originalPrompt || "No prompt data available"}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="settings">
+                        {message.promptSettings ? (
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                            <div>
+                              <p className="font-medium">Temperature:</p>
+                              <p>{message.promptSettings.temperature}</p>
+                            </div>
+                            <div>
+                              <p className="font-medium">Max Tokens:</p>
+                              <p>{message.promptSettings.maxTokens}</p>
+                            </div>
+                            <div>
+                              <p className="font-medium">Voice:</p>
+                              <p>{VOICE_OPTIONS.find(v => v.id === message.promptSettings?.voice)?.name || message.promptSettings?.voice}</p>
+                            </div>
+                            <div>
+                              <p className="font-medium">Speed:</p>
+                              <p>{message.promptSettings.speed}x</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-xs">No settings data available</p>
+                        )}
+                      </TabsContent>
+                      
+                      {message.context && (
+                        <TabsContent value="context">
+                          <p className="text-xs font-medium mb-1">Context Used:</p>
+                          <div className="p-2 bg-background rounded border border-border text-xs font-mono whitespace-pre-line">
+                            {message.context}
+                          </div>
+                        </TabsContent>
+                      )}
+                    </Tabs>
+                  </div>
+                )}
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
 
           {!formStarted && !formCompleted && (
             <div className="mt-6 text-center">
-              <Button onClick={startForm} className="bg-gradient-to-r from-purple-600 to-indigo-600">
+              <Button onClick={startForm} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
                 Start Form
               </Button>
             </div>
@@ -316,7 +744,7 @@ export default function TestForm({ params }: { params?: { id: string } }) {
 
               <div className="flex justify-between items-center">
                 <div className="flex-1">
-                  {transcript && <Transcript text={transcript} />}
+                  {transcript && <Transcript text={transcript} isLoading={isTranscribing} />}
                 </div>
                 <div className="flex space-x-2 items-center">
                   <AudioVisualizer isRecording={isRecording} />
