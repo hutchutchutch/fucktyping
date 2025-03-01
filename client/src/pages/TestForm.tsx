@@ -24,7 +24,9 @@ import {
   BarChart, 
   VolumeX,
   Volume2,
-  Sliders
+  Sliders,
+  WifiOff,
+  Wifi
 } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";

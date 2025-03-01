@@ -1,17 +1,25 @@
 /**
  * Groq AI Service - For text generation, sentiment analysis, and other AI features
+ * Using LangChain integration with Groq
  */
 
-const { Groq } = require('groq');
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+import { ChatGroq } from "@langchain/groq";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+
+// Initialize the Groq chat model
+const groqChat = new ChatGroq({
+  apiKey: process.env.GROQ_API_KEY || '',
+  modelName: "llama3-70b-8192"
+});
 
 /**
- * Generate a response using a Groq model
+ * Generate a response using a Groq model via LangChain
  * @param {string} prompt - The input prompt
  * @param {Object} options - Generation options
  * @returns {Promise<Object>} - Generated response
  */
-async function generateResponse(prompt, options = {}) {
+export async function generateResponse(prompt, options = {}) {
   const { 
     temperature = 0.7, 
     maxTokens = 250,
@@ -23,27 +31,35 @@ async function generateResponse(prompt, options = {}) {
   try {
     const startTime = Date.now();
     
-    const response = await groq.chat.completions.create({
-      model,
-      messages: [{ role: "user", content: prompt }],
-      temperature,
-      max_tokens: maxTokens,
-      stream: false
+    // Create a chat prompt template
+    const chatPrompt = ChatPromptTemplate.fromMessages([
+      ["user", prompt]
+    ]);
+    
+    // Set Groq model parameters
+    const modelWithParams = groqChat.bind({
+      temperature: temperature,
+      maxTokens: maxTokens,
     });
     
-    const text = response.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
+    // Create the LangChain chain
+    const chain = chatPrompt.pipe(modelWithParams).pipe(new StringOutputParser());
+    
+    // Execute the chain
+    const responseText = await chain.invoke({});
+    
     const processingTime = Date.now() - startTime;
     
-    // Calculate tokens from the Groq response
-    const totalTokens = response.usage?.total_tokens || 0;
-    const inputTokens = response.usage?.prompt_tokens || 0;
-    const outputTokens = response.usage?.completion_tokens || 0;
+    // Since LangChain doesn't provide token counts directly, we're estimating
+    const estimatedTokenCount = Math.round(prompt.length / 4) + Math.round(responseText.length / 4);
+    const estimatedInputTokens = Math.round(prompt.length / 4);
+    const estimatedOutputTokens = Math.round(responseText.length / 4);
     
     return {
-      text,
-      tokens: totalTokens,
-      inputTokens,
-      outputTokens,
+      text: responseText,
+      tokens: estimatedTokenCount,
+      inputTokens: estimatedInputTokens,
+      outputTokens: estimatedOutputTokens,
       processingTime,
       model,
       temperature,
@@ -51,7 +67,7 @@ async function generateResponse(prompt, options = {}) {
     };
   } catch (error) {
     console.error('Error generating Groq response:', error);
-    throw new Error(`Failed to generate AI response: ${error.message}`);
+    throw new Error(`Failed to generate AI response: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -63,7 +79,7 @@ async function generateResponse(prompt, options = {}) {
  * @param {Array} options - Options for multiple choice questions
  * @returns {Promise<any>} - Processed answer
  */
-async function processAnswer(text, questionType, questionText, options = []) {
+export async function processAnswer(text, questionType, questionText, options = []) {
   try {
     // Simulate processing time
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -173,7 +189,7 @@ async function processAnswer(text, questionType, questionText, options = []) {
     }
   } catch (error) {
     console.error('Error processing answer:', error);
-    return { value: text, confidence: 0.5, error: error.message };
+    return { value: text, confidence: 0.5, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -182,14 +198,10 @@ async function processAnswer(text, questionType, questionText, options = []) {
  * @param {string} text - Text to analyze
  * @returns {Promise<Object>} - Sentiment analysis result
  */
-async function analyzeSentiment(text) {
+export async function analyzeSentiment(text) {
   try {
-    // Simulate API latency
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // In a real implementation, you would call the Groq API for sentiment analysis
-    // For this demo, use a simple keyword-based approach
-    
+    // For development we use a simple keyword-based approach
+    // In production, we would use LangChain with Groq for sentiment analysis
     const positiveWords = ['great', 'good', 'excellent', 'amazing', 'love', 'happy', 'best', 'like', 'enjoy', 'positive', 'helpful', 'wonderful', 'fantastic', 'awesome', 'pleased', 'satisfied'];
     const negativeWords = ['bad', 'poor', 'terrible', 'awful', 'hate', 'dislike', 'worst', 'difficult', 'negative', 'unhappy', 'disappointed', 'frustrating', 'useless', 'horrible', 'annoying'];
     
@@ -233,12 +245,3 @@ async function analyzeSentiment(text) {
     throw new Error('Failed to analyze sentiment');
   }
 }
-
-module.exports = {
-  generateResponse,
-  processAnswer,
-  analyzeSentiment
-};
-
-// Export default for ESM imports
-module.exports.default = module.exports;

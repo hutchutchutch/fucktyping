@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
@@ -10,46 +10,173 @@ import {
 import { z } from "zod";
 import { log } from "./vite";
 
+// Import our services
+import * as groqService from './services/groqService';
+import * as voiceService from './services/voiceService';
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
   // Create WebSocket server on the same server but different path
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
+  // Active WebSocket connections and their context
+  const activeConnections = new Map();
+  
   // WebSocket handling
   wss.on('connection', (ws) => {
-    log('WebSocket client connected');
+    const connectionId = Date.now().toString();
+    log(`WebSocket client connected: ${connectionId}`);
     
-    ws.on('message', (message) => {
+    // Initialize connection context
+    activeConnections.set(connectionId, {
+      id: connectionId,
+      sessionContext: [],
+      currentForm: null,
+      currentQuestion: null
+    });
+    
+    // Send a welcome message
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'connection',
+        connectionId,
+        status: 'connected',
+        message: 'Connected to form voice interface'
+      }));
+    }
+    
+    ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString());
-        log(`Received message: ${JSON.stringify(data)}`);
+        log(`Received WebSocket message type: ${data.type}`);
+        
+        const context = activeConnections.get(connectionId);
+        const startTime = Date.now();
         
         // Process message based on type
         if (data.type === 'transcript') {
-          // Simulate AI processing (this would be the actual AI model in production)
-          setTimeout(() => {
+          const { text, formId, questionId, questionType, questionContext } = data;
+          
+          // Update the connection context
+          if (formId) context.currentForm = formId;
+          if (questionId) context.currentQuestion = questionId;
+          
+          // Add user message to context for better continuity
+          context.sessionContext.push({ role: 'user', content: text });
+          
+          // Define the prompt based on available context
+          let prompt = text;
+          if (questionContext) {
+            prompt = `Question context: ${questionContext}\n\nUser response: ${text}\n\nPlease respond to the user appropriately. Be conversational, helpful, and concise.`;
+          }
+          
+          // Generate response using Groq (Llama 3 70B)
+          try {
+            const response = await groqService.generateResponse(prompt, {
+              temperature: data.temperature || 0.7,
+              maxTokens: data.maxTokens || 250,
+              model: 'llama3-70b-8192'
+            });
+            
+            // Add the assistant response to the context
+            context.sessionContext.push({ role: 'assistant', content: response.text });
+            
+            // Keep context size reasonable (last 10 messages)
+            if (context.sessionContext.length > 10) {
+              context.sessionContext = context.sessionContext.slice(-10);
+            }
+            
+            // Send the response back to the client
             if (ws.readyState === WebSocket.OPEN) {
               ws.send(JSON.stringify({
                 type: 'response',
-                text: `I received your message: "${data.text}"`,
                 messageId: Date.now().toString(),
+                text: response.text,
+                formId,
+                questionId,
                 stats: {
-                  latency: 230,
-                  processingTime: 450,
-                  tokens: 28
+                  latency: Date.now() - startTime,
+                  processingTime: response.processingTime,
+                  tokens: response.tokens,
+                  inputTokens: response.inputTokens,
+                  outputTokens: response.outputTokens
                 }
               }));
             }
-          }, 1000);
+          } catch (error) {
+            console.error('Error generating response:', error);
+            
+            // Send error message
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                messageId: Date.now().toString(),
+                error: 'Failed to generate response',
+                details: error.message
+              }));
+            }
+          }
+        } 
+        // Handle audio transcription
+        else if (data.type === 'audio') {
+          try {
+            const transcription = await voiceService.transcribeAudio(data.audioData);
+            
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'transcription',
+                messageId: Date.now().toString(),
+                text: transcription.transcript,
+                confidence: transcription.confidence,
+                processingTime: transcription.processingTime,
+                formId: data.formId,
+                questionId: data.questionId
+              }));
+            }
+          } catch (error) {
+            console.error('Error transcribing audio:', error);
+            
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                messageId: Date.now().toString(),
+                error: 'Failed to transcribe audio',
+                details: error.message
+              }));
+            }
+          }
+        }
+        // Initialize form session
+        else if (data.type === 'init') {
+          context.currentForm = data.formId;
+          context.sessionContext = [];
+          
+          // Send acknowledgment
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'init',
+              status: 'success',
+              formId: data.formId
+            }));
+          }
         }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
+        
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'error',
+            error: 'Failed to process message',
+            details: error.message
+          }));
+        }
       }
     });
     
     ws.on('close', () => {
-      log('WebSocket client disconnected');
+      log(`WebSocket client disconnected: ${connectionId}`);
+      activeConnections.delete(connectionId);
     });
   });
 
