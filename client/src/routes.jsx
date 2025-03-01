@@ -113,12 +113,8 @@ export default function Routes() {
       <Route path="/forms/:id/respond" component={FormResponder} />
       
       {/* Test form interface */}
-      <Route path="/forms/demo/test">
+      <Route path="/forms/test">
         {() => <PrivateRoute component={TestForm} />}
-      </Route>
-      
-      <Route path="/forms/:id/test">
-        {(params) => <PrivateRoute component={TestForm} params={params} />}
       </Route>
       
       {/* Fallback to 404 */}

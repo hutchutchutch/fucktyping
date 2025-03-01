@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useRoute } from 'wouter';
+import { useLocation } from 'wouter';
 import { 
   Card, 
   CardContent, 
@@ -40,7 +40,6 @@ interface Message {
 
 export default function TestForm() {
   // Get form ID from URL query parameter
-  const [, params] = useRoute('/forms/demo/test');
   const [location, navigate] = useLocation();
   const urlParams = new URLSearchParams(window.location.search);
   const formId = urlParams.get('formId');

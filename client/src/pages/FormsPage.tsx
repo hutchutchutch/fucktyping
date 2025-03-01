@@ -136,7 +136,7 @@ const FormsPage = () => {
             variant="default" 
             size="sm" 
             className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-            onClick={() => navigate(`/forms/demo/test?formId=${form.id}`)}
+            onClick={() => navigate(`/forms/test?formId=${form.id}`)}
           >
             Test Form
           </Button>
