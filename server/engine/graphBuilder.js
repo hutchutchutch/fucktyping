@@ -1,83 +1,62 @@
-import { StateGraph } from "@langchain/langgraph";
-import { END, START } from "@langchain/langgraph";
-
-// Import nodes
-import openActivity from "./nodes/openActivity";
-import questioner from "./nodes/questioner";
-import validator from "./nodes/validator";
-import rephrase from "./nodes/rephrase";
-import closeActivity from "./nodes/closeActivity";
-import followUp from "./nodes/followUp";
-
-// Import conditionals
-import shouldRephrase from "./conditionals/shouldRephrase";
-import shouldContinue from "./conditionals/shouldContinue";
-import needsFollowUp from "./conditionals/needsFollowUp";
-
-// Import state schema
-import { stateSchema } from "./stateSchema";
+// graphBuilder.js
+import { StateGraph, START, END } from "@langchain/langgraph";
+import { ChatGroq } from "@langchain/groq";
+import { 
+  createOpenActivityNode,
+  createQuestionNode,
+  createValidateResponseNode,
+  createRephraseNode,
+  createClosingActivityNode,
+  createProcessUserInputNode
+} from './nodes.js';
+import { StateSchema } from './state.js';
 
 /**
  * Builds a conversation flow graph for form completion
+ * @param {Object} formConfig - The form configuration
  * @param {Object} initialState - Initial state for the graph
  * @returns {StateGraph} The constructed graph
  */
-function buildGraph(initialState = {}) {
-  // Create a new graph
-  const builder = new StateGraph({
-    channels: stateSchema,
-    initialState
+export function buildGraph(formConfig) {
+  // Create an instance of the LLM
+  const llm = new ChatGroq({
+    modelName: "llama3-70b-8192",
+    apiKey: process.env.GROQ_API_KEY,
   });
-
-  // Add nodes
-  builder.addNode("openActivity", openActivity);
-  builder.addNode("questioner", questioner);
-  builder.addNode("validator", validator);
-  builder.addNode("rephrase", rephrase);
-  builder.addNode("followUp", followUp);
-  builder.addNode("closeActivity", closeActivity);
-
-  // Define the edges
-  builder.addEdge(START, "openActivity");
-  builder.addEdge("openActivity", "questioner");
   
-  // Add conditional edges
-  builder.addConditionalEdges(
-    "questioner",
-    shouldRephrase,
+  // Create a new StateGraph with our state schema
+  const workflow = new StateGraph({
+    stateSchema: StateSchema,
+  });
+  
+  // Create nodes
+  workflow.addNode("opening_activity", createOpenActivityNode(formConfig));
+  workflow.addNode("question", createQuestionNode(formConfig));
+  workflow.addNode("validate_response", createValidateResponseNode(formConfig, llm));
+  workflow.addNode("rephrase_question", createRephraseNode(formConfig));
+  workflow.addNode("closing_activity", createClosingActivityNode(formConfig));
+  workflow.addNode("process_user_input", createProcessUserInputNode());
+  
+  // Define edges
+  workflow.addEdge(START, "opening_activity");
+  workflow.addEdge("opening_activity", "question");
+  workflow.addEdge("question", "validate_response");
+  workflow.addEdge("validate_response", "question");
+  workflow.addEdge("validate_response", "rephrase_question");
+  workflow.addEdge("validate_response", "closing_activity");
+  workflow.addEdge("rephrase_question", "validate_response");
+  workflow.addEdge("closing_activity", END);
+  
+  // Add conditional routing based on the current node ID
+  workflow.addConditionalEdges(
+    "process_user_input",
+    (state) => state.currentNodeId,
     {
-      true: "rephrase",
-      false: "validator"
+      "validate_response": "validate_response",
+      "end": END
     }
   );
   
-  builder.addEdge("rephrase", "questioner");
-  
-  builder.addConditionalEdges(
-    "validator",
-    needsFollowUp,
-    {
-      true: "followUp",
-      false: shouldContinue
-    }
-  );
-  
-  builder.addEdge("followUp", "questioner");
-  
-  builder.addConditionalEdges(
-    shouldContinue,
-    {
-      true: "closeActivity",
-      false: "questioner"
-    }
-  );
-  
-  builder.addEdge("closeActivity", END);
-
   // Compile the graph
-  return builder.compile();
+  return workflow.compile();
 }
-
-export default {
-  buildGraph
-};
