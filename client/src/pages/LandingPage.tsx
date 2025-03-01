@@ -2,6 +2,7 @@ import { useLocation, Link } from "wouter";
 import { Button } from "../components/ui/button";
 import { useAuthContext } from "../context/AuthContext";
 import { Badge } from "../components/ui/badge";
+import DigitalRain from "../components/animation/DigitalRain";
 import { 
   FileQuestion, 
   Mic, 
@@ -32,9 +33,10 @@ export default function LandingPage() {
   const getStartedPath = isAuthenticated ? "/dashboard" : "/login";
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Bold Hero Section with Large Headlines */}
-      <header className="relative overflow-hidden bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+      <header className="relative overflow-hidden bg-white text-gray-900">
+        <DigitalRain color="#2a4365" opacity={0.05} speed={1.2} density={0.03} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="flex flex-col lg:flex-row items-center">
             <div className="w-full lg:w-1/2 pr-0 lg:pr-12 mb-10 lg:mb-0">
