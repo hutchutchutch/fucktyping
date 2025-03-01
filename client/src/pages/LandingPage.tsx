@@ -41,12 +41,12 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row items-center">
             <div className="w-full lg:w-1/2 pr-0 lg:pr-12 mb-10 lg:mb-0">
               <div className="text-left">
-                <h2 className="text-3xl font-bold text-red-400 mb-2">Users Hate Forms</h2>
-                <h3 className="text-3xl font-bold text-yellow-400 mb-6">Leads Slip Away</h3>
-                <h1 className="text-6xl sm:text-7xl md:text-8xl font-extrabold tracking-tight mt-2 mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+                <h2 className="text-3xl font-bold text-red-500 mb-2">Users Hate Forms</h2>
+                <h3 className="text-3xl font-bold text-yellow-600 mb-6">Leads Slip Away</h3>
+                <h1 className="text-6xl sm:text-7xl md:text-8xl font-extrabold tracking-tight mt-2 mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-800">
                   f*ck typing
                 </h1>
-                <p className="mt-4 mb-8 text-xl text-gray-300 max-w-xl">
+                <p className="mt-4 mb-8 text-xl text-gray-600 max-w-xl">
                   Let your users speak instead of type. Capture all the details they want to share, 
                   not just what you asked for.
                 </p>
@@ -342,21 +342,21 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white">
+      <footer className="bg-gray-50 text-gray-800 border-t border-gray-200">
         <div className="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center mb-8">
             <div className="flex items-center mb-4 md:mb-0">
-              <Mic className="h-8 w-8 text-indigo-400 mr-2" />
+              <Mic className="h-8 w-8 text-indigo-600 mr-2" />
               <span className="text-xl font-bold">Voice Form Agent</span>
             </div>
             <nav className="flex space-x-6">
-              <a href="#" className="text-gray-300 hover:text-white">Features</a>
-              <a href="#" className="text-gray-300 hover:text-white">Pricing</a>
-              <a href="#" className="text-gray-300 hover:text-white">Documentation</a>
-              <a href="#" className="text-gray-300 hover:text-white">Support</a>
+              <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">Features</a>
+              <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">Pricing</a>
+              <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">Documentation</a>
+              <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">Support</a>
             </nav>
           </div>
-          <p className="text-center text-gray-400">
+          <p className="text-center text-gray-500">
             &copy; {new Date().getFullYear()} Voice Form Agent, Inc. All rights reserved.
           </p>
         </div>
