@@ -89,34 +89,46 @@ export default function TestForm() {
 
   // Initialize WebSocket and AI services
   useEffect(() => {
-    // Initialize without real API keys for demo purposes
-    initializeAIServices('', '');
-    
-    // Setup WebSocket connection for real-time voice interaction
-    setupWebSocketConnection('', (data) => {
-      if (data.type === 'response') {
-        // Add AI response as a message
-        const agentMessage: Message = {
-          id: `agent-${Date.now()}`,
-          sender: 'agent',
-          text: data.text,
-          type: 'question',
-          timestamp: new Date(),
-          stats: data.stats || {
-            latency: 250,
-            processingTime: 450,
-            tokens: 30
+    try {
+      // Initialize without real API keys for demo purposes
+      initializeAIServices('', '');
+      
+      // Setup WebSocket connection for real-time voice interaction
+      setupWebSocketConnection('', (data) => {
+        if (data.type === 'response') {
+          try {
+            // Add AI response as a message
+            const agentMessage: Message = {
+              id: `agent-${Date.now()}`,
+              sender: 'agent',
+              text: data.text,
+              type: 'question',
+              timestamp: new Date(),
+              stats: data.stats || {
+                latency: 250,
+                processingTime: 450,
+                tokens: 30
+              }
+            };
+            
+            setMessages(prevMessages => [...prevMessages, agentMessage]);
+          } catch (msgError) {
+            console.error('Error handling message:', msgError);
           }
-        };
-        
-        setMessages(prevMessages => [...prevMessages, agentMessage]);
-      }
-    });
-    
-    return () => {
-      // Clean up WebSocket connection on unmount
-      closeWebSocketConnection();
-    };
+        }
+      });
+      
+      return () => {
+        // Clean up WebSocket connection on unmount
+        try {
+          closeWebSocketConnection();
+        } catch (closeError) {
+          console.error('Error closing WebSocket:', closeError);
+        }
+      };
+    } catch (error) {
+      console.error('Error in WebSocket initialization:', error);
+    }
   }, []);
   
   useEffect(() => {

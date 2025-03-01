@@ -105,16 +105,14 @@ export default function VoiceRecorder({
         setIsTranscribing(true);
         
         // In a real app, this would send the audio to the backend for processing
-        // Here we use our aiService transcribeAudio function
-        const transcript = await transcribeAudio(audioBlob);
-        
-        // TypeScript fix: ensure transcript is a string
-        const transcriptText = typeof transcript === 'string' 
-          ? transcript 
-          : 'No valid transcription available';
-        
-        // Pass the transcript up to the parent component
-        onTranscriptionComplete(transcriptText);
+        // Here we use our aiService transcribeAudio function with error handling
+        try {
+          const transcript = await transcribeAudio(audioBlob);
+          onTranscriptionComplete(transcript);
+        } catch (transcriptError) {
+          console.error('Transcription error:', transcriptError);
+          onTranscriptionComplete('Error transcribing audio. Please try again.');
+        }
         
       } catch (error) {
         console.error('Error processing audio:', error);
