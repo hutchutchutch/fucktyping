@@ -108,8 +108,13 @@ export default function VoiceRecorder({
         // Here we use our aiService transcribeAudio function
         const transcript = await transcribeAudio(audioBlob);
         
+        // TypeScript fix: ensure transcript is a string
+        const transcriptText = typeof transcript === 'string' 
+          ? transcript 
+          : 'No valid transcription available';
+        
         // Pass the transcript up to the parent component
-        onTranscriptionComplete(transcript);
+        onTranscriptionComplete(transcriptText);
         
       } catch (error) {
         console.error('Error processing audio:', error);

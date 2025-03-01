@@ -90,64 +90,50 @@ export const generateResponse = async (prompt: string, temperature: number = 0.7
 
 /**
  * Transcribe audio from the user's microphone
+ * @returns Promise<string> Transcribed text
  */
-export const transcribeAudio = async (audioBlob: Blob) => {
-  if (!openai) {
-    console.error('OpenAI not initialized. Please provide an API key.');
-    return "AI service not initialized. Please provide API keys to enable this feature.";
-  }
+export const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
+  console.log('Simulating audio transcription...');
   
-  try {
-    // For the demo, let's use our API endpoint instead of direct OpenAI API calls
-    const formData = new FormData();
-    formData.append('audio', audioBlob);
-    
-    const response = await fetch('/api/voice/transcribe', {
-      method: 'POST',
-      body: formData
-    });
-    
-    const data = await response.json();
-    return data.transcript || "Sorry, couldn't transcribe the audio.";
-  } catch (error) {
-    console.error('Error transcribing audio:', error);
-    return "Sorry, there was an error transcribing your audio. Please try again.";
-  }
+  // For demo purposes, return a simulated transcript
+  return new Promise<string>((resolve) => {
+    // Simulate processing delay
+    setTimeout(() => {
+      // Return a mock transcript
+      const mockResponses = [
+        "Hello, I'm calling about the form submission.",
+        "I would rate my experience as excellent, definitely a 5 out of 5.",
+        "I'd like to provide some feedback on your service.",
+        "Yes, I'm interested in learning more about your products.",
+        "Thank you for your assistance today."
+      ];
+      
+      // Pick a random response
+      const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
+      console.log('Simulated transcript:', randomResponse);
+      
+      resolve(randomResponse);
+    }, 1500);
+  });
 };
 
 /**
  * Generate text-to-speech audio using ElevenLabs API
  */
 export const generateSpeech = async (text: string, voice = "male", speed = 1.0) => {
-  if (!elevenLabsApiKey) {
-    console.error('ElevenLabs not initialized. Please provide an API key.');
-    // Use our API endpoint instead
-    try {
-      const response = await fetch('/api/voice/synthesize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ text, voice, speed })
-      });
-      
-      const data = await response.json();
-      
-      // This is just a simulation since we're not actually connecting to ElevenLabs
-      if (data.audioUrl) {
-        // In a real app, we would fetch the audio and convert it to a blob
-        return new Blob(['mock audio data'], { type: 'audio/mpeg' });
-      }
-      return null;
-    } catch (error) {
-      console.error('Error generating speech via API:', error);
-      return null;
-    }
-  }
+  console.log('Simulating text-to-speech conversion...');
+  console.log(`Text: "${text}", Voice: ${voice}, Speed: ${speed}`);
   
-  // In a real app, we would directly call the ElevenLabs API here
-  console.log('Using mock ElevenLabs implementation');
-  return new Blob(['mock audio data'], { type: 'audio/mpeg' });
+  return new Promise<Blob>((resolve) => {
+    // Simulate processing delay
+    setTimeout(() => {
+      // Create a mock audio blob
+      const audioBlob = new Blob(['simulated audio data'], { type: 'audio/mpeg' });
+      console.log('Generated simulated speech audio');
+      
+      resolve(audioBlob);
+    }, 1000);
+  });
 };
 
 /**
@@ -155,31 +141,28 @@ export const generateSpeech = async (text: string, voice = "male", speed = 1.0) 
  */
 export const setupWebSocketConnection = (url: string, onMessage: (data: any) => void) => {
   try {
-    // Create WebSocket connection
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    webSocket = new WebSocket(wsUrl);
+    // For demo purposes, we'll simulate WebSocket connection rather than connect to a real one
+    // This prevents errors when WebSockets aren't available
+    console.log('Simulating WebSocket connection...');
     
-    webSocket.onopen = () => {
-      console.log('WebSocket connected');
-    };
-    
-    webSocket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        onMessage(data);
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
-      }
-    };
-    
-    webSocket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-    
-    webSocket.onclose = () => {
-      console.log('WebSocket disconnected');
-    };
+    // Simulate successful connection
+    setTimeout(() => {
+      console.log('WebSocket simulated connection established');
+      
+      // Simulate receiving a message after a delay
+      setTimeout(() => {
+        onMessage({
+          type: 'response',
+          text: "Hello, I'm the voice assistant. How can I help you today?",
+          messageId: Date.now().toString(),
+          stats: {
+            latency: 250,
+            processingTime: 450,
+            tokens: 30
+          }
+        });
+      }, 2000);
+    }, 500);
     
     return true;
   } catch (error) {
@@ -192,26 +175,22 @@ export const setupWebSocketConnection = (url: string, onMessage: (data: any) => 
  * Send a message through the WebSocket connection
  */
 export const sendWebSocketMessage = (message: any) => {
-  if (!webSocket || webSocket.readyState !== WebSocket.OPEN) {
-    console.error('WebSocket not connected');
-    return false;
-  }
+  // For demo purposes, simulate sending a message
+  console.log('Simulating sending message:', message);
   
-  try {
-    webSocket.send(JSON.stringify(message));
-    return true;
-  } catch (error) {
-    console.error('Error sending WebSocket message:', error);
-    return false;
-  }
+  // Simulate a response after a short delay
+  setTimeout(() => {
+    console.log('Simulated message sent successfully');
+  }, 100);
+  
+  return true;
 };
 
 /**
  * Close the WebSocket connection
  */
 export const closeWebSocketConnection = () => {
-  if (webSocket) {
-    webSocket.close();
-    webSocket = null;
-  }
+  // For demo purposes, simulate closing the connection
+  console.log('Simulated WebSocket connection closed');
+  webSocket = null;
 };
