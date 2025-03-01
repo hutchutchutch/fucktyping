@@ -27,6 +27,7 @@ export const initializeAIServices = (openaiKey: string, elevenLabsKey: string) =
       elevenLabsApiKey = elevenLabsKey;
     }
     
+    // For demo purposes, we can proceed without actual API keys
     return true;
   } catch (error) {
     console.error('Error initializing AI services:', error);

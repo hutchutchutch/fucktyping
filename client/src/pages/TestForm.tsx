@@ -9,8 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Badge } from "../components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import { Slider } from "../components/ui/slider";
-import { io } from "socket.io-client";
-import { OpenAI } from "openai";
+import VoiceRecorder from "../components/form-responder/VoiceRecorder";
+import { setupWebSocketConnection, sendWebSocketMessage, initializeAIServices } from "../services/aiService";
 import { 
   Mic, 
   MicOff, 
@@ -87,6 +87,38 @@ export default function TestForm() {
     }
   ]);
 
+  // Initialize WebSocket and AI services
+  useEffect(() => {
+    // Initialize without real API keys for demo purposes
+    initializeAIServices('', '');
+    
+    // Setup WebSocket connection for real-time voice interaction
+    setupWebSocketConnection('', (data) => {
+      if (data.type === 'response') {
+        // Add AI response as a message
+        const agentMessage: Message = {
+          id: `agent-${Date.now()}`,
+          sender: 'agent',
+          text: data.text,
+          type: 'question',
+          timestamp: new Date(),
+          stats: data.stats || {
+            latency: 250,
+            processingTime: 450,
+            tokens: 30
+          }
+        };
+        
+        setMessages(prevMessages => [...prevMessages, agentMessage]);
+      }
+    });
+    
+    return () => {
+      // Clean up WebSocket connection on unmount
+      closeWebSocketConnection();
+    };
+  }, []);
+  
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -180,16 +212,16 @@ export default function TestForm() {
     alert("Message would be regenerated with current settings");
   };
 
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  
   const handleVoiceRecording = () => {
-    setIsRecording(!isRecording);
-    
-    if (!isRecording) {
-      // Start recording
-      // In a real app, this would initialize the recording API
-    } else {
-      // Stop recording and process
-      setUserInput("This is a simulated voice response.");
-    }
+    setShowVoiceRecorder(!showVoiceRecorder);
+  };
+  
+  const handleTranscriptionComplete = (transcript: string) => {
+    setUserInput(transcript);
+    setShowVoiceRecorder(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -427,35 +459,43 @@ export default function TestForm() {
       {/* Input Area */}
       <div className="p-4 border-t bg-background">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-end gap-2">
-            <div className="flex-1">
-              <Textarea
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type your response..."
-                className="min-h-[60px] resize-none"
-                rows={1}
-              />
+          {showVoiceRecorder ? (
+            <VoiceRecorder 
+              onTranscriptionComplete={handleTranscriptionComplete}
+              isTranscribing={isTranscribing}
+              setIsTranscribing={setIsTranscribing}
+            />
+          ) : (
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <Textarea
+                  value={userInput}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type your response..."
+                  className="min-h-[60px] resize-none"
+                  rows={1}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleVoiceRecording}
+                  className="h-10 w-10"
+                >
+                  <Mic className="h-5 w-5" />
+                </Button>
+                <Button 
+                  onClick={handleSendMessage}
+                  disabled={userInput.trim() === ""}
+                  className="h-10"
+                >
+                  Send
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant={isRecording ? "destructive" : "outline"}
-                size="icon"
-                onClick={handleVoiceRecording}
-                className="h-10 w-10"
-              >
-                {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-              </Button>
-              <Button 
-                onClick={handleSendMessage}
-                disabled={userInput.trim() === "" && !isRecording}
-                className="h-10"
-              >
-                Send
-              </Button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
