@@ -2,9 +2,8 @@
  * Groq AI Service - For text generation, sentiment analysis, and other AI features
  */
 
-// In a real app with an actual Groq API key, you would use the official client
-// const { GroqClient } = require('@groq/api');
-// const client = new GroqClient({ apiKey: process.env.GROQ_API_KEY });
+const { Groq } = require('groq');
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 /**
  * Generate a response using a Groq model
@@ -15,58 +14,44 @@
 async function generateResponse(prompt, options = {}) {
   const { 
     temperature = 0.7, 
-    maxTokens = 150,
-    model = 'grok-2-1212' 
+    maxTokens = 250,
+    model = 'llama3-70b-8192' 
   } = options;
   
   console.log(`Generating response using ${model} with temperature ${temperature}`);
   
   try {
-    // Simulating API latency
     const startTime = Date.now();
-    const processingTime = Math.floor(Math.random() * 300) + 100; // 100-400ms
     
-    await new Promise(resolve => setTimeout(resolve, processingTime));
+    const response = await groq.chat.completions.create({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      temperature,
+      max_tokens: maxTokens,
+      stream: false
+    });
     
-    // In a real implementation, you would call the Groq API
-    // const response = await client.chat.completions.create({
-    //   model,
-    //   messages: [{ role: "user", content: prompt }],
-    //   temperature,
-    //   max_tokens: maxTokens,
-    // });
+    const text = response.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
+    const processingTime = Date.now() - startTime;
     
-    // For this demo, generate a realistic response based on the prompt
-    let text = '';
-    
-    if (prompt.includes('form') || prompt.includes('survey')) {
-      text = "Thank you for your response! That's helpful information. Is there anything specific you'd like to add about your experience?";
-    } else if (prompt.includes('product') || prompt.includes('service')) {
-      text = "I appreciate your feedback about our product. Your insights will help us improve. Do you have any suggestions for features you'd like to see in the future?";
-    } else if (prompt.includes('experience') || prompt.includes('feedback')) {
-      text = "Thanks for sharing your experience. It's valuable for us to understand how we're doing. Would you mind elaborating a bit more on what aspects stood out to you?";
-    } else if (prompt.includes('rate') || prompt.includes('rating')) {
-      text = "Thank you for your rating! We're always looking to improve. Could you tell me what factors influenced your rating the most?";
-    } else {
-      text = "Thank you for your response. That's helpful information for our survey. Is there anything else you'd like to share before we move to the next question?";
-    }
-    
-    // Calculate tokens (very rough estimation for demo)
-    const inputTokens = Math.ceil(prompt.length / 4);
-    const outputTokens = Math.ceil(text.length / 4);
-    const totalTokens = inputTokens + outputTokens;
+    // Calculate tokens from the Groq response
+    const totalTokens = response.usage?.total_tokens || 0;
+    const inputTokens = response.usage?.prompt_tokens || 0;
+    const outputTokens = response.usage?.completion_tokens || 0;
     
     return {
       text,
       tokens: totalTokens,
+      inputTokens,
+      outputTokens,
       processingTime,
       model,
       temperature,
-      completion_time: Date.now() - startTime
+      completion_time: processingTime
     };
   } catch (error) {
     console.error('Error generating Groq response:', error);
-    throw new Error('Failed to generate AI response');
+    throw new Error(`Failed to generate AI response: ${error.message}`);
   }
 }
 
