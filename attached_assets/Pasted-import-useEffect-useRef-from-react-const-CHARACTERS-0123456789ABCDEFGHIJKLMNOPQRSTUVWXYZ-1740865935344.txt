@@ -1,0 +1,85 @@
+import { useEffect, useRef } from 'react';
+
+const CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const FONT_SIZE = 14;
+const DROP_SPEED = 1;
+
+export default function MatrixRain2D() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resizeCanvas = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+
+    // Initialize drops
+    const drops: number[] = [];
+    const columns = Math.floor(canvas.width / FONT_SIZE);
+    for (let i = 0; i < columns; i++) {
+      drops[i] = 1;
+    }
+
+    const draw = () => {
+      // Semi-transparent black to create fade effect
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#0F0';
+      ctx.font = `${FONT_SIZE}px monospace`;
+
+      // Loop over drops
+      for (let i = 0; i < drops.length; i++) {
+        // Random character
+        const char = CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
+        
+        // Calculate position
+        const x = i * FONT_SIZE;
+        const y = drops[i] * FONT_SIZE;
+
+        // Add gradient effect
+        const gradient = ctx.createLinearGradient(x, y - FONT_SIZE * 4, x, y);
+        gradient.addColorStop(0, 'rgba(0, 255, 0, 0)');
+        gradient.addColorStop(1, 'rgba(0, 255, 0, 1)');
+        ctx.fillStyle = gradient;
+        
+        // Draw character
+        ctx.fillText(char, x, y);
+
+        // Reset drop if it reaches bottom
+        if (y > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+
+        // Move drop
+        drops[i]++;
+      }
+    };
+
+    // Setup resize handler
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Animation loop
+    const interval = setInterval(draw, 33); // ~30fps
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, []);
+
+  return (
+    <canvas 
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full opacity-30"
+      style={{ mixBlendMode: 'screen' }}
+    />
+  );
+}

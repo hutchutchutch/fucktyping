@@ -1,18 +1,22 @@
 import React, { useEffect, useRef } from 'react';
 
+const CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
 interface DigitalRainProps {
   color?: string;
   speed?: number;
   density?: number;
   opacity?: number;
+  fontSize?: number;
   className?: string;
 }
 
 export default function DigitalRain({ 
-  color = '#2a4365', // default: matte blue color
-  speed = 1.5,
-  density = 0.05,
-  opacity = 0.8,
+  color = '#2563eb', // default: blue-600 color
+  speed = 1.0,
+  density = 0.025,
+  opacity = 0.15,
+  fontSize = 14,
   className = ''
 }: DigitalRainProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -21,8 +25,8 @@ export default function DigitalRain({
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    const context = canvas.getContext('2d');
-    if (!context) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -32,60 +36,80 @@ export default function DigitalRain({
     window.addEventListener('resize', resize);
     resize();
     
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()_+-=[]{}|;:,./<>?';
-    const fontSize = 16;
+    // Calculate columns based on fontSize
     const columns = Math.floor(canvas.width / fontSize);
     
     // Drops contains the y position of the current drops
     const drops: number[] = [];
     for (let i = 0; i < columns; i++) {
-      drops[i] = Math.floor(Math.random() * -canvas.height);
+      // Randomize starting positions for a more natural look
+      drops[i] = Math.random() * -canvas.height;
     }
     
     // Main animation loop
-    let frameId: number;
     const draw = () => {
-      // Slightly translucent black background to create trail effect
-      context.fillStyle = `rgba(255, 255, 255, ${1 - opacity})`;
-      context.fillRect(0, 0, canvas.width, canvas.height);
+      // Semi-transparent background to create trail effect
+      ctx.fillStyle = `rgba(255, 255, 255, ${1 - opacity})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Set the text color
-      context.fillStyle = color;
-      context.font = `${fontSize}px monospace`;
+      // Set font and basic color
+      ctx.font = `${fontSize}px monospace`;
       
       // Loop over drops
       for (let i = 0; i < drops.length; i++) {
         // Random character to print
-        const text = characters[Math.floor(Math.random() * characters.length)];
+        const char = CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
         
-        // x = i * fontSize, y = value of drops[i]
-        context.fillText(text, i * fontSize, drops[i]);
+        // Calculate position
+        const x = i * fontSize;
+        const y = drops[i];
+        
+        // Add gradient effect for depth
+        const gradientLength = 4; // How many characters to fade
+        
+        if (y > 0) { // Only draw if visible
+          // Draw leading character (brightest)
+          ctx.fillStyle = color;
+          ctx.fillText(char, x, y);
+          
+          // Draw trailing characters with fading effect
+          for (let j = 1; j <= gradientLength; j++) {
+            const trailY = y - j * fontSize;
+            if (trailY > 0) {
+              const alpha = 1 - (j / gradientLength);
+              ctx.fillStyle = `${color}${Math.floor(alpha * 99).toString(16)}`;
+              const trailChar = CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
+              ctx.fillText(trailChar, x, trailY);
+            }
+          }
+        }
         
         // Randomly reset some drops to top with a density factor
         if (drops[i] > canvas.height && Math.random() > (1 - density)) {
           drops[i] = 0;
         }
         
-        // Increment y coordinate
-        drops[i] += fontSize * speed * (Math.random() * 0.5 + 0.5);
+        // Increment y coordinate with variable speed
+        drops[i] += fontSize * speed * (Math.random() * 0.5 + 0.75);
       }
       
-      frameId = requestAnimationFrame(draw);
+      requestAnimationFrame(draw);
     };
     
-    draw();
+    const animationId = requestAnimationFrame(draw);
     
     // Cleanup
     return () => {
       window.removeEventListener('resize', resize);
-      cancelAnimationFrame(frameId);
+      cancelAnimationFrame(animationId);
     };
-  }, [color, speed, density, opacity]);
+  }, [color, speed, density, opacity, fontSize]);
   
   return (
     <canvas
       ref={canvasRef}
       className={`absolute top-0 left-0 w-full h-full -z-10 ${className}`}
+      style={{ mixBlendMode: 'normal' }}
     />
   );
 }

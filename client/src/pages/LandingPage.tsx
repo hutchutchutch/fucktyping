@@ -36,22 +36,22 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Bold Hero Section with Large Headlines */}
       <header className="relative overflow-hidden bg-white text-gray-900">
-        <DigitalRain color="#2a4365" opacity={0.05} speed={1.2} density={0.03} />
+        <DigitalRain color="#2563eb" opacity={0.15} speed={1.0} density={0.025} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="flex flex-col lg:flex-row items-center">
             <div className="w-full lg:w-1/2 pr-0 lg:pr-12 mb-10 lg:mb-0">
               <div className="text-left">
-                <h2 className="text-3xl font-bold text-red-500 mb-2">Users Hate Forms</h2>
-                <h3 className="text-3xl font-bold text-yellow-600 mb-6">Leads Slip Away</h3>
-                <h1 className="text-6xl sm:text-7xl md:text-8xl font-extrabold tracking-tight mt-2 mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-800">
-                  f*ck typing
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">Transform Your Forms</h2>
+                <h3 className="text-3xl font-bold text-indigo-600 mb-6">Engage Your Users</h3>
+                <h1 className="text-6xl sm:text-7xl md:text-8xl font-extrabold tracking-tight mt-2 mb-6 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">
+                  Voice First
                 </h1>
                 <p className="mt-4 mb-8 text-xl text-gray-600 max-w-xl">
                   Let your users speak instead of type. Capture all the details they want to share, 
                   not just what you asked for.
                 </p>
                 <Link href="/forms/new">
-                  <Button size="lg" className="px-8 py-6 text-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg">
+                  <Button size="lg" className="px-8 py-6 text-lg bg-indigo-600 hover:bg-indigo-700 shadow-lg">
                     Create Voice Agent Form <Mic className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
@@ -60,15 +60,15 @@ export default function LandingPage() {
             <div className="w-full lg:w-1/2">
               <div className="bg-white p-4 rounded-lg shadow-xl transform rotate-2 opacity-85 relative">
                 <div className="absolute -top-3 -right-3">
-                  <div className="bg-red-500 text-white rounded-full p-2">
+                  <div className="bg-indigo-500 text-white rounded-full p-2">
                     <X className="h-6 w-6" />
                   </div>
                 </div>
                 <div className="overflow-hidden">
                   <div className="bg-gray-100 p-3 rounded-t-md">
                     <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                       <div className="ml-2 text-sm text-gray-600">Overwhelming Form</div>
                     </div>
@@ -76,21 +76,21 @@ export default function LandingPage() {
                   <div className="p-4 border-t">
                     <div className="flex flex-col space-y-4">
                       <div className="border border-gray-300 p-3 rounded">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Full Legal Name <span className="text-red-500">*</span></label>
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Full Legal Name <span className="text-indigo-500">*</span></label>
                         <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="border border-gray-300 p-3 rounded">
-                          <label className="block text-gray-700 text-sm font-bold mb-2">Email <span className="text-red-500">*</span></label>
+                          <label className="block text-gray-700 text-sm font-bold mb-2">Email <span className="text-indigo-500">*</span></label>
                           <input className="border border-gray-300 rounded w-full py-2 px-3" type="email" />
                         </div>
                         <div className="border border-gray-300 p-3 rounded">
-                          <label className="block text-gray-700 text-sm font-bold mb-2">Phone <span className="text-red-500">*</span></label>
+                          <label className="block text-gray-700 text-sm font-bold mb-2">Phone <span className="text-indigo-500">*</span></label>
                           <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" />
                         </div>
                       </div>
                       <div className="border border-gray-300 p-3 rounded">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Address <span className="text-red-500">*</span></label>
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Address <span className="text-indigo-500">*</span></label>
                         <input className="border border-gray-300 rounded w-full py-2 px-3 mb-2" type="text" placeholder="Street Address" />
                         <input className="border border-gray-300 rounded w-full py-2 px-3 mb-2" type="text" placeholder="Apt, Suite, Bldg" />
                         <div className="grid grid-cols-3 gap-2">
