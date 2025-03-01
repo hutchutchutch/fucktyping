@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
@@ -11,28 +11,38 @@ export default function Dashboard() {
   const [, navigate] = useLocation();
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
         
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-2xl font-semibold">Dashboard</h1>
+        <main className="flex-1 overflow-y-auto px-6 py-8 max-w-7xl">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
+              <p className="mt-1 text-sm text-gray-500">
+                Monitor your form performance and responses
+              </p>
+            </div>
             <Button 
               className="bg-primary hover:bg-primary/90 text-white" 
               onClick={() => navigate("/forms/create")}
             >
-              <Plus className="h-5 w-5 mr-2" />
+              <PlusIcon className="h-5 w-5 mr-2" />
               Create New Form
             </Button>
           </div>
 
-          <Stats />
+          <div className="mb-10">
+            <h2 className="text-base font-medium text-gray-700 mb-6">Overview</h2>
+            <Stats />
+          </div>
           
-          <h2 className="mt-10 mb-6 text-xl font-semibold">Recent Forms</h2>
-          <FormsList />
+          <div>
+            <h2 className="text-base font-medium text-gray-700 mb-6">Recent Forms</h2>
+            <FormsList />
+          </div>
         </main>
       </div>
       
