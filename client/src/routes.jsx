@@ -3,6 +3,7 @@ import { useAuthContext } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import FormBuilder from './pages/FormBuilder';
+import CreateForm from './pages/CreateForm';
 import FormResponder from './pages/FormResponder';
 import ResponseViewer from './pages/ResponseViewer';
 import FormsPage from './pages/FormsPage';
@@ -71,11 +72,11 @@ export default function Routes() {
           </Route>
           
           <Route path="/forms/new">
-            {() => <PrivateRoute component={FormBuilder} />}
+            {() => <PrivateRoute component={CreateForm} />}
           </Route>
           
           <Route path="/forms/new/">
-            {() => <PrivateRoute component={FormBuilder} />}
+            {() => <PrivateRoute component={CreateForm} />}
           </Route>
           
           <Route path="/forms/edit/:id">
