@@ -21,7 +21,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
   // Active WebSocket connections and their context
-  const activeConnections = new Map();
+  const activeConnections = new Map<string, {
+    id: string;
+    sessionContext: Array<{role: string; content: string}>;
+    currentForm: number | null;
+    currentQuestion: number | null;
+    lastActivity: number;
+    voiceStreamActive: boolean;
+    transcriptInProgress: boolean;
+    transcriptBuffer: string;
+  }>();
   
   // WebSocket handling
   wss.on('connection', (ws) => {
@@ -33,7 +42,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       id: connectionId,
       sessionContext: [],
       currentForm: null,
-      currentQuestion: null
+      currentQuestion: null,
+      lastActivity: Date.now(),
+      voiceStreamActive: false,
+      transcriptInProgress: false,
+      transcriptBuffer: ''
     });
     
     // Send a welcome message
@@ -52,6 +65,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         log(`Received WebSocket message type: ${data.type}`);
         
         const context = activeConnections.get(connectionId);
+        if (!context) {
+          console.error(`Connection context not found for ID: ${connectionId}`);
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'error',
+              error: 'Connection context not found',
+              details: 'Please reconnect to the server'
+            }));
+          }
+          return;
+        }
+        
         const startTime = Date.now();
         
         // Process message based on type
@@ -142,6 +167,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 type: 'error',
                 messageId: Date.now().toString(),
                 error: 'Failed to transcribe audio',
+                details: error.message || 'Unknown error'
+              }));
+            }
+          }
+        }
+        // Handle voice streaming start
+        else if (data.type === 'voice_stream_start') {
+          // Since we've already checked for a valid context at the beginning of the handler,
+          // we don't need to check again
+          context.voiceStreamActive = true;
+          context.transcriptInProgress = true;
+          context.transcriptBuffer = '';
+          
+          if (data.formId) context.currentForm = data.formId;
+          if (data.questionId) context.currentQuestion = data.questionId;
+          
+          // Acknowledge stream start
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'voice_stream_ack',
+              status: 'started',
+              messageId: Date.now().toString()
+            }));
+          }
+        }
+        // Handle voice streaming chunk data
+        else if (data.type === 'voice_stream_chunk') {
+          // Voice streaming requires active streaming
+          if (!context.voiceStreamActive) {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                error: 'No active voice stream',
+                details: 'You must start a voice stream before sending chunks'
+              }));
+            }
+            return;
+          }
+          
+          try {
+            const audioChunk = data.audioChunk;
+            
+            // In a real implementation, we'd accumulate audio chunks and perform 
+            // incremental transcription. For this demo, we'll simulate it with partial results.
+            
+            // If this is the first chunk or at random intervals, send partial transcription
+            const shouldSendPartial = Math.random() > 0.7; // ~30% chance to send partial update
+            
+            if (shouldSendPartial) {
+              // Simulate partial results
+              const partialWords = ["hello", "testing", "this", "is", "a", "sample", "voice", "response", 
+                "form", "question", "answer", "streaming", "real-time", "transcription"];
+                
+              // Add 1-3 random words to the buffer
+              const wordCount = Math.floor(Math.random() * 3) + 1;
+              for (let i = 0; i < wordCount; i++) {
+                const randomWord = partialWords[Math.floor(Math.random() * partialWords.length)];
+                context.transcriptBuffer += (context.transcriptBuffer ? ' ' : '') + randomWord;
+              }
+              
+              // Send partial result
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                  type: 'voice_stream_partial',
+                  text: context.transcriptBuffer,
+                  final: false,
+                  messageId: Date.now().toString()
+                }));
+              }
+            }
+            
+          } catch (error: any) {
+            console.error('Error processing voice stream chunk:', error);
+            
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                error: 'Failed to process voice stream chunk',
+                details: error.message || 'Unknown error'
+              }));
+            }
+          }
+        }
+        // Handle voice streaming end
+        else if (data.type === 'voice_stream_end') {
+          // Voice streaming requires active streaming
+          if (!context.voiceStreamActive) {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                error: 'No active voice stream',
+                details: 'You must start a voice stream before ending it'
+              }));
+            }
+            return;
+          }
+          
+          context.voiceStreamActive = false;
+          context.transcriptInProgress = false;
+          
+          try {
+            // In a real implementation, we'd process the entire accumulated buffer
+            // For this demo, we'll send the final result based on the buffer
+            
+            // If buffer is empty, generate something random
+            if (!context.transcriptBuffer) {
+              context.transcriptBuffer = "This is a simulated final transcription result.";
+            }
+            
+            // Send final result
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'voice_stream_result',
+                text: context.transcriptBuffer,
+                confidence: 0.9,
+                final: true,
+                formId: context.currentForm,
+                questionId: context.currentQuestion,
+                messageId: Date.now().toString()
+              }));
+            }
+            
+            // Process the answer if appropriate
+            if (context.currentForm && context.currentQuestion) {
+              // Code to process the answer would go here in a full implementation
+              
+              // In a real implementation, we would use LLM to improve answer processing
+              // based on question type
+              const improvedAnswer = context.transcriptBuffer;
+              
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                  type: 'voice_stream_processed',
+                  originalText: context.transcriptBuffer,
+                  processedText: improvedAnswer,
+                  confidence: 0.85,
+                  formId: context.currentForm,
+                  questionId: context.currentQuestion,
+                  messageId: Date.now().toString()
+                }));
+              }
+            }
+            
+            // Clear buffer after processing
+            context.transcriptBuffer = '';
+            
+          } catch (error: any) {
+            console.error('Error finalizing voice stream:', error);
+            
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                error: 'Failed to finalize voice stream',
                 details: error.message || 'Unknown error'
               }));
             }
