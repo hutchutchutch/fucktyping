@@ -10,7 +10,7 @@ import { Badge } from "../components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import { Slider } from "../components/ui/slider";
 import VoiceRecorder from "../components/form-responder/VoiceRecorder";
-import { setupWebSocketConnection, sendWebSocketMessage, initializeAIServices } from "../services/aiService";
+import { setupWebSocketConnection, sendWebSocketMessage, closeWebSocketConnection, initializeAIServices } from "../services/aiService";
 import { 
   Mic, 
   MicOff, 
