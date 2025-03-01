@@ -35,72 +35,190 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Bold Hero Section with Large Headlines */}
-      <header className="relative overflow-hidden bg-white text-gray-900">
-        <DigitalRain color="#2563eb" opacity={0.15} speed={1.0} density={0.025} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      <header className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white text-gray-900">
+        <div className="absolute inset-0 opacity-80">
+          <DigitalRain color="#4f46e5" opacity={0.3} speed={1.2} density={0.08} fontSize={18} />
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative z-10">
           <div className="flex flex-col lg:flex-row items-center">
             <div className="w-full lg:w-1/2 pr-0 lg:pr-12 mb-10 lg:mb-0">
               <div className="text-left">
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">Transform Your Forms</h2>
-                <h3 className="text-3xl font-bold text-indigo-600 mb-6">Engage Your Users</h3>
-                <h1 className="text-6xl sm:text-7xl md:text-8xl font-extrabold tracking-tight mt-2 mb-6 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">
-                  Voice First
+                <h2 className="text-5xl sm:text-6xl font-extrabold text-gray-900 mb-2 drop-shadow-sm">Users Hate Forms</h2>
+                <h3 className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-4 drop-shadow-sm">Leads Slip Away</h3>
+                <h1 className="text-7xl sm:text-8xl md:text-9xl font-black tracking-tight mt-2 mb-10 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600 drop-shadow">
+                  fck typing
                 </h1>
-                <p className="mt-4 mb-8 text-xl text-gray-600 max-w-xl">
-                  Let your users speak instead of type. Capture all the details they want to share, 
-                  not just what you asked for.
-                </p>
                 <Link href="/forms/new">
-                  <Button size="lg" className="px-8 py-6 text-lg bg-indigo-600 hover:bg-indigo-700 shadow-lg">
+                  <Button size="lg" className="px-8 py-6 text-xl font-bold bg-indigo-600 hover:bg-indigo-700 shadow-xl rounded-xl">
                     Create Voice Agent Form <Mic className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
               </div>
             </div>
             <div className="w-full lg:w-1/2">
-              <div className="bg-white p-4 rounded-lg shadow-xl transform rotate-2 opacity-85 relative">
+              <div className="bg-white p-4 rounded-lg shadow-xl transform rotate-2 opacity-85 relative max-h-[500px] overflow-hidden">
                 <div className="absolute -top-3 -right-3">
                   <div className="bg-indigo-500 text-white rounded-full p-2">
                     <X className="h-6 w-6" />
                   </div>
                 </div>
-                <div className="overflow-hidden">
-                  <div className="bg-gray-100 p-3 rounded-t-md">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <div className="ml-2 text-sm text-gray-600">Overwhelming Form</div>
+                <div className="h-[500px] overflow-y-auto scrollbar-thin">
+                  <div className="bg-gray-100 p-3 rounded-t-md sticky top-0 z-10 shadow-md">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      </div>
+                      <div className="text-sm text-gray-600 font-medium">Mind-Numbing Form (Page 1/7)</div>
                     </div>
                   </div>
                   <div className="p-4 border-t">
-                    <div className="flex flex-col space-y-4">
-                      <div className="border border-gray-300 p-3 rounded">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Full Legal Name <span className="text-indigo-500">*</span></label>
-                        <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="border border-gray-300 p-3 rounded">
-                          <label className="block text-gray-700 text-sm font-bold mb-2">Email <span className="text-indigo-500">*</span></label>
-                          <input className="border border-gray-300 rounded w-full py-2 px-3" type="email" />
+                    <div className="flex flex-col space-y-6">
+                      {/* Form sections - Deliberately long and tedious */}
+                      <div className="border border-gray-300 p-3 rounded bg-white">
+                        <div className="text-lg font-bold border-b pb-2 mb-3">1. Personal Information</div>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Legal First Name <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Legal Middle Name</label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Legal Last Name <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Previous Name (if applicable)</label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-gray-700 text-sm font-bold mb-2">Date of Birth <span className="text-indigo-500">*</span></label>
+                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="date" />
+                            </div>
+                            <div>
+                              <label className="block text-gray-700 text-sm font-bold mb-2">Gender <span className="text-indigo-500">*</span></label>
+                              <select className="border border-gray-300 rounded w-full py-2 px-3">
+                                <option>Select Gender</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                                <option>Non-binary</option>
+                                <option>Prefer not to say</option>
+                              </select>
+                            </div>
+                          </div>
                         </div>
-                        <div className="border border-gray-300 p-3 rounded">
-                          <label className="block text-gray-700 text-sm font-bold mb-2">Phone <span className="text-indigo-500">*</span></label>
-                          <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" />
+                      </div>
+                      
+                      <div className="border border-gray-300 p-3 rounded bg-white">
+                        <div className="text-lg font-bold border-b pb-2 mb-3">2. Contact Details</div>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Primary Email <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="email" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Confirm Email <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="email" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Mobile Phone <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Home Phone</label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Work Phone</label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="tel" />
+                          </div>
                         </div>
                       </div>
-                      <div className="border border-gray-300 p-3 rounded">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Address <span className="text-indigo-500">*</span></label>
-                        <input className="border border-gray-300 rounded w-full py-2 px-3 mb-2" type="text" placeholder="Street Address" />
-                        <input className="border border-gray-300 rounded w-full py-2 px-3 mb-2" type="text" placeholder="Apt, Suite, Bldg" />
-                        <div className="grid grid-cols-3 gap-2">
-                          <input className="border border-gray-300 rounded py-2 px-3" type="text" placeholder="City" />
-                          <input className="border border-gray-300 rounded py-2 px-3" type="text" placeholder="State" />
-                          <input className="border border-gray-300 rounded py-2 px-3" type="text" placeholder="ZIP" />
+                      
+                      <div className="border border-gray-300 p-3 rounded bg-white">
+                        <div className="text-lg font-bold border-b pb-2 mb-3">3. Current Address</div>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Street Address <span className="text-indigo-500">*</span></label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Apt/Suite/Unit</label>
+                            <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <label className="block text-gray-700 text-sm font-bold mb-2">City <span className="text-indigo-500">*</span></label>
+                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            </div>
+                            <div>
+                              <label className="block text-gray-700 text-sm font-bold mb-2">State <span className="text-indigo-500">*</span></label>
+                              <select className="border border-gray-300 rounded w-full py-2 px-3">
+                                <option>Select State</option>
+                                <option>AL</option>
+                                <option>AK</option>
+                                <option>AZ</option>
+                                {/* Imagine all 50 states here */}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-gray-700 text-sm font-bold mb-2">ZIP <span className="text-indigo-500">*</span></label>
+                              <input className="border border-gray-300 rounded w-full py-2 px-3" type="text" />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Country <span className="text-indigo-500">*</span></label>
+                            <select className="border border-gray-300 rounded w-full py-2 px-3">
+                              <option>United States</option>
+                              <option>Canada</option>
+                              <option>Mexico</option>
+                              {/* Imagine 100+ countries here */}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Time at current address</label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <select className="border border-gray-300 rounded w-full py-2 px-3">
+                                  <option>Years</option>
+                                  <option>1</option>
+                                  <option>2</option>
+                                  <option>3+</option>
+                                </select>
+                              </div>
+                              <div>
+                                <select className="border border-gray-300 rounded w-full py-2 px-3">
+                                  <option>Months</option>
+                                  <option>1</option>
+                                  <option>2</option>
+                                  <option>3</option>
+                                  {/* More months */}
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            <input type="checkbox" className="mr-2" />
+                            <label className="text-gray-700 text-sm">I've lived at this address for less than 2 years</label>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-xs text-gray-500 mt-4">
-                        Page 1 of 7 (32 fields remaining)
+                      
+                      <div className="text-xs text-gray-500 mt-4 flex items-center">
+                        <div className="h-1 bg-gray-300 rounded-full flex-grow mr-2">
+                          <div className="h-1 bg-indigo-500 rounded-full" style={{width: '14%'}}></div>
+                        </div>
+                        <span>Page 1 of 7 (32 fields remaining)</span>
+                      </div>
+                      
+                      <div className="sticky bottom-0 bg-white p-3 border-t border-gray-200 flex justify-between">
+                        <button className="px-4 py-2 bg-gray-200 rounded text-gray-600" disabled>Previous</button>
+                        <button className="px-4 py-2 bg-indigo-500 text-white rounded">Next Page</button>
                       </div>
                     </div>
                   </div>

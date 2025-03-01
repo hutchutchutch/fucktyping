@@ -12,11 +12,11 @@ interface DigitalRainProps {
 }
 
 export default function DigitalRain({ 
-  color = '#2563eb', // default: blue-600 color
-  speed = 1.0,
-  density = 0.025,
-  opacity = 0.15,
-  fontSize = 14,
+  color = '#4338ca', // default: indigo-700 color
+  speed = 1.1,
+  density = 0.05,
+  opacity = 0.25,
+  fontSize = 16,
   className = ''
 }: DigitalRainProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -53,7 +53,7 @@ export default function DigitalRain({
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       // Set font and basic color
-      ctx.font = `${fontSize}px monospace`;
+      ctx.font = `bold ${fontSize}px monospace`;
       
       // Loop over drops
       for (let i = 0; i < drops.length; i++) {
@@ -65,7 +65,7 @@ export default function DigitalRain({
         const y = drops[i];
         
         // Add gradient effect for depth
-        const gradientLength = 4; // How many characters to fade
+        const gradientLength = 6; // How many characters to fade (increased for more visible trails)
         
         if (y > 0) { // Only draw if visible
           // Draw leading character (brightest)
@@ -109,7 +109,7 @@ export default function DigitalRain({
     <canvas
       ref={canvasRef}
       className={`absolute top-0 left-0 w-full h-full -z-10 ${className}`}
-      style={{ mixBlendMode: 'normal' }}
+      style={{ mixBlendMode: 'soft-light' }}
     />
   );
 }
