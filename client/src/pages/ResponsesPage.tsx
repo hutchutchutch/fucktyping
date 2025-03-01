@@ -7,9 +7,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "../components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +25,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "../components/ui/dropdown-menu";
 import {
   Pagination,
   PaginationContent,
@@ -34,8 +34,8 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "../components/ui/pagination";
+import { Skeleton } from "../components/ui/skeleton";
 import { 
   ArrowLeft, 
   Search, 
@@ -49,7 +49,7 @@ import {
   SlidersHorizontal
 } from 'lucide-react';
 import { mockForms, mockResponses } from '../services/mockData';
-import { Form, Question, Response } from '../shared/schema';
+import { Form, Question, Response } from '../../shared/schema';
 
 interface ResponseData extends Response {
   respondent: string;

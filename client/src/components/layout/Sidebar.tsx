@@ -5,7 +5,7 @@ import {
   ChatBubbleLeftRightIcon,
   Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
-import AIChatAssistant from "@/components/layout/AIChatAssistant";
+import AIChatAssistant from "./AIChatAssistant";
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();

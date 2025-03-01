@@ -21,12 +21,17 @@ export const insertUserSchema = createInsertSchema(users).pick({
   avatarUrl: true,
 });
 
+// Form status enum
+export const formStatusEnum = z.enum(['draft', 'active', 'archived']);
+export type FormStatus = z.infer<typeof formStatusEnum>;
+
 // Form schema
 export const forms = pgTable("forms", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   title: text("title").notNull(),
   description: text("description"),
+  status: text("status").default('draft'), // 'draft', 'active', 'archived'
   isActive: boolean("is_active").default(true),
   emailNotificationEnabled: boolean("email_notification_enabled").default(false),
   emailRecipients: text("email_recipients"),
@@ -40,6 +45,7 @@ export const insertFormSchema = createInsertSchema(forms).pick({
   userId: true,
   title: true,
   description: true,
+  status: true,
   isActive: true,
   emailNotificationEnabled: true,
   emailRecipients: true,
@@ -154,8 +160,11 @@ export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 
-// Form with questions
-export type FormWithQuestions = Form & { questions: Question[] };
+// Extended Form types 
+export type FormWithQuestions = Form & { 
+  questions: Question[]; 
+  responseCount?: number;
+};
 
 // Response with answers
 export type ResponseWithAnswers = Response & { answers: Answer[] };
