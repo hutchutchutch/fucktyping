@@ -4,7 +4,8 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { 
   insertFormSchema, insertQuestionSchema, insertResponseSchema,
-  insertAnswerSchema, insertConversationSchema, insertMessageSchema 
+  insertAnswerSchema, insertConversationSchema, insertMessageSchema,
+  insertCategorySchema 
 } from "@shared/schema";
 import { z } from "zod";
 import { log } from "./vite";
@@ -452,6 +453,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Categories API endpoints
+  // GET all categories for user
+  app.get("/api/categories", async (req: Request, res: Response) => {
+    try {
+      // In a real app, this would use the authenticated user's ID
+      const userId = 1; // Using test user ID
+      const categories = await storage.getCategoriesByUserId(userId);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Error fetching categories" });
+    }
+  });
+
+  // GET categories with stats
+  app.get("/api/categories/stats", async (req: Request, res: Response) => {
+    try {
+      // In a real app, this would use the authenticated user's ID
+      const userId = 1; // Using test user ID
+      const categoriesWithStats = await storage.getAllCategoriesWithStats(userId);
+      res.json(categoriesWithStats);
+    } catch (error) {
+      console.error("Error fetching categories with stats:", error);
+      res.status(500).json({ message: "Error fetching categories with stats" });
+    }
+  });
+
+  // GET category by ID
+  app.get("/api/categories/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const category = await storage.getCategory(id);
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      console.error("Error fetching category:", error);
+      res.status(500).json({ message: "Error fetching category" });
+    }
+  });
+
+  // GET category with stats by ID
+  app.get("/api/categories/:id/stats", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const categoryStats = await storage.getCategoryWithStats(id);
+      if (!categoryStats) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(categoryStats);
+    } catch (error) {
+      console.error("Error fetching category stats:", error);
+      res.status(500).json({ message: "Error fetching category stats" });
+    }
+  });
+
+  // POST Create category
+  app.post("/api/categories", async (req: Request, res: Response) => {
+    try {
+      const categoryData = insertCategorySchema.parse(req.body);
+      const category = await storage.createCategory(categoryData);
+      res.status(201).json(category);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid category data", errors: error.errors });
+      }
+      console.error("Error creating category:", error);
+      res.status(500).json({ message: "Error creating category" });
+    }
+  });
+
+  // PUT Update category
+  app.put("/api/categories/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const categoryData = insertCategorySchema.partial().parse(req.body);
+      const updatedCategory = await storage.updateCategory(id, categoryData);
+      
+      if (!updatedCategory) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(updatedCategory);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid category data", errors: error.errors });
+      }
+      console.error("Error updating category:", error);
+      res.status(500).json({ message: "Error updating category" });
+    }
+  });
+
+  // DELETE Category
+  app.delete("/api/categories/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const success = await storage.deleteCategory(id);
+      if (!success) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json({ message: "Category deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ message: "Error deleting category" });
+    }
+  });
+
+  // GET forms by category ID
+  app.get("/api/categories/:id/forms", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const forms = await storage.getFormsByCategoryId(id);
+      
+      // Count responses for each form
+      const formsWithStats = await Promise.all(forms.map(async (form) => {
+        const responses = await storage.getResponsesByFormId(form.id);
+        return {
+          ...form,
+          responseCount: responses.length,
+          lastResponseDate: responses.length > 0 ? responses[0].completedAt : null
+        };
+      }));
+      
+      res.json(formsWithStats);
+    } catch (error) {
+      console.error("Error fetching forms by category:", error);
+      res.status(500).json({ message: "Error fetching forms by category" });
+    }
+  });
+  
   // GET stats
   app.get("/api/stats", async (req: Request, res: Response) => {
     try {

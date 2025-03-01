@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { format } from 'date-fns';
 import { 
@@ -28,12 +28,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "../components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Loader2, BarChart2, ClipboardCheck, MoreVertical, Edit, Trash2, Copy, Eye, Share2 } from 'lucide-react';
+import { 
+  Loader2, BarChart2, ClipboardCheck, MoreVertical, Edit, Trash2, Copy, 
+  Eye, Share2, Star, Users, Calendar, Megaphone, PlusCircle, Inbox,
+  ChevronRight, Percent, ThumbsUp, MessageSquare
+} from 'lucide-react';
 import { mockForms } from '../services/mockData';
-import { FormWithQuestions } from '../../../shared/schema';
+import { FormWithQuestions, CategoryWithStats } from '../../../shared/schema';
+import { Progress } from "../components/ui/progress";
 
 const FormsPage = () => {
   const [, navigate] = useLocation();

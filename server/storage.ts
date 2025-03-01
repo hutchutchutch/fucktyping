@@ -411,9 +411,43 @@ export class MemStorage implements IStorage {
       avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
     });
     
+    // Create categories
+    const customerCategory = await this.createCategory({
+      userId: user.id,
+      name: "Customer Feedback",
+      description: "Forms for gathering customer input and feedback",
+      color: "#3B82F6",
+      icon: "star"
+    });
+    
+    const hrCategory = await this.createCategory({
+      userId: user.id,
+      name: "Human Resources",
+      description: "Forms related to HR processes and recruiting",
+      color: "#8B5CF6",
+      icon: "users"
+    });
+    
+    const eventCategory = await this.createCategory({
+      userId: user.id,
+      name: "Events",
+      description: "Forms for event planning, feedback, and management",
+      color: "#EC4899",
+      icon: "calendar"
+    });
+    
+    const marketingCategory = await this.createCategory({
+      userId: user.id,
+      name: "Marketing",
+      description: "Forms for marketing surveys and campaigns",
+      color: "#10B981",
+      icon: "megaphone"
+    });
+    
     // Create a few forms
     const form1 = await this.createForm({
       userId: user.id,
+      categoryId: customerCategory.id,
       title: "Customer Satisfaction",
       description: "Please provide feedback about your recent experience with our customer service team.",
       isActive: true,
@@ -453,9 +487,23 @@ Voice Form Agent`
       required: true
     });
     
-    // Create another form
+    // Create another form in the same category
     const form2 = await this.createForm({
       userId: user.id,
+      categoryId: customerCategory.id,
+      title: "Product Feedback",
+      description: "Help us improve our products with your feedback",
+      isActive: true,
+      emailNotificationEnabled: true,
+      emailRecipients: "product@example.com",
+      emailSubject: "New Product Feedback",
+      emailTemplate: "A new product feedback form has been submitted."
+    });
+    
+    // HR category form
+    const form3 = await this.createForm({
+      userId: user.id,
+      categoryId: hrCategory.id,
       title: "Job Application",
       description: "Apply for open positions at our company",
       isActive: true,
@@ -465,11 +513,25 @@ Voice Form Agent`
       emailTemplate: "A new job application has been submitted."
     });
     
-    // Create a third form
-    const form3 = await this.createForm({
+    // Event category form
+    const form4 = await this.createForm({
       userId: user.id,
+      categoryId: eventCategory.id,
       title: "Event Feedback",
       description: "Share your thoughts about our recent event",
+      isActive: true,
+      emailNotificationEnabled: false,
+      emailRecipients: null,
+      emailSubject: null,
+      emailTemplate: null
+    });
+    
+    // Marketing category form
+    const form5 = await this.createForm({
+      userId: user.id,
+      categoryId: marketingCategory.id,
+      title: "Marketing Survey",
+      description: "Help us understand your preferences",
       isActive: true,
       emailNotificationEnabled: false,
       emailRecipients: null,
@@ -530,6 +592,13 @@ Voice Form Agent`
       responseId: response3.id,
       questionId: 2,
       answerText: "Everything was perfect, no improvements needed!"
+    });
+    
+    // Add a response to another form
+    const response4 = await this.createResponse({
+      formId: form2.id,
+      respondentName: "Mike Brown",
+      respondentEmail: "mike.b@example.com"
     });
   }
 }
