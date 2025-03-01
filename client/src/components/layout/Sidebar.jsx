@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useAuthContext } from "../../context/AuthContext";
 import {
@@ -7,13 +7,14 @@ import {
   FileQuestion,
   HelpCircle,
   Home,
-  LogOut,
   Settings,
+  MessageSquare
 } from "lucide-react";
+import AIChatAssistant from "./AIChatAssistant";
 
 function Sidebar() {
-  const [location] = useLocation();
-  const { user, logout } = useAuthContext();
+  const [location, navigate] = useLocation();
+  const { user } = useAuthContext();
 
   const isActive = (path) => {
     return location === path || location.startsWith(`${path}/`);
@@ -39,8 +40,8 @@ function Sidebar() {
           icon: <FileQuestion className="h-4 w-4 mr-3" />,
         },
         {
-          name: "Analytics",
-          path: "/analytics",
+          name: "Responses",
+          path: "/responses",
           icon: <BarChart className="h-4 w-4 mr-3" />,
         },
       ],
@@ -64,7 +65,10 @@ function Sidebar() {
 
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 bg-white border-r border-gray-200 h-screen">
-      <div className="p-4 border-b border-gray-200">
+      <div 
+        className="p-4 border-b border-gray-200 cursor-pointer"
+        onClick={() => navigate("/")}
+      >
         <h1 className="text-xl font-bold font-sans text-primary-500">Voice Form Agent</h1>
       </div>
 
@@ -77,19 +81,18 @@ function Sidebar() {
             <ul>
               {section.items.map((item) => (
                 <li key={item.path} className="mb-1">
-                  <Link href={item.path}>
-                    <a
-                      className={cn(
-                        "flex items-center px-3 py-2 text-sm rounded-md",
-                        isActive(item.path)
-                          ? "text-primary-500 bg-primary-50"
-                          : "text-gray-700 hover:bg-gray-100"
-                      )}
-                    >
-                      {item.icon}
-                      {item.name}
-                    </a>
-                  </Link>
+                  <div
+                    onClick={() => navigate(item.path)}
+                    className={cn(
+                      "flex items-center px-3 py-2 text-sm rounded-md cursor-pointer",
+                      isActive(item.path)
+                        ? "text-primary-500 bg-primary-50"
+                        : "text-gray-700 hover:bg-gray-100"
+                    )}
+                  >
+                    {item.icon}
+                    {item.name}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -97,26 +100,8 @@ function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
-            {user?.firstName?.[0] || "U"}
-          </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium">
-              {user?.firstName
-                ? `${user.firstName} ${user.lastName || ""}`
-                : "Guest User"}
-            </p>
-            <p className="text-xs text-gray-500">{user?.email || "guest@example.com"}</p>
-          </div>
-          <button
-            onClick={logout}
-            className="ml-auto text-gray-400 hover:text-gray-600"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
-        </div>
+      <div className="mt-auto">
+        <AIChatAssistant />
       </div>
     </aside>
   );

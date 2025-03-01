@@ -50,7 +50,7 @@ export default function Stats() {
       iconColor: "text-purple-500"
     },
     {
-      title: "Responses",
+      title: "Total Responses",
       value: data?.totalResponses || 0,
       icon: ChartBarIcon,
       color: "bg-blue-50",

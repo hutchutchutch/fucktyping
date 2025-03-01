@@ -26,7 +26,7 @@ export default function Dashboard() {
       </div>
 
       <div className="mb-10">
-        <h2 className="text-base font-medium text-gray-700 mb-6">Overview</h2>
+        <h2 className="text-base font-medium text-gray-700 mb-6">Response Overview</h2>
         <Stats />
       </div>
       

@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export default function AIChatAssistant() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true); // Start with the chat open
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<{ role: 'ai' | 'user', content: string }[]>([
-    { role: 'ai', content: 'Hi there! I can help you with creating forms or answering questions. How can I assist you today?' }
+    { role: 'ai', content: 'Hi there! I can help you with creating voice forms or answering questions. How can I assist you today?' }
   ]);
 
   const handleSendMessage = (e: React.FormEvent) => {
