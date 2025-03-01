@@ -86,11 +86,15 @@ function Sidebar() {
                     className={cn(
                       "flex items-center px-3 py-2 text-sm rounded-md cursor-pointer",
                       isActive(item.path)
-                        ? "text-primary-500 bg-primary-50"
+                        ? "text-blue-600 bg-blue-50 font-bold"
                         : "text-gray-700 hover:bg-gray-100"
                     )}
                   >
-                    {item.icon}
+                    <span className={cn(
+                      isActive(item.path) ? "text-blue-600" : "text-gray-700"
+                    )}>
+                      {item.icon}
+                    </span>
                     {item.name}
                   </div>
                 </li>

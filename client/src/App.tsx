@@ -22,6 +22,12 @@ function Router() {
       <AppLayout>
         <Switch>
           <Route path="/" component={Dashboard} />
+          <Route path="/dashboard" component={Dashboard} />
+          <Route path="/forms" component={Dashboard} />
+          <Route path="/responses" component={Dashboard} />
+          <Route path="/settings" component={Dashboard} />
+          <Route path="/help" component={Dashboard} />
+          <Route path="/forms/new" component={FormBuilder} />
           <Route path="/forms/create" component={FormBuilder} />
           <Route path="/forms/edit/:id" component={FormBuilder} />
           <Route path="/forms/:id/responses" component={ResponseViewer} />

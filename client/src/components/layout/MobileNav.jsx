@@ -44,10 +44,12 @@ function MobileNav() {
             key={item.path} 
             onClick={() => navigate(item.path)}
             className={`flex flex-col items-center cursor-pointer ${
-              isActive(item.path) ? "text-primary-500" : "text-gray-500"
+              isActive(item.path) ? "text-blue-600 font-bold" : "text-gray-500"
             }`}
           >
-            {item.icon}
+            <span className={isActive(item.path) ? "text-blue-600" : "text-gray-500"}>
+              {item.icon}
+            </span>
             <span className="text-xs">{item.name}</span>
           </div>
         ))}
