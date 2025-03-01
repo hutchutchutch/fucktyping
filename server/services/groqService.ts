@@ -10,7 +10,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 // Initialize the Groq chat model
 const groqChat = new ChatGroq({
   apiKey: process.env.GROQ_API_KEY || '',
-  modelName: "llama3-70b-8192"
+  modelName: "grok-2-1212" // Using Grok 2 as our default model
 });
 
 /**
@@ -23,7 +23,7 @@ export async function generateResponse(prompt, options = {}) {
   const { 
     temperature = 0.7, 
     maxTokens = 250,
-    model = 'llama3-70b-8192' 
+    model = 'grok-2-1212' 
   } = options;
   
   console.log(`Generating response using ${model} with temperature ${temperature}`);

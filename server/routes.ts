@@ -76,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const response = await groqService.generateResponse(prompt, {
               temperature: data.temperature || 0.7,
               maxTokens: data.maxTokens || 250,
-              model: 'llama3-70b-8192'
+              model: 'grok-2-1212' // Updated to use Groq's model
             });
             
             // Add the assistant response to the context
