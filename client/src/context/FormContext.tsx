@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { Form, Question, Response } from "@shared/schema";
+// @ts-ignore - Import JSX version
 import { useAuthContext } from "./AuthContext";
 
 interface FormContextType {

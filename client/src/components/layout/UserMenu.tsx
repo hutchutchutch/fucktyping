@@ -38,7 +38,7 @@ export default function UserMenu() {
     setIsLoggingIn(true);
     
     try {
-      await login(email, password);
+      await login({ email, password });
       setLoginOpen(false);
     } catch (error) {
       console.error("Login failed:", error);

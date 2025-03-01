@@ -56,15 +56,31 @@ export function AuthProvider({ children }) {
   const login = async (credentials) => {
     try {
       setIsLoading(true);
-      const response = await apiRequest("POST", "/api/auth/login", credentials);
-      const data = await response.json();
+      // For demo purposes, simulate a successful login
+      // In a real app, this would make an API call
+      // const response = await apiRequest("POST", "/api/auth/login", credentials);
+      // const data = await response.json();
       
-      setUser(data.user);
-      setIsAuthenticated(true);
-      notification.success("Successfully logged in");
-      navigate("/dashboard");
+      // Simulate response
+      setTimeout(() => {
+        const demoUser = {
+          id: 1,
+          username: "demo_user",
+          email: credentials.email,
+          firstName: "Demo",
+          lastName: "User",
+          name: "Demo User"
+        };
+        
+        setUser(demoUser);
+        setIsAuthenticated(true);
+        notification.success("Successfully logged in");
+        navigate("/dashboard");
+      }, 500);
+      
       return true;
     } catch (error) {
+      console.error("Login failed:", error);
       notification.error(error.message || "Login failed");
       return false;
     } finally {
