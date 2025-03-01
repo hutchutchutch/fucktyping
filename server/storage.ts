@@ -603,6 +603,25 @@ Voice Form Agent`
   }
 }
 
-export const storage = new MemStorage();
-// Seed test data
-storage.seedTestData();
+import { DatabaseStorage } from "./databaseStorage";
+import runMigration from "./migrate";
+
+// Create storage instance but don't initialize yet
+const dbStorage = new DatabaseStorage();
+
+// Export an async function to initialize the storage
+export async function initializeStorage() {
+  try {
+    // Run migrations before using the database
+    await runMigration();
+    // Seed test data after migrations are complete
+    await dbStorage.seedTestData();
+    console.log("Database initialized successfully with test data");
+  } catch (error) {
+    console.error("Failed to initialize database:", error);
+    throw error;
+  }
+}
+
+// Export the storage instance
+export const storage = dbStorage;
