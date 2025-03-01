@@ -258,7 +258,11 @@ export async function textToSpeech(text: string, options: SpeechSynthesisOptions
  * @param {Object} options - Processing options
  * @returns {Promise<Object>} - Processed answer
  */
-export async function processVoiceAnswer(audioBase64, questionType, options = {}) {
+export async function processVoiceAnswer(
+  audioBase64: string, 
+  questionType: string, 
+  options: ProcessVoiceAnswerOptions = {}
+) {
   try {
     // First, transcribe the audio
     const transcription = await transcribeAudio(audioBase64);
@@ -283,7 +287,7 @@ export async function processVoiceAnswer(audioBase64, questionType, options = {}
  * @param {string} audioBase64 - Base64 encoded audio data
  * @returns {Promise<Object>} - Sentiment analysis result
  */
-export async function analyzeVoiceSentiment(audioBase64) {
+export async function analyzeVoiceSentiment(audioBase64: string): Promise<SentimentAnalysisResult> {
   try {
     // First, transcribe the audio
     const transcription = await transcribeAudio(audioBase64);

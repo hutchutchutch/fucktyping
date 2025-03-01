@@ -19,7 +19,11 @@ const groqChat = new ChatGroq({
  * @param {Object} options - Generation options
  * @returns {Promise<Object>} - Generated response
  */
-export async function generateResponse(prompt, options = {}) {
+export async function generateResponse(prompt: string, options: {
+  temperature?: number;
+  maxTokens?: number;
+  model?: string;
+} = {}) {
   const { 
     temperature = 0.7, 
     maxTokens = 250,
@@ -79,7 +83,12 @@ export async function generateResponse(prompt, options = {}) {
  * @param {Array} options - Options for multiple choice questions
  * @returns {Promise<any>} - Processed answer
  */
-export async function processAnswer(text, questionType, questionText, options = []) {
+export async function processAnswer(
+  text: string, 
+  questionType: string, 
+  questionText: string, 
+  options: string[] = []
+) {
   try {
     // Simulate processing time
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -111,7 +120,7 @@ export async function processAnswer(text, questionType, questionText, options = 
         // Find the best match
         const bestMatch = matches.reduce((best, current) => 
           current.confidence > best.confidence ? current : best
-        , { confidence: 0 });
+        , { confidence: 0, option: '', index: -1 });
         
         if (bestMatch.confidence > 0.5) {
           return { 
@@ -128,7 +137,7 @@ export async function processAnswer(text, questionType, questionText, options = 
         const ratingMatch = text.match(/\b([0-5]|five|four|three|two|one)\b/i);
         if (ratingMatch) {
           const ratingText = ratingMatch[1].toLowerCase();
-          const ratingMap = { 'five': 5, 'four': 4, 'three': 3, 'two': 2, 'one': 1 };
+          const ratingMap: Record<string, number> = { 'five': 5, 'four': 4, 'three': 3, 'two': 2, 'one': 1 };
           const rating = ratingMap[ratingText] || parseInt(ratingText);
           
           return { 
@@ -198,7 +207,7 @@ export async function processAnswer(text, questionType, questionText, options = 
  * @param {string} text - Text to analyze
  * @returns {Promise<Object>} - Sentiment analysis result
  */
-export async function analyzeSentiment(text) {
+export async function analyzeSentiment(text: string) {
   try {
     // For development we use a simple keyword-based approach
     // In production, we would use LangChain with Groq for sentiment analysis
