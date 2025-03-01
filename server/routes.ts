@@ -358,18 +358,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST process speech to text
   app.post("/api/voice/transcribe", async (req: Request, res: Response) => {
     try {
-      // In a real implementation, this would use a speech-to-text API
-      // For demo purposes, just echo back the text if provided or return mock response
+      // Import the voice service
+      const voiceService = await import('./services/voiceService.js').then(m => m.default);
+      
       const { audio } = req.body;
       
       if (!audio) {
         return res.status(400).json({ message: "Audio data is required" });
       }
       
-      // Mock response - would connect to Groq or other STT API
-      const transcript = req.body.text || "This is a simulated transcription of the audio input.";
+      // Use the voiceService to transcribe the audio
+      const transcriptionResult = await voiceService.transcribe(audio);
       
-      res.json({ transcript });
+      res.json({ 
+        transcript: transcriptionResult.text,
+        confidence: transcriptionResult.confidence, 
+        language: transcriptionResult.language 
+      });
     } catch (error) {
       console.error("Error transcribing audio:", error);
       res.status(500).json({ message: "Error transcribing audio" });
@@ -379,17 +384,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST text to speech
   app.post("/api/voice/synthesize", async (req: Request, res: Response) => {
     try {
-      const { text } = req.body;
+      // Import the voice service
+      const voiceService = await import('./services/voiceService.js').then(m => m.default);
+      
+      const { text, voice } = req.body;
       
       if (!text) {
         return res.status(400).json({ message: "Text is required" });
       }
       
-      // Mock response - would connect to a TTS API
-      // Return a mock audio URL (in a real app, this would be a base64 audio or URL)
+      // In a real implementation, we would convert the audio buffer to a data URL
+      // For this demo, we're simulating the response
+      const audioBuffer = await voiceService.textToSpeech(text, voice);
+      const audioBase64 = voiceService.audioToBase64(audioBuffer);
+      
       res.json({
-        audioUrl: "data:audio/wav;base64,mockAudioData",
-        message: "Text-to-speech conversion simulated. In a real app, this would return actual audio."
+        audioUrl: `data:audio/mp3;base64,${audioBase64}`,
+        message: "Text-to-speech conversion completed"
       });
     } catch (error) {
       console.error("Error synthesizing speech:", error);
@@ -400,7 +411,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST conversation message
   app.post("/api/conversation", async (req: Request, res: Response) => {
     try {
-      const { responseId, message } = req.body;
+      // Import the Groq service
+      const groqService = await import('./services/groqService.js').then(m => m.default);
+      
+      const { responseId, message, questionContext, agentSettings } = req.body;
       
       if (!responseId || !message) {
         return res.status(400).json({ message: "Response ID and message are required" });
@@ -417,17 +431,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Add message to conversation
+      // Add user message to conversation
       await storage.createMessage({
         conversationId: conversation.id,
         role: "user",
         content: message
       });
       
-      // In a real app, process with LangGraph.js and Groq
-      // Mock assistant response
-      const assistantResponse = "Thank you for your response. Is there anything else you'd like to add?";
+      // Get all previous messages to build context
+      const messages = await storage.getMessagesByConversationId(conversation.id);
       
+      // Build a prompt for the Groq service
+      let prompt = "You are a helpful AI assistant conducting a form or survey. ";
+      
+      if (questionContext) {
+        prompt += `Current question context: ${questionContext}. `;
+      }
+      
+      prompt += "Respond to the following message from the user in a conversational way: ";
+      
+      // Add conversation history for context
+      if (messages.length > 1) {
+        prompt += "Previous messages: ";
+        messages.slice(0, -1).forEach(m => {
+          prompt += `\n${m.role}: ${m.content}`;
+        });
+        prompt += "\n\nUser's latest message: " + message;
+      } else {
+        prompt += message;
+      }
+      
+      // Use Groq to generate a response
+      const options = agentSettings || {
+        temperature: 0.7,
+        maxTokens: 150
+      };
+      
+      const generatedResponse = await groqService.generateResponse(prompt, options);
+      const assistantResponse = generatedResponse.text;
+      
+      // Add assistant message to conversation
       await storage.createMessage({
         conversationId: conversation.id,
         role: "assistant",
@@ -435,17 +478,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Update conversation transcript
-      const messages = await storage.getMessagesByConversationId(conversation.id);
-      const transcript = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+      const updatedMessages = await storage.getMessagesByConversationId(conversation.id);
+      const transcript = updatedMessages.map(m => `${m.role}: ${m.content}`).join('\n');
       
       await storage.updateConversation(conversation.id, {
         transcript,
-        state: { currentStep: "follow-up" }
+        state: { 
+          currentStep: "follow-up",
+          lastMessageTimestamp: new Date(),
+          messageCount: updatedMessages.length
+        }
       });
       
+      // Analyze sentiment if appropriate
+      let sentimentScore = null;
+      try {
+        if (message.length > 10) {
+          const sentiment = await groqService.analyzeSentiment(message);
+          sentimentScore = Math.round(sentiment.score * 100); // Convert to 0-100 scale
+        }
+      } catch (err) {
+        console.error("Sentiment analysis failed:", err);
+        // Continue anyway, sentiment is optional
+      }
+      
+      // Return the AI response along with stats
       res.json({
         message: assistantResponse,
-        conversationId: conversation.id
+        conversationId: conversation.id,
+        stats: {
+          tokens: generatedResponse.tokens,
+          processingTime: generatedResponse.processingTime,
+          sentiment: sentimentScore
+        }
       });
     } catch (error) {
       console.error("Error processing conversation:", error);
