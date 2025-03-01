@@ -126,16 +126,16 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Pain Point 1 */}
             <div className="bg-gray-50 rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
-              <div className="p-1 bg-gradient-to-r from-red-500 to-pink-500"></div>
+              <div className="p-1 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
               <div className="p-6">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                  <Clock className="h-6 w-6 text-red-600" />
+                <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                  <Clock className="h-6 w-6 text-indigo-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Form Fatigue</h3>
                 <p className="text-gray-600 mb-6">
                   Users are overwhelmed when forms are too long, leading to high abandonment rates and incomplete data.
                 </p>
-                <Badge className="bg-red-100 text-red-800 hover:bg-red-200">
+                <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-200">
                   Reduced Completion Rates
                 </Badge>
               </div>
@@ -143,16 +143,16 @@ export default function LandingPage() {
 
             {/* Pain Point 2 */}
             <div className="bg-gray-50 rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
-              <div className="p-1 bg-gradient-to-r from-yellow-500 to-orange-500"></div>
+              <div className="p-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
               <div className="p-6">
-                <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center mb-4">
-                  <ClipboardCheck className="h-6 w-6 text-yellow-600" />
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                  <ClipboardCheck className="h-6 w-6 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Missing Context</h3>
                 <p className="text-gray-600 mb-6">
                   Businesses miss out on extra details they didn't explicitly ask for, losing valuable insights.
                 </p>
-                <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
+                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
                   Limited Insights
                 </Badge>
               </div>
