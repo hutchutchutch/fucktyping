@@ -44,6 +44,7 @@ export default function Routes() {
                          location.includes('/forms/edit/') || 
                          location.includes('/forms/new') || 
                          location.includes('/forms/create') ||
+                         location.includes('/forms/draft/test') ||
                          (location.includes('/forms/') && location.includes('/responses'));
                          
   // For paths that need the full layout with sidebar
@@ -86,6 +87,10 @@ export default function Routes() {
           
           <Route path="/forms/:id/responses">
             {(params) => <PrivateRoute component={ResponseViewer} params={params} />}
+          </Route>
+          
+          <Route path="/forms/draft/test">
+            {() => <PrivateRoute component={TestForm} />}
           </Route>
           
 

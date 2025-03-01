@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Badge } from "../components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import { Slider } from "../components/ui/slider";
+import { io } from "socket.io-client";
+import { OpenAI } from "openai";
 import { 
   Mic, 
   MicOff, 
