@@ -1,120 +1,132 @@
 /**
- * Voice Service - Handles speech-to-text and text-to-speech operations
+ * Voice Service - Handles audio transcription and text-to-speech
  */
 
-// For a real implementation, we would use the Whisper API
-// For this demo, we'll simulate the responses
-const voiceService = {
-  /**
-   * Transcribe audio to text
-   * @param {string} audioData - Base64 encoded audio or audio blob
-   * @returns {Promise<Object>} - Transcription result
-   */
-  transcribe: async (audioData) => {
-    try {
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 700 + Math.random() * 300));
-      
-      console.log("[VoiceService] Transcribing audio data...");
-      
-      // In production, this would call the Whisper API
-      // For demo, return a simulated response
-      const mockResponses = [
-        "I would rate my experience as excellent. The customer service representative was very helpful.",
-        "My experience was good overall. The product works as expected.",
-        "I think your website could be improved by making the navigation simpler.",
-        "The shipping was incredibly fast, and the packaging was excellent.",
-        "I'd like to see more color options available for this product.",
-        "I had trouble finding the information I needed on your support page.",
-        "The quality of the product exceeded my expectations.",
-        "I'm satisfied with my recent purchase.",
-        "Yes, I would recommend this product to a friend.",
-        "No, I wouldn't buy this again because of the quality issues."
-      ];
-      
-      const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
-      
-      return {
-        text: randomResponse,
-        confidence: 0.92 + (Math.random() * 0.08),
-        language: "en",
-        processingTime: 450 + Math.floor(Math.random() * 200)
-      };
-    } catch (error) {
-      console.error("Error transcribing audio:", error);
-      throw new Error(`Transcription error: ${error.message}`);
-    }
-  },
-  
-  /**
-   * Convert text to speech
-   * @param {string} text - Text to convert to speech
-   * @param {string} voice - Voice ID to use
-   * @returns {Promise<Buffer>} - Audio buffer
-   */
-  textToSpeech: async (text, voice = "default") => {
-    try {
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 200));
-      
-      console.log(`[VoiceService] Converting text to speech using voice: ${voice}`);
-      
-      // In a real implementation, this would call a TTS API
-      // For this demo, return a simulated audio file path
-      
-      // Note: In production, we would return an actual audio buffer
-      // For the demo, we'll just return a placeholder value
-      return Buffer.from("mockAudioData");
-    } catch (error) {
-      console.error("Error synthesizing speech:", error);
-      throw new Error(`Text-to-speech error: ${error.message}`);
-    }
-  },
-  
-  /**
-   * Process audio and extract structured information
-   * @param {string} audioData - Base64 encoded audio
-   * @param {Object} options - Processing options
-   * @returns {Promise<Object>} - Structured information
-   */
-  processAudio: async (audioData, options = {}) => {
-    try {
-      // First transcribe the audio
-      const transcription = await voiceService.transcribe(audioData);
-      
-      // Then extract structured information
-      // In production, this would use an LLM
-      // For demo, return a simple object with the transcription
-      return {
-        text: transcription.text,
-        // Add additional mock structured data
-        entities: [],
-        sentiment: Math.random() > 0.5 ? "positive" : "neutral",
-        confidence: 0.85 + (Math.random() * 0.15)
-      };
-    } catch (error) {
-      console.error("Error processing audio:", error);
-      throw new Error(`Audio processing error: ${error.message}`);
-    }
-  },
-  
-  /**
-   * Convert audio to base64 format
-   * @param {Buffer} audioBuffer - Audio buffer
-   * @returns {string} - Base64 encoded audio
-   */
-  audioToBase64: (audioBuffer) => {
-    return Buffer.from(audioBuffer).toString('base64');
-  },
-  
-  /**
-   * Convert base64 to audio buffer
-   * @param {string} base64Audio - Base64 encoded audio
-   * @returns {Buffer} - Audio buffer
-   */
-  base64ToAudio: (base64Audio) => {
-    return Buffer.from(base64Audio, 'base64');
+async function transcribeAudio(audioBase64) {
+  try {
+    // Track processing time
+    const startTime = Date.now();
+    
+    // In a production app, this would call an API like OpenAI Whisper
+    // For this demo, we'll simulate a delay and return mock data
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Simple simulation - just return a mock result
+    const mockResponse = {
+      transcript: "This is a simulated transcript of the audio recording. In a real application, this would be the text extracted from the audio using a service like OpenAI's Whisper API.",
+      confidence: 0.92,
+      language: "en",
+      processingTime: Date.now() - startTime
+    };
+    
+    return mockResponse;
+  } catch (error) {
+    console.error('Error transcribing audio:', error);
+    throw new Error('Failed to transcribe audio: ' + error.message);
   }
+}
+
+/**
+ * Convert text to speech using a TTS API
+ * @param {string} text - Text to convert to speech
+ * @param {Object} options - TTS options
+ * @returns {Promise<Object>} - Speech synthesis result
+ */
+async function textToSpeech(text, options = {}) {
+  try {
+    // Track processing time
+    const startTime = Date.now();
+    
+    // In a production app, this would call an API like ElevenLabs
+    // For this demo, we'll simulate a delay and return mock data
+    await new Promise(resolve => setTimeout(resolve, 700));
+    
+    // Default options
+    const defaultOptions = {
+      voice: options.voice || 'adam',
+      speed: options.speed || 1.0,
+      quality: options.quality || 'high'
+    };
+    
+    // Generate a fake audio URL (in a real app, this would be a data URL or file path)
+    const mockAudioUrl = `data:audio/mp3;base64,${Buffer.from('mock-audio-data').toString('base64')}`;
+    
+    // Return a simulated response
+    return {
+      audioUrl: mockAudioUrl,
+      format: 'mp3',
+      duration: text.length / 15, // Rough estimate: 15 chars per second
+      message: 'Speech synthesized successfully',
+      processingTime: Date.now() - startTime,
+      success: true
+    };
+  } catch (error) {
+    console.error('Error synthesizing speech:', error);
+    throw new Error('Failed to synthesize speech: ' + error.message);
+  }
+}
+
+/**
+ * Process a voice answer based on question type
+ * @param {string} audioBase64 - Base64 encoded audio data
+ * @param {string} questionType - Type of question (multiple_choice, text, etc.)
+ * @param {Object} options - Processing options
+ * @returns {Promise<Object>} - Processed answer
+ */
+async function processVoiceAnswer(audioBase64, questionType, options = {}) {
+  try {
+    // First, transcribe the audio
+    const transcription = await transcribeAudio(audioBase64);
+    
+    // Then, process the transcript based on the question type
+    // This would be handled by an AI model in a real application
+    let processedAnswer = {
+      value: transcription.transcript,
+      confidence: transcription.confidence,
+      processingTime: transcription.processingTime
+    };
+    
+    return processedAnswer;
+  } catch (error) {
+    console.error('Error processing voice answer:', error);
+    throw new Error('Failed to process voice answer: ' + error.message);
+  }
+}
+
+/**
+ * Analyze sentiment of audio
+ * @param {string} audioBase64 - Base64 encoded audio data
+ * @returns {Promise<Object>} - Sentiment analysis result
+ */
+async function analyzeVoiceSentiment(audioBase64) {
+  try {
+    // First, transcribe the audio
+    const transcription = await transcribeAudio(audioBase64);
+    
+    // Then, analyze the sentiment of the transcribed text
+    // In a real app, this would use an AI model
+    const sentimentScore = Math.random(); // 0-1, where 0 is negative and 1 is positive
+    
+    return {
+      score: sentimentScore,
+      text: transcription.transcript,
+      positive: sentimentScore > 0.6,
+      negative: sentimentScore < 0.4,
+      neutral: sentimentScore >= 0.4 && sentimentScore <= 0.6,
+      confidence: transcription.confidence
+    };
+  } catch (error) {
+    console.error('Error analyzing voice sentiment:', error);
+    throw new Error('Failed to analyze voice sentiment: ' + error.message);
+  }
+}
+
+module.exports = {
+  transcribeAudio,
+  textToSpeech,
+  processVoiceAnswer,
+  analyzeVoiceSentiment
 };
 
-export default voiceService;
+// Export default for ESM imports
+module.exports.default = module.exports;

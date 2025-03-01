@@ -1,125 +1,147 @@
-import { apiRequest } from "@/lib/queryClient";
+/**
+ * Voice Service - For audio recording, transcription, and text-to-speech
+ */
 
-// Interface for transcription response
 interface TranscribeResponse {
   transcript: string;
+  confidence?: number;
+  language?: string;
+  success?: boolean;
 }
 
-// Interface for text-to-speech response
 interface SynthesizeResponse {
   audioUrl: string;
+  format?: string;
   message: string;
+  success?: boolean;
 }
 
-// Interface for conversation response
 interface ConversationResponse {
   message: string;
   conversationId: number;
+  stats?: {
+    tokens?: number;
+    processingTime?: number;
+    sentiment?: number;
+  };
 }
 
-// Main voice service API
-export const voiceService = {
-  // Convert audio to text
-  transcribeAudio: async (audioBlob: Blob | string): Promise<string> => {
+const voiceService = {
+  /**
+   * Transcribe audio to text
+   * @param audioBase64 Base64 encoded audio data
+   * @returns Promise with transcript
+   */
+  transcribeAudio: async (audioBase64: string): Promise<string> => {
     try {
-      // In a real implementation, we would convert the audio blob to base64
-      // or use FormData to send the actual audio data
-      const audioData = typeof audioBlob === 'string' 
-        ? audioBlob 
-        : 'base64encodedaudiodatawouldgohere';
-      
-      const response = await apiRequest("POST", "/api/voice/transcribe", {
-        audio: audioData
+      const response = await fetch('/api/voice/transcribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ audio: audioBase64 }),
       });
-      
+
+      if (!response.ok) {
+        throw new Error(`Transcription failed: ${response.status}`);
+      }
+
       const data: TranscribeResponse = await response.json();
       return data.transcript;
     } catch (error) {
-      console.error("Error transcribing audio:", error);
-      throw new Error(`Failed to transcribe audio: ${error}`);
+      console.error('Error transcribing audio:', error);
+      throw error;
     }
   },
-  
-  // Convert text to speech
-  synthesizeSpeech: async (text: string): Promise<string> => {
+
+  /**
+   * Convert text to speech
+   * @param text Text to synthesize
+   * @param voice Voice ID to use
+   * @param options Additional options
+   * @returns Promise with audio URL
+   */
+  synthesizeSpeech: async (
+    text: string, 
+    voice: string = 'adam',
+    options: { speed?: number; quality?: string } = {}
+  ): Promise<string> => {
     try {
-      const response = await apiRequest("POST", "/api/voice/synthesize", {
-        text
+      const response = await fetch('/api/voice/synthesize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text,
+          voice,
+          speed: options.speed || 1.0,
+          quality: options.quality || 'high'
+        }),
       });
-      
+
+      if (!response.ok) {
+        throw new Error(`Speech synthesis failed: ${response.status}`);
+      }
+
       const data: SynthesizeResponse = await response.json();
       return data.audioUrl;
     } catch (error) {
-      console.error("Error synthesizing speech:", error);
-      throw new Error(`Failed to synthesize speech: ${error}`);
+      console.error('Error synthesizing speech:', error);
+      throw error;
     }
   },
-  
-  // Process a conversation message
-  processConversationMessage: async (responseId: number, message: string): Promise<ConversationResponse> => {
+
+  /**
+   * Send a message to the conversation API
+   * @param responseId ID of the form response
+   * @param message User message
+   * @param questionContext Context about the current question
+   * @param agentSettings Settings for the agent
+   * @returns Promise with the AI response
+   */
+  sendConversationMessage: async (
+    responseId: number,
+    message: string,
+    questionContext?: string,
+    agentSettings?: {
+      temperature?: number;
+      maxTokens?: number;
+      model?: string;
+    }
+  ): Promise<ConversationResponse> => {
     try {
-      const response = await apiRequest("POST", "/api/conversation", {
-        responseId,
-        message
+      const response = await fetch('/api/conversation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          responseId,
+          message,
+          questionContext,
+          agentSettings
+        }),
       });
-      
+
+      if (!response.ok) {
+        throw new Error(`Conversation API failed: ${response.status}`);
+      }
+
       return await response.json();
     } catch (error) {
-      console.error("Error processing conversation:", error);
-      throw new Error(`Failed to process conversation: ${error}`);
+      console.error('Error processing conversation:', error);
+      throw error;
     }
   },
-  
-  // Request microphone access and create a MediaRecorder
-  requestMicrophoneAccess: async (): Promise<MediaRecorder> => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      return new MediaRecorder(stream);
-    } catch (error) {
-      console.error("Error accessing microphone:", error);
-      throw new Error(`Failed to access microphone: ${error}`);
-    }
-  },
-  
-  // Convert MediaRecorder audio chunks to a blob
+
+  /**
+   * Helper to create an audio blob from chunks
+   * @param chunks Array of audio blobs
+   * @returns Combined audio blob
+   */
   createAudioBlob: (chunks: Blob[]): Blob => {
     return new Blob(chunks, { type: 'audio/wav' });
-  },
-  
-  // Mock transcription function for development/testing
-  getMockTranscription: (): string => {
-    const mockResponses = [
-      "I would rate my experience as excellent. The customer service representative was very helpful and resolved my issue quickly.",
-      "My experience was good overall. The product works as expected, but the setup was a bit confusing.",
-      "I think your website could be improved by making the navigation simpler and adding more product details.",
-      "The shipping was incredibly fast, and the packaging was excellent. Very satisfied with my purchase.",
-      "I'd like to see more color options available for this product.",
-      "I had trouble finding the information I needed on your support page.",
-      "The quality of the product exceeded my expectations."
-    ];
-    
-    return mockResponses[Math.floor(Math.random() * mockResponses.length)];
-  },
-  
-  // Generate realistic conversation responses based on form context
-  generateAIResponse: (question: string, userResponse: string): string => {
-    if (!userResponse) {
-      return "I didn't catch that. Could you please repeat your answer?";
-    }
-    
-    if (userResponse.length < 5) {
-      return "Could you elaborate a bit more on your answer?";
-    }
-    
-    if (question.toLowerCase().includes("rate") || question.toLowerCase().includes("rating")) {
-      return "Thank you for your rating. Can you explain why you gave this rating?";
-    }
-    
-    if (question.toLowerCase().includes("improve") || question.toLowerCase().includes("suggestion")) {
-      return "Thanks for your feedback. Is there anything specific you'd like to see implemented?";
-    }
-    
-    return "Thank you for your response. Let's move on to the next question.";
   }
 };
 

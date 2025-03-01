@@ -245,7 +245,7 @@ Key Metrics: NPS Score, Feature Satisfaction`;
   };
 
   // Handle text input submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!inputText.trim() || !form || !form.questions) return;
     
     // Create user message
@@ -258,79 +258,159 @@ Key Metrics: NPS Score, Feature Satisfaction`;
     };
     
     setMessages(prev => [...prev, userMessage]);
-    setInputText('');
-    setTranscript('');
     
-    // Move to next question or end the form
-    const nextIndex = currentQuestionIndex + 1;
-    
-    if (nextIndex < form.questions.length) {
-      // Add next question with simulated stats
-      setTimeout(() => {
-        const nextQuestion = form.questions[nextIndex];
-        
-        // Random KPI values for demo purposes
-        const latency = 50 + Math.floor(Math.random() * 100);
-        const processingTime = 150 + Math.floor(Math.random() * 200);
-        const tokens = 30 + Math.floor(Math.random() * 20);
-        
-        // Add question message
-        const questionMessage: Message = {
-          id: `question-${nextQuestion.id}`,
-          sender: 'agent',
-          text: nextQuestion.text,
-          type: 'question',
-          timestamp: new Date(),
-          stats: {
-            latency,
-            processingTime,
-            tokens
-          },
-          promptSettings: {
+    try {
+      // Determine the current question context to send to the API
+      let questionContext = "";
+      let currentQuestionType = "";
+      
+      if (form.questions && currentQuestionIndex < form.questions.length) {
+        const currentQuestion = form.questions[currentQuestionIndex];
+        questionContext = `Question: "${currentQuestion.text}"\nType: ${currentQuestion.type}\nRequired: ${currentQuestion.required ? 'Yes' : 'No'}\nOrder: ${currentQuestion.order}`;
+        currentQuestionType = currentQuestion.type;
+      }
+      
+      // Create a mock response ID for demonstration purposes
+      // In a real app, this would be retrieved from the database
+      const mockResponseId = form.id * 1000 + Date.now() % 1000;
+      
+      // Call the conversation API
+      const response = await fetch('/api/conversation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          responseId: mockResponseId,
+          message: inputText,
+          questionContext,
+          agentSettings: {
             temperature: agentSettings.temperature,
             maxTokens: agentSettings.maxTokens,
-            voice: agentSettings.voice,
-            speed: agentSettings.speed
-          },
-          originalPrompt: `Ask the user the following question: "${nextQuestion.text}". Wait for their response before proceeding.`,
-          context: agentSettings.includeFormContext ? `Question Type: ${nextQuestion.type}\nRequired: ${nextQuestion.required ? 'Yes' : 'No'}\nOrder: ${nextQuestion.order}` : undefined
-        };
-        
-        setMessages(prev => [...prev, questionMessage]);
-        setCurrentQuestionIndex(nextIndex);
-      }, 1000);
-    } else {
-      // Form is completed
-      setTimeout(() => {
-        // Random KPI values for demo purposes
-        const latency = 50 + Math.floor(Math.random() * 100);
-        const processingTime = 150 + Math.floor(Math.random() * 200);
-        const tokens = 40 + Math.floor(Math.random() * 30);
-        
-        const closingMessage: Message = {
-          id: 'closing',
+            model: 'grok-2-1212'
+          }
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Move to next question or end the form
+      const nextIndex = currentQuestionIndex + 1;
+      
+      // Clear input field and transcript
+      setInputText('');
+      setTranscript('');
+      
+      if (nextIndex < form.questions.length) {
+        // Create AI response message
+        const aiResponseMessage: Message = {
+          id: `ai-response-${Date.now()}`,
           sender: 'agent',
-          text: `Thank you for completing the "${form.title}" form. Your responses have been recorded.`,
-          type: 'closing',
+          text: data.message,
+          type: 'response',
           timestamp: new Date(),
           stats: {
-            latency,
-            processingTime,
-            tokens
-          },
-          promptSettings: {
-            temperature: agentSettings.temperature,
-            maxTokens: agentSettings.maxTokens,
-            voice: agentSettings.voice,
-            speed: agentSettings.speed
-          },
-          originalPrompt: `Thank the user for completing the survey, inform them that their responses have been recorded, and end the conversation politely.`,
-          context: agentSettings.includeFormContext ? `Form completion statistics:\nCompletion Time: ${Math.floor(Math.random() * 5) + 1} minutes\nQuestions Answered: ${form.questions.length}` : undefined
+            latency: response.headers.get('X-Response-Time') ? parseInt(response.headers.get('X-Response-Time') || '0') : data.stats?.processingTime || 200,
+            processingTime: data.stats?.processingTime || 250,
+            tokens: data.stats?.tokens || 35
+          }
         };
         
-        setMessages(prev => [...prev, closingMessage]);
-        setFormCompleted(true);
-      }, 1000);
+        // Add AI response to messages
+        setMessages(prev => [...prev, aiResponseMessage]);
+        
+        // Wait briefly before showing the next question
+        setTimeout(() => {
+          const nextQuestion = form.questions[nextIndex];
+          
+          // Add next question message
+          const questionMessage: Message = {
+            id: `question-${nextQuestion.id}`,
+            sender: 'agent',
+            text: nextQuestion.text,
+            type: 'question',
+            timestamp: new Date(),
+            stats: {
+              latency: 50, // Simple latency as we're just displaying text
+              processingTime: 100,
+              tokens: Math.floor(nextQuestion.text.length / 4)
+            },
+            promptSettings: {
+              temperature: agentSettings.temperature,
+              maxTokens: agentSettings.maxTokens,
+              voice: agentSettings.voice,
+              speed: agentSettings.speed
+            },
+            originalPrompt: `Ask the user the following question: "${nextQuestion.text}". Wait for their response before proceeding.`,
+            context: agentSettings.includeFormContext ? `Question Type: ${nextQuestion.type}\nRequired: ${nextQuestion.required ? 'Yes' : 'No'}\nOrder: ${nextQuestion.order}` : undefined
+          };
+          
+          setMessages(prev => [...prev, questionMessage]);
+          setCurrentQuestionIndex(nextIndex);
+        }, 1500);
+      } else {
+        // Form is completed
+        // First show the AI's response to the last answer
+        const aiResponseMessage: Message = {
+          id: `ai-response-${Date.now()}`,
+          sender: 'agent',
+          text: data.message,
+          type: 'response',
+          timestamp: new Date(),
+          stats: {
+            latency: response.headers.get('X-Response-Time') ? parseInt(response.headers.get('X-Response-Time') || '0') : data.stats?.processingTime || 200,
+            processingTime: data.stats?.processingTime || 250,
+            tokens: data.stats?.tokens || 35
+          }
+        };
+        
+        // Add AI response to messages
+        setMessages(prev => [...prev, aiResponseMessage]);
+        
+        // Then show the closing message
+        setTimeout(() => {
+          const closingMessage: Message = {
+            id: 'closing',
+            sender: 'agent',
+            text: `Thank you for completing the "${form.title}" form. Your responses have been recorded.`,
+            type: 'closing',
+            timestamp: new Date(),
+            stats: {
+              latency: 50,
+              processingTime: 150,
+              tokens: 40
+            },
+            promptSettings: {
+              temperature: agentSettings.temperature,
+              maxTokens: agentSettings.maxTokens,
+              voice: agentSettings.voice,
+              speed: agentSettings.speed
+            },
+            originalPrompt: `Thank the user for completing the survey, inform them that their responses have been recorded, and end the conversation politely.`,
+            context: agentSettings.includeFormContext ? `Form completion statistics:\nCompletion Time: ${Math.floor(Math.random() * 5) + 1} minutes\nQuestions Answered: ${form.questions.length}` : undefined
+          };
+          
+          setMessages(prev => [...prev, closingMessage]);
+          setFormCompleted(true);
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error submitting response:', error);
+      
+      // Create an error message to show to the user
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        sender: 'agent',
+        text: "I'm sorry, there was an error processing your response. Please try again.",
+        type: 'response',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
     }
   };
 

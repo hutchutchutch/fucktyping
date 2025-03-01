@@ -10,6 +10,7 @@ import FormResponder from "./pages/FormResponder";
 import ResponseViewer from "./pages/ResponseViewer";
 import FormsPage from "./pages/FormsPage";
 import ResponsesPage from "./pages/ResponsesPage";
+import VoiceTest from "./pages/VoiceTest";
 import Login from "./pages/Login";
 import NotFound from "./pages/not-found";
 import AppLayout from "./components/layout/AppLayout";
@@ -142,6 +143,7 @@ export default function Routes() {
       {/* Public pages */}
       <Route path="/" component={LandingPage} />
       <Route path="/login" component={Login} />
+      <Route path="/voice-test" component={VoiceTest} />
 
       {/* Fallback to 404 */}
       <Route component={NotFound} />

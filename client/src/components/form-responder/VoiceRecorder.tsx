@@ -1,6 +1,9 @@
-import React, { useState, useRef } from 'react';
-import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import AudioVisualizer from './AudioVisualizer';
+import Transcript from './Transcript';
+import voiceService from '@/services/voiceService';
+import { Mic, MicOff, StopCircle, Play } from 'lucide-react';
 
 interface VoiceRecorderProps {
   onTranscriptionComplete: (transcript: string) => void;
@@ -9,117 +12,180 @@ interface VoiceRecorderProps {
 }
 
 export default function VoiceRecorder({ 
-  onTranscriptionComplete, 
+  onTranscriptionComplete,
   isTranscribing,
   setIsTranscribing
 }: VoiceRecorderProps) {
-  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [audioData, setAudioData] = useState<number[]>([]);
+  const [visualizerInterval, setVisualizerInterval] = useState<NodeJS.Timeout | null>(null);
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-
-  // Start recording
+  const streamRef = useRef<MediaStream | null>(null);
+  
+  // Clean up on component unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (visualizerInterval) {
+        clearInterval(visualizerInterval);
+      }
+    };
+  }, [visualizerInterval]);
+  
   const startRecording = async () => {
     try {
-      // Reset audio chunks
-      audioChunksRef.current = [];
-      
-      // Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
       
-      // Create media recorder
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
       
-      // Set up event handlers
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
       
-      mediaRecorder.onstop = () => {
-        // Get all recorded audio
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-        
-        // Simulate transcription process
-        setIsTranscribing(true);
-        
-        // In a real app, you would send the audio to a transcription service
-        // For this demo, we'll simulate it with a timeout
-        setTimeout(() => {
-          // Fake transcription result
-          const fakePhrases = [
-            "Yes, I'm interested in this product.",
-            "No, this doesn't meet my needs right now.",
-            "I would like more information before deciding.",
-            "That sounds good to me.",
-            "I prefer the first option you mentioned.",
-            "Can you tell me more about the pricing?"
-          ];
-          
-          const randomPhrase = fakePhrases[Math.floor(Math.random() * fakePhrases.length)];
-          
-          // Return the transcription
-          onTranscriptionComplete(randomPhrase);
-          setIsTranscribing(false);
-        }, 1500);
-      };
-      
-      // Start recording
-      mediaRecorder.start();
+      mediaRecorder.start(100); // Collect data every 100ms
       setIsRecording(true);
-    } catch (err) {
-      console.error('Error accessing microphone:', err);
+      setIsPaused(false);
+      
+      // Start the audio visualizer
+      const interval = setInterval(() => {
+        // Generate dummy visualization data (in a real app, this would use actual audio analysis)
+        const dummyData = Array(30).fill(0).map(() => Math.random() * 0.7);
+        setAudioData(dummyData);
+      }, 100);
+      
+      setVisualizerInterval(interval);
+      
+    } catch (error) {
+      console.error('Error starting recording:', error);
     }
   };
-
-  // Stop recording
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      
-      // Stop all tracks in the stream
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      
-      setIsRecording(false);
+  
+  const stopRecording = async () => {
+    if (!mediaRecorderRef.current || !streamRef.current) return;
+    
+    mediaRecorderRef.current.stop();
+    streamRef.current.getTracks().forEach(track => track.stop());
+    
+    if (visualizerInterval) {
+      clearInterval(visualizerInterval);
+      setVisualizerInterval(null);
     }
+    
+    setIsRecording(false);
+    setIsPaused(false);
+    
+    // Process the recorded audio
+    setTimeout(async () => {
+      if (audioChunksRef.current.length > 0) {
+        const audioBlob = voiceService.createAudioBlob(audioChunksRef.current);
+        
+        try {
+          setIsTranscribing(true);
+          const base64Audio = await blobToBase64(audioBlob);
+          const transcriptText = await voiceService.transcribeAudio(base64Audio);
+          
+          setTranscript(transcriptText);
+          onTranscriptionComplete(transcriptText);
+        } catch (error) {
+          console.error('Error transcribing audio:', error);
+        } finally {
+          setIsTranscribing(false);
+        }
+      }
+    }, 100);
   };
-
-  // Toggle recording
-  const toggleRecording = () => {
-    if (isRecording) {
-      stopRecording();
+  
+  const togglePause = () => {
+    if (!mediaRecorderRef.current) return;
+    
+    if (isPaused) {
+      mediaRecorderRef.current.resume();
+      
+      // Resume the audio visualizer
+      const interval = setInterval(() => {
+        const dummyData = Array(30).fill(0).map(() => Math.random() * 0.7);
+        setAudioData(dummyData);
+      }, 100);
+      
+      setVisualizerInterval(interval);
     } else {
-      startRecording();
+      mediaRecorderRef.current.pause();
+      
+      // Pause the audio visualizer
+      if (visualizerInterval) {
+        clearInterval(visualizerInterval);
+        setVisualizerInterval(null);
+      }
     }
+    
+    setIsPaused(!isPaused);
   };
-
+  
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        // Extract the base64 data without the prefix
+        const base64Data = base64String.split(',')[1];
+        resolve(base64Data);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+  
   return (
-    <div>
-      <Button
-        variant={isRecording ? "destructive" : "outline"}
-        size="sm"
-        onClick={toggleRecording}
-        disabled={isTranscribing}
-        className={isRecording ? "bg-red-500 hover:bg-red-600" : ""}
-      >
-        {isTranscribing ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Processing...
-          </>
-        ) : isRecording ? (
-          <>
-            <MicOff className="h-4 w-4 mr-2" />
-            Stop
-          </>
+    <div className="space-y-4 w-full">
+      <div className="flex justify-center">
+        <AudioVisualizer isRecording={isRecording} audioData={audioData} />
+      </div>
+      
+      <div className="flex justify-center space-x-2">
+        {!isRecording ? (
+          <Button 
+            onClick={startRecording} 
+            variant="default"
+            className="w-12 h-12 rounded-full"
+            disabled={isTranscribing}
+          >
+            <Mic className="h-6 w-6" />
+          </Button>
         ) : (
           <>
-            <Mic className="h-4 w-4 mr-2" />
-            Record
+            <Button 
+              onClick={togglePause} 
+              variant="outline"
+              className="w-12 h-12 rounded-full"
+            >
+              {isPaused ? <Play className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
+            </Button>
+            
+            <Button 
+              onClick={stopRecording} 
+              variant="destructive"
+              className="w-12 h-12 rounded-full"
+            >
+              <StopCircle className="h-6 w-6" />
+            </Button>
           </>
         )}
-      </Button>
+      </div>
+      
+      <div className="p-4 bg-muted/40 rounded-lg">
+        <Transcript text={transcript} isLoading={isTranscribing} />
+      </div>
     </div>
   );
 }

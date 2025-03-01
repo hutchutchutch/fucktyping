@@ -1,19 +1,14 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 interface AudioVisualizerProps {
   isRecording: boolean;
   audioData?: number[];
 }
 
-export default function AudioVisualizer({ isRecording, audioData }: AudioVisualizerProps) {
+export default function AudioVisualizer({ isRecording, audioData = [] }: AudioVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  // Mock data for when real audio data isn't provided
-  const mockVisualizationData = () => {
-    return Array(30).fill(0).map(() => Math.random() * 0.5);
-  };
-  
-  // Draw the visualization
+  // Draw audio visualizer on canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -24,74 +19,77 @@ export default function AudioVisualizer({ isRecording, audioData }: AudioVisuali
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Return early if not recording
-    if (!isRecording) {
-      // Draw a flat line in the middle
+    // If not recording, draw a single centered line
+    if (!isRecording || audioData.length === 0) {
       ctx.beginPath();
       ctx.moveTo(0, canvas.height / 2);
       ctx.lineTo(canvas.width, canvas.height / 2);
-      ctx.strokeStyle = '#cccccc';
+      ctx.strokeStyle = '#e2e8f0';
       ctx.lineWidth = 2;
       ctx.stroke();
       return;
     }
     
-    // Use provided data or generate mock data
-    const data = audioData || mockVisualizationData();
-    const barWidth = canvas.width / data.length;
-    const baseLineY = canvas.height / 2;
-    
-    ctx.fillStyle = '#4f46e5'; // Indigo color
-    ctx.strokeStyle = '#4f46e5';
+    // Set up styles for the waveform
     ctx.lineWidth = 2;
+    ctx.strokeStyle = '#3b82f6';
     
-    // Draw the visualization as bars
-    for (let i = 0; i < data.length; i++) {
-      const barHeight = data[i] * canvas.height;
-      const x = i * barWidth;
+    // Start the path
+    ctx.beginPath();
+    
+    // Calculate width between points
+    const sliceWidth = canvas.width / (audioData.length - 1);
+    
+    // Start from the left
+    let x = 0;
+    
+    // Draw the waveform
+    audioData.forEach((amplitude, i) => {
+      // Scale amplitude to fit canvas height (0.5 = center)
+      const y = (1 - amplitude) * canvas.height / 2;
       
-      // Draw bar from center (representing audio waveform)
-      ctx.fillRect(x, baseLineY - barHeight / 2, barWidth - 1, barHeight);
-    }
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+      
+      // Move to the next point
+      x += sliceWidth;
+    });
     
-    // Request animation frame for continuous updates if recording
+    // Apply the stroke
+    ctx.stroke();
+    
+    // Optional: Add gradient background under the line
     if (isRecording) {
-      requestAnimationFrame(() => {
-        const randomData = mockVisualizationData();
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        
-        // Clear canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        const barWidth = canvas.width / randomData.length;
-        const baseLineY = canvas.height / 2;
-        
-        ctx.fillStyle = '#4f46e5';
-        
-        // Draw the visualization as bars
-        for (let i = 0; i < randomData.length; i++) {
-          const barHeight = randomData[i] * canvas.height;
-          const x = i * barWidth;
-          
-          // Draw bar from center
-          ctx.fillRect(x, baseLineY - barHeight / 2, barWidth - 1, barHeight);
-        }
-      });
+      // Create a gradient
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+      gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+      
+      // Fill the path
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.lineTo(0, canvas.height);
+      ctx.fillStyle = gradient;
+      ctx.fill();
     }
   }, [isRecording, audioData]);
   
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="h-24 w-full relative">
       <canvas 
         ref={canvasRef} 
-        width={500} 
+        className="w-full h-full rounded-md bg-muted/20"
+        width={300} 
         height={100} 
-        className="w-full h-full"
       />
+      {isRecording && (
+        <div className="absolute top-3 right-3 flex items-center">
+          <div className="w-3 h-3 rounded-full bg-red-500 mr-2 animate-pulse" />
+          <span className="text-xs text-muted-foreground">Recording</span>
+        </div>
+      )}
     </div>
   );
 }

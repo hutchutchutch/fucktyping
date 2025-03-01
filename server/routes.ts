@@ -367,13 +367,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Audio data is required" });
       }
       
-      // Use the voiceService to transcribe the audio
-      const transcriptionResult = await voiceService.transcribe(audio);
+      // Process the audio through the voice service
+      const result = await voiceService.transcribeAudio(audio);
       
+      // Set response time header for benchmarking
+      res.set('X-Response-Time', result.processingTime.toString());
+      
+      // Return the transcript
       res.json({ 
-        transcript: transcriptionResult.text,
-        confidence: transcriptionResult.confidence, 
-        language: transcriptionResult.language 
+        transcript: result.transcript,
+        confidence: result.confidence,
+        language: result.language,
+        success: result.success 
       });
     } catch (error) {
       console.error("Error transcribing audio:", error);
@@ -387,20 +392,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import the voice service
       const voiceService = await import('./services/voiceService.js').then(m => m.default);
       
-      const { text, voice } = req.body;
+      const { text, voice, speed, quality } = req.body;
       
       if (!text) {
         return res.status(400).json({ message: "Text is required" });
       }
       
-      // In a real implementation, we would convert the audio buffer to a data URL
-      // For this demo, we're simulating the response
-      const audioBuffer = await voiceService.textToSpeech(text, voice);
-      const audioBase64 = voiceService.audioToBase64(audioBuffer);
+      // Process the text through the voice service
+      const result = await voiceService.textToSpeech(text, {
+        voice: voice || 'adam',
+        speed: speed || 1.0,
+        quality: quality || 'high'
+      });
       
-      res.json({
-        audioUrl: `data:audio/mp3;base64,${audioBase64}`,
-        message: "Text-to-speech conversion completed"
+      // Set response time header for benchmarking
+      res.set('X-Response-Time', result.processingTime.toString());
+      
+      // Return the synthesized audio
+      res.json({ 
+        audioUrl: result.audioUrl,
+        format: result.format,
+        message: result.message,
+        success: result.success
       });
     } catch (error) {
       console.error("Error synthesizing speech:", error);
