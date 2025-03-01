@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -325,4 +325,132 @@ export type VoiceMetrics = {
   averageTranscriptionConfidence: number;
   totalVoiceResponses: number;
   percentageOfVoiceResponses: number;
+};
+
+// Voice Agent tables
+
+// Voice agent config types
+export const voiceAgentNodeTypeEnum = z.enum([
+  'opening_activity',
+  'question',
+  'validation',
+  'rephrase',
+  'closing_activity',
+  'process_input'
+]);
+export type VoiceAgentNodeType = z.infer<typeof voiceAgentNodeTypeEnum>;
+
+// Voice Agent schema - represents a voice agent for a form
+export const voiceAgents = pgTable("voice_agents", {
+  id: serial("id").primaryKey(),
+  formId: integer("form_id").notNull().references(() => forms.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  aiModel: varchar("ai_model", { length: 100 }).default("llama3-70b-8192"), // Default language model
+  temperature: integer("temperature").default(70), // Temperature * 100 (0.7 = 70)
+  systemPrompt: text("system_prompt"),
+  maxTokens: integer("max_tokens").default(1024),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  metadata: jsonb("metadata"), // Additional metadata about the voice agent
+});
+
+export const insertVoiceAgentSchema = createInsertSchema(voiceAgents).pick({
+  formId: true,
+  name: true,
+  description: true,
+  isActive: true,
+  aiModel: true,
+  temperature: true,
+  systemPrompt: true,
+  maxTokens: true,
+  metadata: true,
+});
+
+// Voice Agent Node schema - represents a node in the voice agent graph
+export const voiceAgentNodes = pgTable("voice_agent_nodes", {
+  id: serial("id").primaryKey(),
+  agentId: integer("agent_id").notNull().references(() => voiceAgents.id, { onDelete: "cascade" }),
+  nodeType: varchar("node_type", { length: 50 }).notNull(), // 'opening_activity', 'question', 'validation', etc.
+  nodeId: varchar("node_id", { length: 100 }).notNull(), // Unique ID for this node in the graph
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  prompt: text("prompt"), // Prompt template for this node
+  order: integer("order").default(0), // Order for sequencing
+  configuration: jsonb("configuration"), // Additional configuration for this node
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertVoiceAgentNodeSchema = createInsertSchema(voiceAgentNodes).pick({
+  agentId: true,
+  nodeType: true,
+  nodeId: true,
+  name: true,
+  description: true,
+  prompt: true,
+  order: true,
+  configuration: true,
+});
+
+// Voice Agent Edge schema - represents an edge in the voice agent graph
+export const voiceAgentEdges = pgTable("voice_agent_edges", {
+  id: serial("id").primaryKey(),
+  agentId: integer("agent_id").notNull().references(() => voiceAgents.id, { onDelete: "cascade" }),
+  fromNodeId: varchar("from_node_id", { length: 100 }).notNull(),
+  toNodeId: varchar("to_node_id", { length: 100 }).notNull(),
+  condition: jsonb("condition"), // Conditional logic for this edge
+  isDefault: boolean("is_default").default(false), // Whether this is the default edge
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertVoiceAgentEdgeSchema = createInsertSchema(voiceAgentEdges).pick({
+  agentId: true,
+  fromNodeId: true,
+  toNodeId: true,
+  condition: true,
+  isDefault: true,
+});
+
+// Voice Agent Session schema - represents a running session of a voice agent
+export const voiceAgentSessions = pgTable("voice_agent_sessions", {
+  id: serial("id").primaryKey(),
+  agentId: integer("agent_id").notNull().references(() => voiceAgents.id, { onDelete: "cascade" }),
+  conversationId: integer("conversation_id").references(() => conversations.id, { onDelete: "set null" }),
+  sessionState: jsonb("session_state").notNull(), // Current state of the session
+  currentNodeId: varchar("current_node_id", { length: 100 }).notNull(), // Current node in the graph
+  isComplete: boolean("is_complete").default(false),
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  metadata: jsonb("metadata"), // Additional metadata about the session
+});
+
+export const insertVoiceAgentSessionSchema = createInsertSchema(voiceAgentSessions).pick({
+  agentId: true,
+  conversationId: true,
+  sessionState: true,
+  currentNodeId: true,
+  isComplete: true,
+  metadata: true,
+});
+
+// Types for voice agent entities
+export type VoiceAgent = typeof voiceAgents.$inferSelect;
+export type InsertVoiceAgent = z.infer<typeof insertVoiceAgentSchema>;
+
+export type VoiceAgentNode = typeof voiceAgentNodes.$inferSelect;
+export type InsertVoiceAgentNode = z.infer<typeof insertVoiceAgentNodeSchema>;
+
+export type VoiceAgentEdge = typeof voiceAgentEdges.$inferSelect;
+export type InsertVoiceAgentEdge = z.infer<typeof insertVoiceAgentEdgeSchema>;
+
+export type VoiceAgentSession = typeof voiceAgentSessions.$inferSelect;
+export type InsertVoiceAgentSession = z.infer<typeof insertVoiceAgentSessionSchema>;
+
+// Extended Voice Agent types
+export type VoiceAgentWithNodes = VoiceAgent & { 
+  nodes: VoiceAgentNode[];
+  edges: VoiceAgentEdge[];
+  form?: Form;
 };

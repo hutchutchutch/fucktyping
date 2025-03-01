@@ -2,7 +2,10 @@ import {
   User, InsertUser, Category, InsertCategory, Form, InsertForm, 
   Question, InsertQuestion, Response, InsertResponse, Answer, 
   InsertAnswer, Conversation, InsertConversation, Message, 
-  InsertMessage, FormWithQuestions, ResponseWithAnswers, CategoryWithStats
+  InsertMessage, FormWithQuestions, ResponseWithAnswers, CategoryWithStats,
+  VoiceAgent, InsertVoiceAgent, VoiceAgentNode, InsertVoiceAgentNode,
+  VoiceAgentEdge, InsertVoiceAgentEdge, VoiceAgentSession, InsertVoiceAgentSession,
+  VoiceAgentWithNodes
 } from "@shared/schema";
 
 export interface IStorage {
@@ -57,6 +60,36 @@ export interface IStorage {
   getMessage(id: number): Promise<Message | undefined>;
   getMessagesByConversationId(conversationId: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
+  
+  // Voice Agent operations
+  getVoiceAgent(id: number): Promise<VoiceAgent | undefined>;
+  getVoiceAgentByFormId(formId: number): Promise<VoiceAgent | undefined>;
+  getVoiceAgentWithDetails(id: number): Promise<VoiceAgentWithNodes | undefined>;
+  createVoiceAgent(agent: InsertVoiceAgent): Promise<VoiceAgent>;
+  updateVoiceAgent(id: number, agent: Partial<InsertVoiceAgent>): Promise<VoiceAgent | undefined>;
+  deleteVoiceAgent(id: number): Promise<boolean>;
+  
+  // Voice Agent Node operations
+  getVoiceAgentNode(id: number): Promise<VoiceAgentNode | undefined>;
+  getVoiceAgentNodesByAgentId(agentId: number): Promise<VoiceAgentNode[]>;
+  createVoiceAgentNode(node: InsertVoiceAgentNode): Promise<VoiceAgentNode>;
+  updateVoiceAgentNode(id: number, node: Partial<InsertVoiceAgentNode>): Promise<VoiceAgentNode | undefined>;
+  deleteVoiceAgentNode(id: number): Promise<boolean>;
+  
+  // Voice Agent Edge operations
+  getVoiceAgentEdge(id: number): Promise<VoiceAgentEdge | undefined>;
+  getVoiceAgentEdgesByAgentId(agentId: number): Promise<VoiceAgentEdge[]>;
+  createVoiceAgentEdge(edge: InsertVoiceAgentEdge): Promise<VoiceAgentEdge>;
+  deleteVoiceAgentEdge(id: number): Promise<boolean>;
+  
+  // Voice Agent Session operations
+  getVoiceAgentSession(id: number): Promise<VoiceAgentSession | undefined>;
+  getVoiceAgentSessionsByAgentId(agentId: number): Promise<VoiceAgentSession[]>;
+  createVoiceAgentSession(session: InsertVoiceAgentSession): Promise<VoiceAgentSession>;
+  updateVoiceAgentSession(id: number, session: Partial<InsertVoiceAgentSession>): Promise<VoiceAgentSession | undefined>;
+  
+  // Generate LangGraph agent from form
+  generateVoiceAgentFromForm(formId: number): Promise<VoiceAgentWithNodes | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -68,6 +101,10 @@ export class MemStorage implements IStorage {
   private answers: Map<number, Answer> = new Map();
   private conversations: Map<number, Conversation> = new Map();
   private messages: Map<number, Message> = new Map();
+  private voiceAgents: Map<number, VoiceAgent> = new Map();
+  private voiceAgentNodes: Map<number, VoiceAgentNode> = new Map();
+  private voiceAgentEdges: Map<number, VoiceAgentEdge> = new Map();
+  private voiceAgentSessions: Map<number, VoiceAgentSession> = new Map();
   
   private userIdCounter = 1;
   private categoryIdCounter = 1;
@@ -77,6 +114,10 @@ export class MemStorage implements IStorage {
   private answerIdCounter = 1;
   private conversationIdCounter = 1;
   private messageIdCounter = 1;
+  private voiceAgentIdCounter = 1;
+  private voiceAgentNodeIdCounter = 1;
+  private voiceAgentEdgeIdCounter = 1;
+  private voiceAgentSessionIdCounter = 1;
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
@@ -398,6 +439,280 @@ export class MemStorage implements IStorage {
     };
     this.messages.set(id, message);
     return message;
+  }
+  
+  // Voice Agent operations
+  async getVoiceAgent(id: number): Promise<VoiceAgent | undefined> {
+    return this.voiceAgents.get(id);
+  }
+  
+  async getVoiceAgentByFormId(formId: number): Promise<VoiceAgent | undefined> {
+    return Array.from(this.voiceAgents.values())
+      .find(agent => agent.formId === formId);
+  }
+  
+  async getVoiceAgentWithDetails(id: number): Promise<VoiceAgentWithNodes | undefined> {
+    const agent = this.voiceAgents.get(id);
+    if (!agent) return undefined;
+    
+    const nodes = await this.getVoiceAgentNodesByAgentId(id);
+    const edges = await this.getVoiceAgentEdgesByAgentId(id);
+    const form = agent.formId ? await this.getForm(agent.formId) : undefined;
+    
+    return {
+      ...agent,
+      nodes,
+      edges,
+      form
+    };
+  }
+  
+  async createVoiceAgent(insertAgent: InsertVoiceAgent): Promise<VoiceAgent> {
+    const id = this.voiceAgentIdCounter++;
+    const timestamp = new Date();
+    const agent: VoiceAgent = {
+      id,
+      ...insertAgent,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
+    this.voiceAgents.set(id, agent);
+    return agent;
+  }
+  
+  async updateVoiceAgent(id: number, agentUpdate: Partial<InsertVoiceAgent>): Promise<VoiceAgent | undefined> {
+    const agent = this.voiceAgents.get(id);
+    if (!agent) return undefined;
+    
+    const updatedAgent: VoiceAgent = {
+      ...agent,
+      ...agentUpdate,
+      updatedAt: new Date()
+    };
+    this.voiceAgents.set(id, updatedAgent);
+    return updatedAgent;
+  }
+  
+  async deleteVoiceAgent(id: number): Promise<boolean> {
+    // First, delete all associated nodes and edges
+    const nodes = await this.getVoiceAgentNodesByAgentId(id);
+    for (const node of nodes) {
+      await this.deleteVoiceAgentNode(node.id);
+    }
+    
+    const edges = await this.getVoiceAgentEdgesByAgentId(id);
+    for (const edge of edges) {
+      await this.deleteVoiceAgentEdge(edge.id);
+    }
+    
+    return this.voiceAgents.delete(id);
+  }
+  
+  // Voice Agent Node operations
+  async getVoiceAgentNode(id: number): Promise<VoiceAgentNode | undefined> {
+    return this.voiceAgentNodes.get(id);
+  }
+  
+  async getVoiceAgentNodesByAgentId(agentId: number): Promise<VoiceAgentNode[]> {
+    return Array.from(this.voiceAgentNodes.values())
+      .filter(node => node.agentId === agentId);
+  }
+  
+  async createVoiceAgentNode(insertNode: InsertVoiceAgentNode): Promise<VoiceAgentNode> {
+    const id = this.voiceAgentNodeIdCounter++;
+    const timestamp = new Date();
+    const node: VoiceAgentNode = {
+      id,
+      ...insertNode,
+      createdAt: timestamp
+    };
+    this.voiceAgentNodes.set(id, node);
+    return node;
+  }
+  
+  async updateVoiceAgentNode(id: number, nodeUpdate: Partial<InsertVoiceAgentNode>): Promise<VoiceAgentNode | undefined> {
+    const node = this.voiceAgentNodes.get(id);
+    if (!node) return undefined;
+    
+    const updatedNode: VoiceAgentNode = {
+      ...node,
+      ...nodeUpdate
+    };
+    this.voiceAgentNodes.set(id, updatedNode);
+    return updatedNode;
+  }
+  
+  async deleteVoiceAgentNode(id: number): Promise<boolean> {
+    return this.voiceAgentNodes.delete(id);
+  }
+  
+  // Voice Agent Edge operations
+  async getVoiceAgentEdge(id: number): Promise<VoiceAgentEdge | undefined> {
+    return this.voiceAgentEdges.get(id);
+  }
+  
+  async getVoiceAgentEdgesByAgentId(agentId: number): Promise<VoiceAgentEdge[]> {
+    return Array.from(this.voiceAgentEdges.values())
+      .filter(edge => edge.agentId === agentId);
+  }
+  
+  async createVoiceAgentEdge(insertEdge: InsertVoiceAgentEdge): Promise<VoiceAgentEdge> {
+    const id = this.voiceAgentEdgeIdCounter++;
+    const timestamp = new Date();
+    const edge: VoiceAgentEdge = {
+      id,
+      ...insertEdge,
+      createdAt: timestamp
+    };
+    this.voiceAgentEdges.set(id, edge);
+    return edge;
+  }
+  
+  async deleteVoiceAgentEdge(id: number): Promise<boolean> {
+    return this.voiceAgentEdges.delete(id);
+  }
+  
+  // Voice Agent Session operations
+  async getVoiceAgentSession(id: number): Promise<VoiceAgentSession | undefined> {
+    return this.voiceAgentSessions.get(id);
+  }
+  
+  async getVoiceAgentSessionsByAgentId(agentId: number): Promise<VoiceAgentSession[]> {
+    return Array.from(this.voiceAgentSessions.values())
+      .filter(session => session.agentId === agentId);
+  }
+  
+  async createVoiceAgentSession(insertSession: InsertVoiceAgentSession): Promise<VoiceAgentSession> {
+    const id = this.voiceAgentSessionIdCounter++;
+    const timestamp = new Date();
+    const session: VoiceAgentSession = {
+      id,
+      ...insertSession,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
+    this.voiceAgentSessions.set(id, session);
+    return session;
+  }
+  
+  async updateVoiceAgentSession(id: number, sessionUpdate: Partial<InsertVoiceAgentSession>): Promise<VoiceAgentSession | undefined> {
+    const session = this.voiceAgentSessions.get(id);
+    if (!session) return undefined;
+    
+    const updatedSession: VoiceAgentSession = {
+      ...session,
+      ...sessionUpdate,
+      updatedAt: new Date()
+    };
+    this.voiceAgentSessions.set(id, updatedSession);
+    return updatedSession;
+  }
+  
+  // Generate LangGraph agent from form
+  async generateVoiceAgentFromForm(formId: number): Promise<VoiceAgentWithNodes | undefined> {
+    const form = await this.getFormWithQuestions(formId);
+    if (!form) return undefined;
+    
+    // Create a new voice agent for this form
+    const agent = await this.createVoiceAgent({
+      formId: form.id,
+      name: `${form.title} Voice Agent`,
+      description: `Voice agent for ${form.title} form`,
+      model: "grok-2-1212",  // Default to Groq's model
+      temperature: 0.7,
+      maxTokens: 1024,
+      isActive: true,
+      settings: {
+        voiceType: "balanced",
+        speakingRate: 1.0,
+        useMemory: true,
+        followUpQuestions: true
+      }
+    });
+    
+    // Create START node (opening message)
+    const startNode = await this.createVoiceAgentNode({
+      agentId: agent.id,
+      nodeType: "open",
+      nodeId: "START",
+      content: `Welcome to the ${form.title} form. I'll guide you through the questions. You can respond with your voice or by typing. Let's begin.`,
+      settings: {
+        persona: "friendly",
+        allowSkip: false
+      }
+    });
+    
+    // Create question nodes for each question in the form
+    const questionNodes = [];
+    for (const question of form.questions) {
+      const questionNode = await this.createVoiceAgentNode({
+        agentId: agent.id,
+        nodeType: "question",
+        nodeId: `QUESTION_${question.id}`,
+        questionId: question.id,
+        content: question.text,
+        settings: {
+          questionType: question.type,
+          required: question.required || false,
+          validation: question.validation || {},
+          rephrasing: ["Could you please answer that question?", "I need your response to continue."]
+        }
+      });
+      questionNodes.push(questionNode);
+    }
+    
+    // Create END node (closing message)
+    const endNode = await this.createVoiceAgentNode({
+      agentId: agent.id,
+      nodeType: "close",
+      nodeId: "END",
+      content: `Thank you for completing the ${form.title} form. Your responses have been recorded.`,
+      settings: {
+        followUp: false
+      }
+    });
+    
+    // Create edges to connect the nodes
+    // START -> First Question
+    if (questionNodes.length > 0) {
+      await this.createVoiceAgentEdge({
+        agentId: agent.id,
+        sourceNodeId: startNode.nodeId,
+        targetNodeId: questionNodes[0].nodeId,
+        condition: "default"
+      });
+    } else {
+      // If no questions, connect START directly to END
+      await this.createVoiceAgentEdge({
+        agentId: agent.id,
+        sourceNodeId: startNode.nodeId,
+        targetNodeId: endNode.nodeId,
+        condition: "default"
+      });
+    }
+    
+    // Connect questions in sequence
+    for (let i = 0; i < questionNodes.length - 1; i++) {
+      await this.createVoiceAgentEdge({
+        agentId: agent.id,
+        sourceNodeId: questionNodes[i].nodeId,
+        targetNodeId: questionNodes[i + 1].nodeId,
+        condition: "valid"
+      });
+    }
+    
+    // Last Question -> END
+    if (questionNodes.length > 0) {
+      await this.createVoiceAgentEdge({
+        agentId: agent.id,
+        sourceNodeId: questionNodes[questionNodes.length - 1].nodeId,
+        targetNodeId: endNode.nodeId,
+        condition: "valid"
+      });
+    }
+    
+    // Return the complete agent with nodes and edges
+    return this.getVoiceAgentWithDetails(agent.id);
   }
 
   // Add test data for development
