@@ -50,29 +50,35 @@ export default function Routes() {
     location.includes("/forms/create") ||
     (location.includes("/forms/") && location.includes("/responses"));
 
-  // Special case for test form - exclude it from full layout
+  // Include test form in full layout
   const isTestForm =
     location.includes("/forms/draft/test") || location.includes("/forms/test");
 
-  // For test form paths, don't include the app layout to avoid duplication
+  // Add test form paths to the paths that need full layout
   if (isTestForm) {
     return (
-      <Switch>
-        <Route path="/forms/draft/test/:id">
-          {(params) => <PrivateRoute component={TestForm} params={params} />}
-        </Route>
+      <AppLayout>
+        <Switch>
+          <Route path="/forms/draft/test/:id">
+            {(params) => <PrivateRoute component={TestForm} params={params} />}
+          </Route>
 
-        <Route path="/forms/draft/test">
-          {() => <PrivateRoute component={TestForm} />}
-        </Route>
+          <Route path="/forms/draft/test">
+            {() => <PrivateRoute component={TestForm} />}
+          </Route>
 
-        <Route path="/forms/test">
-          {() => <PrivateRoute component={TestForm} />}
-        </Route>
+          <Route path="/forms/test/:id">
+            {(params) => <PrivateRoute component={TestForm} params={params} />}
+          </Route>
 
-        {/* Fallback for all other routes */}
-        <Route>{() => <Redirect to="/forms" />}</Route>
-      </Switch>
+          <Route path="/forms/test">
+            {() => <PrivateRoute component={TestForm} />}
+          </Route>
+
+          {/* Fallback for all other routes */}
+          <Route>{() => <Redirect to="/forms" />}</Route>
+        </Switch>
+      </AppLayout>
     );
   }
 

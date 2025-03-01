@@ -628,26 +628,17 @@ Key Metrics: NPS Score, Feature Satisfaction`;
                     )}
                   </div>
                   
-                  {/* Settings/Edit button for agent messages */}
+                  {/* Settings/Edit chip for agent messages */}
                   {message.sender === 'agent' && (
                     <div className="ml-2 flex flex-col justify-start mt-1">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 w-8 p-0"
-                              onClick={() => toggleMessageDetails(message.id)}
-                            >
-                              <Edit className="h-3.5 w-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>View prompt settings</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <Badge 
+                        variant="outline" 
+                        className="cursor-pointer hover:bg-secondary/60 transition-colors"
+                        onClick={() => toggleMessageDetails(message.id)}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Adjust Settings
+                      </Badge>
                     </div>
                   )}
                 </div>
@@ -655,6 +646,47 @@ Key Metrics: NPS Score, Feature Satisfaction`;
                 {/* Expandable message details */}
                 {message.sender === 'agent' && selectedMessageId === message.id && (
                   <div className="mt-2 mb-4 ml-2 max-w-[90%] bg-muted/50 rounded-md border border-border p-3 text-sm">
+                    {/* Message type indicator */}
+                    <div className="flex justify-between items-center mb-3">
+                      <Badge variant="secondary">
+                        {message.type === 'opening' ? 'Opening Activity' : 
+                         message.type === 'closing' ? 'Closing Activity' : 
+                         `Question #${currentQuestionIndex + 1}`}
+                      </Badge>
+                      
+                      {/* Dynamic Variables Section */}
+                      <div className="flex flex-col">
+                        <p className="text-xs text-muted-foreground mb-1">Dynamic Variables:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {message.type === 'opening' && (
+                            <>
+                              <Badge variant="outline" className="text-xs">form.title</Badge>
+                              <Badge variant="outline" className="text-xs">form.description</Badge>
+                              <Badge variant="outline" className="text-xs">questions.length</Badge>
+                            </>
+                          )}
+                          {message.type === 'question' && (
+                            <>
+                              <Badge variant="outline" className="text-xs">question.text</Badge>
+                              <Badge variant="outline" className="text-xs">question.type</Badge>
+                              {form?.questions && form.questions[currentQuestionIndex]?.options && (
+                                <Badge variant="outline" className="text-xs">question.options</Badge>
+                              )}
+                            </>
+                          )}
+                          {message.type === 'closing' && (
+                            <>
+                              <Badge variant="outline" className="text-xs">form.title</Badge>
+                              <Badge variant="outline" className="text-xs">responses.summary</Badge>
+                            </>
+                          )}
+                          {message.type !== 'opening' && message.type !== 'question' && message.type !== 'closing' && (
+                            <Badge variant="outline" className="text-xs">None</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
                     <Tabs defaultValue="prompt">
                       <TabsList className="mb-2">
                         <TabsTrigger value="prompt">Prompt</TabsTrigger>
