@@ -26,7 +26,7 @@ const floatingAnimation = `
     50% { transform: translateY(-10px) rotate(1deg); }
     100% { transform: translateY(0px) rotate(2deg); }
   }
-  
+
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
@@ -34,18 +34,18 @@ const floatingAnimation = `
 
 export default function LandingPage() {
   const [, navigate] = useLocation();
-  
+
   // Add the style for floating animation
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = floatingAnimation;
     document.head.appendChild(style);
-    
+
     return () => {
       document.head.removeChild(style);
     };
   }, []);
-  
+
   // Use auth context if it's available
   let isAuthenticated = false;
   try {
@@ -55,10 +55,10 @@ export default function LandingPage() {
     // Auth context might not be available, that's okay
     console.log("Auth context not available");
   }
-  
+
   // Determine where to navigate on Get Started click
   const getStartedPath = isAuthenticated ? "/dashboard" : "/login";
-  
+
   return (
     <div className="min-h-screen bg-white">
       {/* Bold Hero Section with Large Headlines */}
@@ -140,7 +140,7 @@ export default function LandingPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="border border-gray-300 p-3 rounded bg-white">
                         <div className="text-lg font-bold border-b pb-2 mb-3">2. Contact Details</div>
                         <div className="space-y-4">
@@ -166,7 +166,7 @@ export default function LandingPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="border border-gray-300 p-3 rounded bg-white">
                         <div className="text-lg font-bold border-b pb-2 mb-3">3. Current Address</div>
                         <div className="space-y-4">
@@ -235,14 +235,14 @@ export default function LandingPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="text-xs text-gray-500 mt-4 flex items-center">
                         <div className="h-1 bg-gray-300 rounded-full flex-grow mr-2">
                           <div className="h-1 bg-indigo-500 rounded-full" style={{width: '14%'}}></div>
                         </div>
                         <span>Page 1 of 7 (32 fields remaining)</span>
                       </div>
-                      
+
                       <div className="sticky bottom-0 bg-white p-3 border-t border-gray-200 flex justify-between">
                         <button className="px-4 py-2 bg-gray-200 rounded text-gray-600" disabled>Previous</button>
                         <button className="px-4 py-2 bg-indigo-500 text-white rounded">Next Page</button>
