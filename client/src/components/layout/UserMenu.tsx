@@ -5,6 +5,7 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
+  DropdownMenuSeparator,
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,11 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
-import { LogOut, User } from "lucide-react";
+import { 
+  ArrowRightOnRectangleIcon, 
+  UserCircleIcon,
+  Cog6ToothIcon
+} from "@heroicons/react/24/outline";
 
 export default function UserMenu() {
   const { user, isAuthenticated, login, logout } = useAuthContext();
@@ -42,7 +47,7 @@ export default function UserMenu() {
   if (!isAuthenticated) {
     return (
       <>
-        <Button variant="outline" onClick={() => setLoginOpen(true)}>
+        <Button variant="outline" size="sm" onClick={() => setLoginOpen(true)}>
           Sign In
         </Button>
         
@@ -97,27 +102,41 @@ export default function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <div className="flex h-full w-full items-center justify-center rounded-full bg-primary text-primary-foreground">
-            {user?.name ? user.name.charAt(0).toUpperCase() : <User className="h-5 w-5" />}
+        <Button variant="ghost" size="icon" className="relative h-8 w-8 rounded-full">
+          <div className="flex h-full w-full items-center justify-center rounded-full bg-purple-100 text-primary">
+            {user?.name ? user.name.charAt(0).toUpperCase() : <UserCircleIcon className="h-5 w-5" />}
           </div>
         </Button>
       </DropdownMenuTrigger>
       
-      <DropdownMenuContent align="end">
-        <div className="flex items-center justify-start gap-2 p-2">
-          <div className="flex flex-col space-y-1 leading-none">
-            <p className="font-medium">{user?.name}</p>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
+      <DropdownMenuContent align="end" className="w-56">
+        <div className="px-2 pt-2 pb-3">
+          <div className="flex flex-col">
+            <p className="font-medium text-sm">{user?.name}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{user?.email}</p>
           </div>
         </div>
         
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem className="py-2 cursor-pointer">
+          <UserCircleIcon className="h-4 w-4 mr-2 text-gray-600" />
+          <span>Account</span>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem className="py-2 cursor-pointer">
+          <Cog6ToothIcon className="h-4 w-4 mr-2 text-gray-600" />
+          <span>Settings</span>
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
         <DropdownMenuItem 
           onClick={logout}
-          className="text-red-600 cursor-pointer"
+          className="text-red-600 py-2 cursor-pointer"
         >
-          <LogOut className="h-4 w-4 mr-2" />
-          Log out
+          <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
+          <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

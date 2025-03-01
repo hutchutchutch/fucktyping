@@ -5,6 +5,9 @@ interface User {
   id: number;
   name: string;
   email: string;
+  organization?: string;
+  avatar?: string;
+  role?: string;
 }
 
 // Define AuthContext interface
@@ -22,7 +25,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // AuthProvider component
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
   // In a real app, this would make an API call to your auth service
   const login = async (email: string, password: string) => {
@@ -35,8 +38,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       setUser({
         id: 1,
-        name: 'Demo User',
-        email: email
+        name: email.split('@')[0].replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        email: email,
+        organization: "Acme Inc.",
+        role: "Admin"
       });
     } catch (error) {
       console.error("Login failed:", error);
@@ -53,13 +58,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // For development purposes, automatically log in a test user
   useEffect(() => {
     // Using timeout to simulate async login
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setUser({
         id: 1,
-        name: 'Demo User',
-        email: 'demo@example.com'
+        name: 'Sarah Johnson',
+        email: 'sarah.johnson@example.com',
+        organization: "Acme Inc.",
+        role: "Admin"
       });
-    }, 100);
+      setIsLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, []);
   
   const value = {
