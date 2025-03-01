@@ -1,14 +1,12 @@
 import { useLocation, Link } from "wouter";
 import { Bell } from "lucide-react";
+import UserMenu from "./UserMenu";
+import { useAuthContext } from "@/context/AuthContext";
 
 export default function Header() {
   const [location, setLocation] = useLocation();
+  const { isAuthenticated } = useAuthContext();
   
-  const userInfo = {
-    name: "Sarah Wilson",
-    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-  };
-
   return (
     <header className="bg-white shadow">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -21,16 +19,12 @@ export default function Header() {
           </Link>
         </div>
         <div className="flex items-center">
-          <button className="mr-4 p-2 rounded-full text-gray-500 hover:text-gray-700">
-            <Bell className="h-6 w-6" />
-          </button>
-          <div className="flex items-center bg-gray-100 rounded-full px-3 py-1">
-            <img className="h-8 w-8 rounded-full" src={userInfo.avatarUrl} alt="User avatar" />
-            <span className="ml-2 text-sm font-medium text-gray-700">{userInfo.name}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="ml-2 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </div>
+          {isAuthenticated && (
+            <button className="mr-4 p-2 rounded-full text-gray-500 hover:text-gray-700">
+              <Bell className="h-6 w-6" />
+            </button>
+          )}
+          <UserMenu />
         </div>
       </div>
     </header>
