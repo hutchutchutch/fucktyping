@@ -9,18 +9,18 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar />
       
-      <div className="md:pl-64 flex flex-col min-h-screen">
+      <div className="flex flex-col flex-1 md:ml-64 overflow-y-auto">
         <Header />
         
         <main className="flex-1 px-6 py-8">
           {children}
         </main>
+        
+        <MobileNav />
       </div>
-      
-      <MobileNav />
     </div>
   );
 }
