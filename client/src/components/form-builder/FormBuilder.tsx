@@ -1,288 +1,174 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useParams, useLocation } from "wouter";
-import { Plus } from "lucide-react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import React, { useState } from 'react';
+// @ts-ignore - Importing from JS file
+import QuestionEditor from './QuestionEditor';
+// @ts-ignore - Importing from JS file
+import ResponseOptions from './ResponseOptions';
 import { Button } from "@/components/ui/button";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import QuestionEditor from "./QuestionEditor";
-import EmailTemplateEditor from "./EmailTemplateEditor";
-import { FormWithQuestions } from "@shared/schema";
 
-const formSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  isActive: z.boolean().default(true),
-  emailNotificationEnabled: z.boolean().default(false),
-  emailRecipients: z.string().optional(),
-  emailSubject: z.string().optional(),
-  emailTemplate: z.string().optional(),
-});
+interface Question {
+  id: string;
+  text: string;
+  type: string;
+  required: boolean;
+  order: number;
+  options: string[] | null;
+  description?: string;
+  validation?: {
+    min: number;
+    max: number;
+  };
+}
 
-type FormValues = z.infer<typeof formSchema>;
+interface DragEndResult {
+  destination?: {
+    index: number;
+  };
+  source: {
+    index: number;
+  };
+}
 
-export default function FormBuilder() {
-  const { id } = useParams<{ id: string }>();
-  const [, navigate] = useLocation();
-  const { toast } = useToast();
-  const [questions, setQuestions] = useState<any[]>([]);
+// src/components/form-builder/FormBuilder.tsx
+const FormBuilder: React.FC = () => {
+  const [questions, setQuestions] = useState<Question[]>([
+    { id: 'q1', text: 'What is your name?', type: 'text', required: true, order: 1 },
+    { id: 'q2', text: 'How satisfied are you with our service?', type: 'rating', required: true, order: 2 },
+    { id: 'q3', text: 'Any additional comments?', type: 'textarea', required: false, order: 3 }
+  ]);
   
-  // Fetch existing form if editing
-  const { data: existingForm, isLoading } = useQuery<FormWithQuestions>({
-    queryKey: id ? [`/api/forms/${id}`] : null,
-    enabled: !!id,
-  });
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      isActive: true,
-      emailNotificationEnabled: false,
-      emailRecipients: "",
-      emailSubject: "",
-      emailTemplate: "",
-    },
-  });
-
-  // Update form with existing data when loaded
-  useState(() => {
-    if (existingForm) {
-      form.reset({
-        title: existingForm.title,
-        description: existingForm.description || "",
-        isActive: existingForm.isActive,
-        emailNotificationEnabled: existingForm.emailNotificationEnabled,
-        emailRecipients: existingForm.emailRecipients || "",
-        emailSubject: existingForm.emailSubject || "",
-        emailTemplate: existingForm.emailTemplate || "",
-      });
-      
-      if (existingForm.questions) {
-        setQuestions(existingForm.questions);
-      }
-    }
-  });
-
-  const createFormMutation = useMutation({
-    mutationFn: async (formData: FormValues) => {
-      const response = await apiRequest(
-        "POST",
-        "/api/forms",
-        {
-          ...formData,
-          userId: 1, // Mock user ID
-        }
-      );
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Form created",
-        description: "Your form has been created successfully.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/forms"] });
-      navigate(`/forms/edit/${data.id}`);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to create form: ${error}`,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateFormMutation = useMutation({
-    mutationFn: async (formData: FormValues) => {
-      const response = await apiRequest(
-        "PUT",
-        `/api/forms/${id}`,
-        formData
-      );
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Form updated",
-        description: "Your form has been updated successfully.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/forms"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/forms/${id}`] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to update form: ${error}`,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = (data: FormValues) => {
-    if (id) {
-      updateFormMutation.mutate(data);
-    } else {
-      createFormMutation.mutate(data);
-    }
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  
+  const handleDragEnd = (result: DragEndResult) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(questions);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    // Update order values
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      order: index + 1
+    }));
+    
+    setQuestions(updatedItems);
   };
-
+  
   const addQuestion = () => {
-    setQuestions([
-      ...questions,
-      {
-        id: `temp-${Date.now()}`,
-        formId: id ? parseInt(id) : 0,
-        text: "",
-        type: "multiple_choice",
-        order: questions.length + 1,
-        options: [""],
-        required: true,
-      },
-    ]);
+    const newQuestion: Question = {
+      id: `q${questions.length + 1}`,
+      text: 'New Question',
+      type: 'text',
+      required: false,
+      order: questions.length + 1
+    };
+    setQuestions([...questions, newQuestion]);
+    setCurrentQuestion(newQuestion);
   };
-
-  const updateQuestion = (index: number, updatedQuestion: any) => {
-    const newQuestions = [...questions];
-    newQuestions[index] = updatedQuestion;
-    setQuestions(newQuestions);
+  
+  const editQuestion = (id: string) => {
+    const question = questions.find(q => q.id === id);
+    if (question) {
+      setCurrentQuestion(question);
+    }
   };
-
-  const removeQuestion = (index: number) => {
-    setQuestions(questions.filter((_, i) => i !== index));
+  
+  const deleteQuestion = (id: string) => {
+    setQuestions(questions.filter(q => q.id !== id));
+    if (currentQuestion && currentQuestion.id === id) {
+      setCurrentQuestion(null);
+    }
   };
-
-  if (isLoading && id) {
-    return (
-      <div className="p-6 animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
-        <div className="h-10 bg-gray-200 rounded w-full mb-6"></div>
-        <div className="h-24 bg-gray-200 rounded w-full mb-6"></div>
-      </div>
-    );
-  }
-
+  
+  const onQuestionChange = (updatedQuestion: Question) => {
+    setQuestions(questions.map(q => 
+      q.id === updatedQuestion.id ? updatedQuestion : q
+    ));
+    setCurrentQuestion(updatedQuestion);
+  };
+  
   return (
-    <div className="p-6">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="mb-5">
-            <Form.Field
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <Form.Item>
-                  <Form.Label className="block text-sm font-medium text-gray-700">Form Title</Form.Label>
-                  <Form.Control>
-                    <Input
-                      {...field}
-                      placeholder="Enter form title"
-                      className="mt-1 block w-full"
-                    />
-                  </Form.Control>
-                  <Form.Message />
-                </Form.Item>
-              )}
-            />
+    <div className="flex flex-col lg:flex-row gap-6">
+      <div className="lg:w-1/2 space-y-6">
+        <div className="bg-card p-6 rounded-lg shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">Form Questions</h2>
+            <Button onClick={addQuestion} className="rounded-md">Add Question</Button>
           </div>
-
-          <div className="mb-5">
-            <Form.Field
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <Form.Item>
-                  <Form.Label className="block text-sm font-medium text-gray-700">Description</Form.Label>
-                  <Form.Control>
-                    <Textarea
-                      {...field}
-                      rows={3}
-                      placeholder="Enter form description"
-                      className="mt-1 block w-full"
-                    />
-                  </Form.Control>
-                  <Form.Message />
-                </Form.Item>
-              )}
-            />
-          </div>
-
-          <div className="border-t border-gray-200 pt-5">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Questions</h3>
-
+          
+          <div className="space-y-3">
             {questions.map((question, index) => (
-              <QuestionEditor
-                key={question.id || index}
-                question={question}
-                index={index}
-                onChange={(updatedQuestion) => updateQuestion(index, updatedQuestion)}
-                onRemove={() => removeQuestion(index)}
-              />
+              <div
+                key={question.id}
+                className="bg-muted/30 p-4 rounded-md flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-medium">{question.text}</p>
+                  <p className="text-sm text-muted-foreground">{question.type}</p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button variant="ghost" size="sm" onClick={() => editQuestion(question.id)}>Edit</Button>
+                  <Button variant="ghost" size="sm" onClick={() => deleteQuestion(question.id)}>Delete</Button>
+                </div>
+              </div>
             ))}
-
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-4"
-              onClick={addQuestion}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Question
-            </Button>
           </div>
-
-          <div className="border-t border-gray-200 pt-5 mt-5">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Email Notification Settings</h3>
-            <EmailTemplateEditor
-              enabled={form.watch("emailNotificationEnabled")}
-              onEnabledChange={(enabled) => form.setValue("emailNotificationEnabled", enabled)}
-              recipients={form.watch("emailRecipients")}
-              onRecipientsChange={(val) => form.setValue("emailRecipients", val)}
-              subject={form.watch("emailSubject")}
-              onSubjectChange={(val) => form.setValue("emailSubject", val)}
-              template={form.watch("emailTemplate")}
-              onTemplateChange={(val) => form.setValue("emailTemplate", val)}
+        </div>
+        
+        <div className="bg-card p-6 rounded-lg shadow-sm">
+          <h2 className="text-2xl font-bold mb-4">Form Settings</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Form Title</label>
+              <input type="text" className="w-full p-2 border rounded-md" placeholder="Enter form title" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Description</label>
+              <textarea className="w-full p-2 border rounded-md h-20" placeholder="Enter form description"></textarea>
+            </div>
+            <div className="flex items-center">
+              <input type="checkbox" id="collect-email" className="mr-2" />
+              <label htmlFor="collect-email">Collect respondent email</label>
+            </div>
+            <div className="flex items-center">
+              <input type="checkbox" id="allow-multiple" className="mr-2" />
+              <label htmlFor="allow-multiple">Allow multiple submissions</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="lg:w-1/2">
+        {currentQuestion ? (
+          <div className="bg-card p-6 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-bold mb-6">Edit Question</h2>
+            {/* @ts-ignore - Using component with untyped props */}
+            <QuestionEditor 
+              question={currentQuestion} 
+              index={questions.findIndex(q => q.id === currentQuestion.id)}
+              onChange={onQuestionChange}
+              onRemove={() => deleteQuestion(currentQuestion.id)}
             />
+            {(currentQuestion.type === 'radio' || currentQuestion.type === 'checkbox' || currentQuestion.type === 'dropdown' || 
+              currentQuestion.type === 'multiple_choice') && (
+              <ResponseOptions />
+            )}
           </div>
-
-          <div className="mt-5 flex justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              className="mr-3"
-              onClick={() => navigate("/")}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="mr-3"
-              onClick={() => {
-                form.setValue("isActive", false);
-                form.handleSubmit(onSubmit)();
-              }}
-            >
-              Save as Draft
-            </Button>
-            <Button
-              type="submit"
-              onClick={() => {
-                form.setValue("isActive", true);
-              }}
-            >
-              {id ? "Update Form" : "Publish Form"}
-            </Button>
+        ) : (
+          <div className="bg-card p-6 rounded-lg shadow-sm h-64 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 11l.01-.011M17 7l.01-.011M12 7l.01-.011M7 11l.01-.011M11 17l.01-.011"/>
+                <path d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5z"/>
+              </svg>
+            </div>
+            <h3 className="font-medium">No Question Selected</h3>
+            <p className="text-sm text-muted-foreground mt-1">Select a question to edit or create a new one</p>
           </div>
-        </form>
-      </Form>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default FormBuilder;

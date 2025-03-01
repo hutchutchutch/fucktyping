@@ -1,116 +1,139 @@
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
-interface EmailTemplateEditorProps {
-  enabled: boolean;
-  onEnabledChange: (enabled: boolean) => void;
-  recipients: string;
-  onRecipientsChange: (recipients: string) => void;
-  subject: string;
-  onSubjectChange: (subject: string) => void;
-  template: string;
-  onTemplateChange: (template: string) => void;
-}
+// src/components/form-builder/EmailTemplateEditor.tsx
+const EmailTemplateEditor = () => {
+  const [subject, setSubject] = useState("Your form response has been received");
+  const [confirmationBody, setConfirmationBody] = useState(
+    "Thank you for completing our form. We have received your responses and will process them shortly."
+  );
+  const [notificationBody, setNotificationBody] = useState(
+    "A new response has been submitted to your form. View the response in your dashboard."
+  );
 
-export default function EmailTemplateEditor({
-  enabled,
-  onEnabledChange,
-  recipients,
-  onRecipientsChange,
-  subject,
-  onSubjectChange,
-  template,
-  onTemplateChange,
-}: EmailTemplateEditorProps) {
-  const defaultTemplate = `Hi there,
-
-A new form has been submitted.
-
-Form: {{formName}}
-Respondent: {{respondentName}} ({{respondentEmail}})
-Date: {{submissionDate}}
-
-View the full response: {{responseLink}}
-
-Thanks,
-Voice Form Agent`;
-
-  const handleTemplateChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onTemplateChange(e.target.value);
-  };
-
-  const handleRecipientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onRecipientsChange(e.target.value);
-  };
-
-  const handleSubjectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onSubjectChange(e.target.value);
-  };
+  // Mock variables for preview
+  const mockRespondent = "John Doe";
+  const mockFormTitle = "Customer Feedback Survey";
+  const mockDate = new Date().toLocaleDateString();
 
   return (
-    <div className="bg-gray-50 p-4 rounded-md mb-4">
-      <div className="mb-3">
-        <div className="flex items-center">
-          <Switch
-            id="send-notifications"
-            checked={enabled}
-            onCheckedChange={onEnabledChange}
-          />
-          <Label htmlFor="send-notifications" className="ml-2">
-            Send email when form is completed
-          </Label>
-        </div>
+    <div className="bg-card p-6 rounded-lg shadow-sm">
+      <h2 className="text-2xl font-bold mb-4">Email Notifications</h2>
+      <p className="text-muted-foreground mb-6">
+        Configure the emails that will be sent when a form is submitted
+      </p>
+
+      <Tabs defaultValue="confirmation">
+        <TabsList className="mb-4">
+          <TabsTrigger value="confirmation">Confirmation Email</TabsTrigger>
+          <TabsTrigger value="notification">Admin Notification</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="confirmation">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Email Subject</label>
+              <input 
+                type="text" 
+                className="w-full p-2 border rounded-md"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Email Body</label>
+              <textarea 
+                className="w-full p-2 border rounded-md h-40"
+                value={confirmationBody}
+                onChange={(e) => setConfirmationBody(e.target.value)}
+              ></textarea>
+              <p className="text-xs text-muted-foreground mt-1">
+                You can use the following variables: {'{respondent}'}, {'{formTitle}'}, {'{date}'}, {'{responseLink}'}
+              </p>
+            </div>
+
+            <div className="border rounded-md p-4">
+              <h3 className="text-sm font-medium mb-2">Preview</h3>
+              <div className="bg-muted/30 p-4 rounded-md">
+                <div className="mb-2">
+                  <span className="font-medium">Subject:</span> {subject}
+                </div>
+                <div>
+                  <span className="font-medium">Body:</span><br />
+                  <p className="mt-1 whitespace-pre-line">
+                    {confirmationBody
+                      .replace("{respondent}", mockRespondent)
+                      .replace("{formTitle}", mockFormTitle)
+                      .replace("{date}", mockDate)
+                      .replace("{responseLink}", "https://example.com/view/123")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="notification">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Admin Email Address</label>
+              <input 
+                type="email" 
+                className="w-full p-2 border rounded-md"
+                placeholder="Enter email address"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Email Subject</label>
+              <input 
+                type="text" 
+                className="w-full p-2 border rounded-md"
+                value="New form submission received"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Email Body</label>
+              <textarea 
+                className="w-full p-2 border rounded-md h-40"
+                value={notificationBody}
+                onChange={(e) => setNotificationBody(e.target.value)}
+              ></textarea>
+              <p className="text-xs text-muted-foreground mt-1">
+                You can use the following variables: {'{respondent}'}, {'{formTitle}'}, {'{date}'}, {'{responseLink}'}
+              </p>
+            </div>
+
+            <div className="border rounded-md p-4">
+              <h3 className="text-sm font-medium mb-2">Preview</h3>
+              <div className="bg-muted/30 p-4 rounded-md">
+                <div className="mb-2">
+                  <span className="font-medium">Subject:</span> New form submission received
+                </div>
+                <div>
+                  <span className="font-medium">Body:</span><br />
+                  <p className="mt-1 whitespace-pre-line">
+                    {notificationBody
+                      .replace("{respondent}", mockRespondent)
+                      .replace("{formTitle}", mockFormTitle)
+                      .replace("{date}", mockDate)
+                      .replace("{responseLink}", "https://example.com/view/123")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      <div className="mt-6 flex justify-end">
+        <Button>Save Email Templates</Button>
       </div>
-
-      {enabled && (
-        <>
-          <div className="mb-3">
-            <Label htmlFor="email-recipients" className="block text-sm font-medium text-gray-700">
-              Recipients (comma separated)
-            </Label>
-            <Input
-              id="email-recipients"
-              value={recipients}
-              onChange={handleRecipientChange}
-              className="mt-1 block w-full"
-              placeholder="email1@example.com, email2@example.com"
-            />
-          </div>
-
-          <div className="mb-3">
-            <Label htmlFor="email-subject" className="block text-sm font-medium text-gray-700">
-              Email Subject
-            </Label>
-            <Input
-              id="email-subject"
-              value={subject}
-              onChange={handleSubjectChange}
-              className="mt-1 block w-full"
-              placeholder="New Form Submission"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="email-template" className="block text-sm font-medium text-gray-700">
-              Email Template
-            </Label>
-            <Textarea
-              id="email-template"
-              value={template || defaultTemplate}
-              onChange={handleTemplateChange}
-              rows={6}
-              className="mt-1 block w-full"
-              placeholder={defaultTemplate}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Available variables: {{formName}}, {{respondentName}}, {{respondentEmail}}, 
-              {{submissionDate}}, {{responseLink}}
-            </p>
-          </div>
-        </>
-      )}
     </div>
   );
-}
+};
+
+export default EmailTemplateEditor;
