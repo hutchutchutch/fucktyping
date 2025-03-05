@@ -2,52 +2,115 @@ import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useAuthContext } from "../../context/AuthContext";
 import {
-  BarChart,
   FileEdit,
   FileQuestion,
   Home,
-  Settings,
-  MessageSquare,
-  PlusCircle,
   TestTube,
   LineChart,
   MoveRight,
   Bot,
   Sparkles,
-  HelpCircle,
-  Mic
+  Send,
+  Mic,
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useState, useEffect } from "react";
-import AIAssistantPopup from "@/components/ai/AIAssistantPopup";
-import SimpleTour from "@/components/onboarding/SimpleTour";
+import { useState, useRef, useEffect } from "react";
+
+interface Message {
+  id: string;
+  sender: 'user' | 'assistant';
+  text: string;
+  timestamp: Date;
+}
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();
   const { user } = useAuthContext();
-  const [showAssistant, setShowAssistant] = useState(false);
-  const [showTour, setShowTour] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [showChat, setShowChat] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Check if this is the first visit (in a real app, this would check user preferences)
+  // Initialize with a greeting message
   useEffect(() => {
-    const hasSeenTour = localStorage.getItem('hasSeenTour');
-    if (!hasSeenTour) {
-      // Wait a moment before showing the tour to let the page load
-      const timer = setTimeout(() => {
-        setShowTour(true);
-      }, 1000);
-      return () => clearTimeout(timer);
+    if (messages.length === 0) {
+      const greeting: Message = {
+        id: Date.now().toString(),
+        sender: 'assistant',
+        text: "Hi there! I'm your AI assistant. How can I help you with your forms today?",
+        timestamp: new Date()
+      };
+      setMessages([greeting]);
     }
   }, []);
   
-  const completeTour = () => {
-    setShowTour(false);
-    localStorage.setItem('hasSeenTour', 'true');
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+  
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSendMessage = (text: string) => {
+    if (!text.trim()) return;
+    
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      sender: 'user',
+      text: text,
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    
+    // Simulate AI response
+    setTimeout(() => {
+      const responses = [
+        "I can help you analyze your form results. Would you like to see your completion rates or sentiment analysis?",
+        "Creating voice-enabled forms is easy! Would you like me to walk you through the process?",
+        "Based on your form responses, participants seem most engaged with the multiple-choice questions. Consider adding more of those.",
+        "I notice you have a few forms in your dashboard. Would you like suggestions on how to optimize them for better completion rates?",
+        "Voice forms have 78% higher completion rates than text-only forms. Would you like to convert some of your existing forms to voice format?",
+        "Looking at your response patterns, most users complete your forms on mobile devices. Let me suggest some mobile-friendly question types."
+      ];
+      
+      const aiMessage: Message = {
+        id: Date.now().toString(),
+        sender: 'assistant',
+        text: responses[Math.floor(Math.random() * responses.length)],
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, aiMessage]);
+      setShowChat(true); // Expand the chat area when there's a conversation
+    }, 1000);
+  };
+  
+  const handleVoiceInput = () => {
+    // Simulate voice input with a placeholder message
+    const placeholderText = "This is a simulated voice transcription";
+    handleSendMessage(placeholderText);
   };
 
   const isActive = (path: string) => {
-    return location === path || location.startsWith(`${path}/`);
+    // Fix highlight issue for Create Form
+    if (path === '/forms/new' && location === '/forms/new') {
+      return true;
+    }
+    
+    // For My Forms path, don't highlight when on Create Form page
+    if (path === '/forms' && location === '/forms/new') {
+      return false;
+    }
+    
+    return location === path || 
+           (location.startsWith(`${path}/`) && !location.startsWith('/forms/new'));
   };
 
   // Navigation items organized by sections
@@ -112,19 +175,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Product Tour */}
-      {showTour && (
-        <SimpleTour 
-          onComplete={completeTour} 
-          onSkip={completeTour} 
-        />
-      )}
-      
-      {/* AI Assistant Popup */}
-      <AIAssistantPopup 
-        isOpen={showAssistant} 
-        onClose={() => setShowAssistant(false)} 
-      />
       
       <aside className="hidden md:flex md:flex-col md:w-64 bg-white border-r border-gray-200 h-screen">
         <div 
@@ -245,27 +295,62 @@ export default function Sidebar() {
             <h3 className="text-xs uppercase font-semibold text-gray-500 mb-2 flex items-center">
               AI Assistant <Sparkles className="h-3 w-3 text-yellow-500 ml-1" />
             </h3>
+            
+            {/* AI Assistant Chat */}
             <Card className="border border-indigo-100 bg-gradient-to-r from-indigo-50/50 to-purple-50/50">
               <CardContent className="p-3">
-                <div className="flex flex-col space-y-2">
-                  <div className="flex items-center">
-                    <Bot className="h-4 w-4 text-indigo-500 mr-2" />
-                    <span className="text-sm text-indigo-800">How can I help you today?</span>
+                {showChat && (
+                  <div className="max-h-40 overflow-y-auto mb-3 space-y-2">
+                    {messages.map((message) => (
+                      <div 
+                        key={message.id} 
+                        className={cn(
+                          "px-2 py-1 rounded text-sm",
+                          message.sender === 'assistant' 
+                            ? "bg-indigo-100 text-indigo-900" 
+                            : "bg-blue-100 text-blue-900 ml-4"
+                        )}
+                      >
+                        {message.text}
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
                   </div>
-                  <div className="flex space-x-2 mt-2">
+                )}
+                
+                <div className="flex flex-col space-y-2">
+                  {!showChat && (
+                    <div className="flex items-center">
+                      <Bot className="h-4 w-4 text-indigo-500 mr-2" />
+                      <span className="text-sm text-indigo-800">How can I help you today?</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex space-x-2">
                     <div className="relative flex-1">
                       <input 
                         type="text" 
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(inputValue)}
                         placeholder="Type a message..." 
                         className="w-full h-9 px-3 py-2 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary" 
-                        onClick={() => setShowAssistant(true)}
                       />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1 h-7 w-7 p-0 text-gray-500"
+                        onClick={() => handleSendMessage(inputValue)}
+                        disabled={!inputValue.trim()}
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       className="h-9 w-9 flex-shrink-0 border-gray-300 hover:bg-indigo-50 hover:text-indigo-600"
-                      onClick={() => setShowAssistant(true)}
+                      onClick={handleVoiceInput}
                     >
                       <Mic className="h-4 w-4" />
                     </Button>
@@ -276,15 +361,7 @@ export default function Sidebar() {
           </div>
           
           <div className="flex gap-2 mt-3 justify-end">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 text-xs text-gray-600"
-              onClick={() => setShowTour(true)}
-            >
-              <HelpCircle className="h-3 w-3 mr-1" />
-              Take tour
-            </Button>
+            {/* Remove tour button - moved to TopNavBar */}
           </div>
         </div>
       </aside>

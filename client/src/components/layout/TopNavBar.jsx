@@ -18,12 +18,20 @@ import {
   Menu, 
   Search, 
   Settings, 
-  User 
+  User,
+  HelpCircle
 } from "lucide-react";
+import SimpleTour from "@/components/onboarding/SimpleTour";
 
 function TopNavBar({ onToggleSidebar }) {
   const { user, logout } = useAuthContext();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showTour, setShowTour] = useState(false);
+  
+  const completeTour = () => {
+    setShowTour(false);
+    localStorage.setItem('hasSeenTour', 'true');
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -66,6 +74,25 @@ function TopNavBar({ onToggleSidebar }) {
         </div>
 
         <div className="flex items-center space-x-4">
+          {/* Tour Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-gray-600 hover:text-gray-900 hidden md:flex items-center"
+            onClick={() => setShowTour(true)}
+          >
+            <HelpCircle className="h-4 w-4 mr-1" />
+            <span className="text-xs">Take Tour</span>
+          </Button>
+          
+          {/* Tour Component */}
+          {showTour && (
+            <SimpleTour 
+              onComplete={completeTour} 
+              onSkip={completeTour} 
+            />
+          )}
+          
           <Button
             variant="ghost"
             size="icon"
