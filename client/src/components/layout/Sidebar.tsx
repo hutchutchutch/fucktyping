@@ -374,8 +374,15 @@ export default function Sidebar() {
               {showChat && (
                 <div className="flex-grow overflow-y-auto mb-3 space-y-2 max-h-80">
                   {messages.map((message) => {
-                    // Safe type check - if action exists, render button
                     if (message.action) {
+                      // Extract action properties safely
+                      const { 
+                        path = "/", 
+                        name = "Action", 
+                        icon = null, 
+                        className = "" 
+                      } = message.action;
+                      
                       return (
                         <Button
                           key={message.id}
@@ -383,13 +390,13 @@ export default function Sidebar() {
                           size="sm"
                           className={cn(
                             "w-full justify-start border text-sm font-medium h-9 mb-1", 
-                            message.action.className
+                            className
                           )}
-                          onClick={() => navigate(message.action.path)}
+                          onClick={() => navigate(path)}
                         >
                           <span className="flex items-center">
-                            {message.action.icon}
-                            <span className="ml-2">{message.action.name}</span>
+                            {icon}
+                            <span className="ml-2">{name}</span>
                           </span>
                         </Button>
                       );
