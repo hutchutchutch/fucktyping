@@ -12,7 +12,7 @@ import {
   Sparkles,
   Send,
   Mic,
-  HelpCircle
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,78 +20,149 @@ import { useState, useRef, useEffect } from "react";
 
 interface Message {
   id: string;
-  sender: 'user' | 'assistant';
+  sender: "user" | "assistant";
   text: string;
   timestamp: Date;
+  action?: {
+    name: string;
+    path: string;
+    icon: JSX.Element;
+    className: string;
+  };
 }
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();
   const { user } = useAuthContext();
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [showChat, setShowChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Initialize with a greeting message
+
+  // Initialize with a greeting message and action options
   useEffect(() => {
     if (messages.length === 0) {
       const greeting: Message = {
         id: Date.now().toString(),
-        sender: 'assistant',
-        text: "Hi there! I'm your AI assistant. How can I help you with your forms today?",
-        timestamp: new Date()
+        sender: "assistant",
+        text: "How can I help you today?",
+        timestamp: new Date(),
       };
+      
       setMessages([greeting]);
+      
+      // Add welcome message with action CTA after a short delay
+      setTimeout(() => {
+        const actionMessage: Message = {
+          id: Date.now().toString(),
+          sender: "assistant",
+          text: "Here are some things you might want to do:",
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, actionMessage]);
+        
+        // Add action buttons with a slight delay
+        setTimeout(() => {
+          // Using a forEach to add each action individually to avoid type issues
+          quickActions.forEach(action => {
+            const actionMsg: Message = {
+              id: Date.now().toString() + Math.random(),
+              sender: "assistant",
+              text: "",
+              timestamp: new Date(),
+              action: action
+            };
+            setMessages(prev => [...prev, actionMsg]);
+          });
+          
+          setShowChat(true);
+        }, 500);
+      }, 1000);
     }
   }, []);
-  
+
   // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleSendMessage = (text: string) => {
     if (!text.trim()) return;
-    
+
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
-      sender: 'user',
+      sender: "user",
       text: text,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-    
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
-    
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
+
     // Simulate AI response
     setTimeout(() => {
-      const responses = [
-        "I can help you analyze your form results. Would you like to see your completion rates or sentiment analysis?",
-        "Creating voice-enabled forms is easy! Would you like me to walk you through the process?",
-        "Based on your form responses, participants seem most engaged with the multiple-choice questions. Consider adding more of those.",
-        "I notice you have a few forms in your dashboard. Would you like suggestions on how to optimize them for better completion rates?",
-        "Voice forms have 78% higher completion rates than text-only forms. Would you like to convert some of your existing forms to voice format?",
-        "Looking at your response patterns, most users complete your forms on mobile devices. Let me suggest some mobile-friendly question types."
-      ];
+      // Determine if we should show action buttons (33% chance)
+      const showActionButtons = Math.random() < 0.33;
       
-      const aiMessage: Message = {
-        id: Date.now().toString(),
-        sender: 'assistant',
-        text: responses[Math.floor(Math.random() * responses.length)],
-        timestamp: new Date()
-      };
+      if (showActionButtons) {
+        // Show text response followed by an action button
+        const suggestedAction = quickActions[Math.floor(Math.random() * quickActions.length)];
+        const actionPrompts = [
+          `Would you like to ${suggestedAction.name.toLowerCase()}?`,
+          `I think it might be helpful to ${suggestedAction.name.toLowerCase()}.`,
+          `Based on your recent activity, you might want to ${suggestedAction.name.toLowerCase()}.`
+        ];
+        
+        const promptMessage: Message = {
+          id: Date.now().toString(),
+          sender: "assistant",
+          text: actionPrompts[Math.floor(Math.random() * actionPrompts.length)],
+          timestamp: new Date(),
+        };
+        
+        setMessages((prev) => [...prev, promptMessage]);
+        
+        // Add action button after a short delay
+        setTimeout(() => {
+          const actionMessage: Message = {
+            id: Date.now().toString() + Math.random(),
+            sender: "assistant",
+            text: "",
+            timestamp: new Date(),
+            action: suggestedAction
+          };
+          setMessages((prev) => [...prev, actionMessage]);
+        }, 500);
+      } else {
+        // Standard text responses
+        const responses = [
+          "I can help you analyze your form results. Would you like to see your completion rates or sentiment analysis?",
+          "Creating voice-enabled forms is easy! Would you like me to walk you through the process?",
+          "Based on your form responses, participants seem most engaged with the multiple-choice questions. Consider adding more of those.",
+          "I notice you have a few forms in your dashboard. Would you like suggestions on how to optimize them for better completion rates?",
+          "Voice forms have 78% higher completion rates than text-only forms. Would you like to convert some of your existing forms to voice format?",
+          "Looking at your response patterns, most users complete your forms on mobile devices. Let me suggest some mobile-friendly question types.",
+        ];
+
+        const aiMessage: Message = {
+          id: Date.now().toString(),
+          sender: "assistant",
+          text: responses[Math.floor(Math.random() * responses.length)],
+          timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, aiMessage]);
+      }
       
-      setMessages(prev => [...prev, aiMessage]);
       setShowChat(true); // Expand the chat area when there's a conversation
     }, 1000);
   };
-  
+
   const handleVoiceInput = () => {
     // Simulate voice input with a placeholder message
     const placeholderText = "This is a simulated voice transcription";
@@ -100,17 +171,19 @@ export default function Sidebar() {
 
   const isActive = (path: string) => {
     // Fix highlight issue for Create Form
-    if (path === '/forms/new' && location === '/forms/new') {
+    if (path === "/forms/new" && location === "/forms/new") {
       return true;
     }
-    
+
     // For My Forms path, don't highlight when on Create Form page
-    if (path === '/forms' && location === '/forms/new') {
+    if (path === "/forms" && location === "/forms/new") {
       return false;
     }
-    
-    return location === path || 
-           (location.startsWith(`${path}/`) && !location.startsWith('/forms/new'));
+
+    return (
+      location === path ||
+      (location.startsWith(`${path}/`) && !location.startsWith("/forms/new"))
+    );
   };
 
   // Navigation items organized by sections
@@ -144,9 +217,9 @@ export default function Sidebar() {
             {
               name: "Event Registration",
               path: "/forms?category=event-registration",
-            }
-          ]
-        }
+            },
+          ],
+        },
       ],
     },
   ];
@@ -157,38 +230,49 @@ export default function Sidebar() {
       name: "Review Form Results",
       path: "/responses",
       icon: <LineChart className="h-4 w-4" />,
-      className: "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 cta-review-results"
+      className:
+        "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 cta-review-results",
     },
     {
       name: "Test Prior Forms",
       path: "/voice-agent-test",
       icon: <TestTube className="h-4 w-4" />,
-      className: "bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 cta-test-forms"
+      className:
+        "bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 cta-test-forms",
     },
     {
       name: "Explore Community Forms",
       path: "/community-forms",
       icon: <Sparkles className="h-4 w-4" />,
-      className: "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 cta-community-forms"
-    }
+      className:
+        "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 cta-community-forms",
+    },
   ];
 
   return (
     <>
-      
       <aside className="hidden md:flex md:flex-col md:w-64 bg-white border-r border-gray-200 h-screen">
-        <div 
+        <div
           className="p-4 border-b border-gray-200 cursor-pointer"
           onClick={() => navigate("/")}
         >
           <div className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-primary mr-2"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z"
+                clipRule="evenodd"
+              />
             </svg>
             <h1 className="text-xl font-bold font-sans">Voice Form Agent</h1>
           </div>
         </div>
-        
+
         {/* Quick Action CTAs */}
         <div className="p-4 space-y-2">
           {quickActions.map((action) => (
@@ -197,8 +281,8 @@ export default function Sidebar() {
               variant="outline"
               size="sm"
               className={cn(
-                "w-full justify-start border text-sm font-medium h-9", 
-                action.className
+                "w-full justify-start border text-sm font-medium h-9",
+                action.className,
               )}
               onClick={() => navigate(action.path)}
             >
@@ -209,7 +293,7 @@ export default function Sidebar() {
             </Button>
           ))}
         </div>
-        
+
         <nav className="flex-1 overflow-y-auto p-4">
           {navItems.map((section) => (
             <div key={section.section} className="mb-8">
@@ -225,17 +309,21 @@ export default function Sidebar() {
                         "flex items-center px-3 py-2 text-sm rounded-md cursor-pointer",
                         isActive(item.path)
                           ? "text-primary bg-primary/10 font-medium"
-                          : "text-gray-700 hover:bg-gray-100"
+                          : "text-gray-700 hover:bg-gray-100",
                       )}
                     >
-                      <span className={cn(
-                        isActive(item.path) ? "text-primary" : "text-gray-700"
-                      )}>
+                      <span
+                        className={cn(
+                          isActive(item.path)
+                            ? "text-primary"
+                            : "text-gray-700",
+                        )}
+                      >
                         {item.icon}
                       </span>
                       {item.name}
                     </div>
-                    
+
                     {/* SubItems for hierarchical navigation */}
                     {item.subItems && (
                       <ul className="pl-8 mt-1 space-y-1">
@@ -247,15 +335,20 @@ export default function Sidebar() {
                                 "flex items-center px-3 py-1.5 text-sm rounded-md cursor-pointer",
                                 isActive(subItem.path)
                                   ? "text-primary bg-primary/5 font-medium"
-                                  : "text-gray-600 hover:bg-gray-50"
+                                  : "text-gray-600 hover:bg-gray-50",
                               )}
                             >
-                              <span className="w-2 h-2 rounded-full mr-2"
-                                style={{ 
-                                  backgroundColor: subItem.name === 'Customer Feedback' ? '#3b82f6' : 
-                                                 subItem.name === 'Product Research' ? '#10b981' : 
-                                                 '#8b5cf6' 
-                                }}></span>
+                              <span
+                                className="w-2 h-2 rounded-full mr-2"
+                                style={{
+                                  backgroundColor:
+                                    subItem.name === "Customer Feedback"
+                                      ? "#3b82f6"
+                                      : subItem.name === "Product Research"
+                                        ? "#10b981"
+                                        : "#8b5cf6",
+                                }}
+                              ></span>
                               {subItem.name}
                             </div>
                           </li>
@@ -268,101 +361,103 @@ export default function Sidebar() {
             </div>
           ))}
         </nav>
-        
-        <div className="p-4 border-t border-gray-200 voice-agent-section">
-          <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-100">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-indigo-900">Voice Forms</h3>
-                  <p className="text-xs text-indigo-700 mt-1">Create forms with voice interaction</p>
+
+        {/* AI Assistant - Full-width component */}
+        <div className="p-4 pt-5 border-t border-gray-200 flex-grow flex flex-col">
+          <h3 className="text-xs uppercase font-semibold text-gray-500 mb-3 flex items-center">
+            AI ASSISTANT <Sparkles className="h-3 w-3 text-yellow-500 ml-1" />
+          </h3>
+
+          {/* AI Assistant Chat */}
+          <Card className="border border-indigo-100 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 flex-grow flex flex-col">
+            <CardContent className="p-3 flex flex-col flex-grow">
+              {showChat && (
+                <div className="flex-grow overflow-y-auto mb-3 space-y-2 max-h-80">
+                  {messages.map((message) => {
+                    // Safe type check - if action exists, render button
+                    if (message.action) {
+                      return (
+                        <Button
+                          key={message.id}
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "w-full justify-start border text-sm font-medium h-9 mb-1", 
+                            message.action.className
+                          )}
+                          onClick={() => navigate(message.action.path)}
+                        >
+                          <span className="flex items-center">
+                            {message.action.icon}
+                            <span className="ml-2">{message.action.name}</span>
+                          </span>
+                        </Button>
+                      );
+                    } else {
+                      // Regular text message
+                      return (
+                        <div
+                          key={message.id}
+                          className={cn(
+                            "px-3 py-2 rounded text-sm",
+                            message.sender === "assistant"
+                              ? "bg-indigo-100 text-indigo-900"
+                              : "bg-blue-100 text-blue-900 ml-4",
+                          )}
+                        >
+                          {message.text}
+                        </div>
+                      );
+                    }
+                  })}
+                  <div ref={messagesEndRef} />
                 </div>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="h-7 px-2 text-indigo-700 hover:text-indigo-900 hover:bg-indigo-100"
-                  onClick={() => navigate("/voice-agent-test")}
-                >
-                  Try <MoveRight className="ml-1 h-3 w-3" />
-                </Button>
+              )}
+
+              <div className="flex flex-col space-y-2 mt-auto">
+                {!showChat && (
+                  <div className="flex items-center">
+                    <Bot className="h-4 w-4 text-indigo-500 mr-2" />
+                    <span className="text-sm text-indigo-800">
+                      How can I help you today?
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex space-x-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyPress={(e) =>
+                        e.key === "Enter" && handleSendMessage(inputValue)
+                      }
+                      placeholder="Type a message..."
+                      className="w-full h-9 px-3 py-2 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-1 top-1 h-7 w-7 p-0 text-gray-500"
+                      onClick={() => handleSendMessage(inputValue)}
+                      disabled={!inputValue.trim()}
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-9 flex-shrink-0 border-gray-300 hover:bg-indigo-50 hover:text-indigo-600"
+                    onClick={handleVoiceInput}
+                  >
+                    <Mic className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        <div className="p-4 border-t border-gray-200">
-          <div className="mb-2">
-            <h3 className="text-xs uppercase font-semibold text-gray-500 mb-2 flex items-center">
-              AI Assistant <Sparkles className="h-3 w-3 text-yellow-500 ml-1" />
-            </h3>
-            
-            {/* AI Assistant Chat */}
-            <Card className="border border-indigo-100 bg-gradient-to-r from-indigo-50/50 to-purple-50/50">
-              <CardContent className="p-3">
-                {showChat && (
-                  <div className="max-h-40 overflow-y-auto mb-3 space-y-2">
-                    {messages.map((message) => (
-                      <div 
-                        key={message.id} 
-                        className={cn(
-                          "px-2 py-1 rounded text-sm",
-                          message.sender === 'assistant' 
-                            ? "bg-indigo-100 text-indigo-900" 
-                            : "bg-blue-100 text-blue-900 ml-4"
-                        )}
-                      >
-                        {message.text}
-                      </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </div>
-                )}
-                
-                <div className="flex flex-col space-y-2">
-                  {!showChat && (
-                    <div className="flex items-center">
-                      <Bot className="h-4 w-4 text-indigo-500 mr-2" />
-                      <span className="text-sm text-indigo-800">How can I help you today?</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex space-x-2">
-                    <div className="relative flex-1">
-                      <input 
-                        type="text" 
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(inputValue)}
-                        placeholder="Type a message..." 
-                        className="w-full h-9 px-3 py-2 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary" 
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-1 top-1 h-7 w-7 p-0 text-gray-500"
-                        onClick={() => handleSendMessage(inputValue)}
-                        disabled={!inputValue.trim()}
-                      >
-                        <Send className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 w-9 flex-shrink-0 border-gray-300 hover:bg-indigo-50 hover:text-indigo-600"
-                      onClick={handleVoiceInput}
-                    >
-                      <Mic className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="flex gap-2 mt-3 justify-end">
-            {/* Remove tour button - moved to TopNavBar */}
-          </div>
         </div>
       </aside>
     </>
