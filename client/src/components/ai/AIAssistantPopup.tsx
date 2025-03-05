@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, Sparkles, MessageCircle } from 'lucide-react';
+import { X, Send, Bot, Sparkles, MessageCircle, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import AIChatInput from './AIChatInput';
 
 interface Message {
   id: string;
@@ -196,25 +197,35 @@ export default function AIAssistantPopup({ isOpen, onClose }: AIAssistantPopupPr
               </CardContent>
               
               <CardFooter className="p-4 pt-2 border-t">
-                <div className="flex w-full gap-2">
-                  <Textarea
-                    value={message}
-                    onChange={handleInputChange}
-                    onKeyDown={handleInputKeyDown}
-                    placeholder="Ask me anything about your forms..."
-                    className="min-h-10 resize-none"
-                    rows={2}
-                    disabled={isThinking}
-                  />
-                  <Button 
-                    onClick={sendMessage} 
-                    size="icon"
-                    disabled={!message.trim() || isThinking}
-                    className="h-10 w-10 flex-shrink-0"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
+                <AIChatInput 
+                  onSendMessage={(text) => {
+                    // Create a temporary message object
+                    const tmpMessage = text;
+                    
+                    // Set it in the state to trigger sendMessage
+                    setMessage(tmpMessage);
+                    
+                    // Call the sendMessage function
+                    setTimeout(() => {
+                      if (tmpMessage.trim()) sendMessage();
+                    }, 0);
+                  }}
+                  onSendVoice={(audioBlob) => {
+                    // Here we would normally send the voice data to be transcribed
+                    // For now, just simulate receiving a transcription
+                    toast({
+                      title: "Voice recorded",
+                      description: "Voice transcription would happen here in production",
+                    });
+                    
+                    // Simulate a transcribed message
+                    const simulatedText = "This is a simulated voice transcription";
+                    setMessage(simulatedText);
+                    setTimeout(() => sendMessage(), 500);
+                  }}
+                  placeholder="Ask me anything about your forms..."
+                  className="w-full border-none p-0"
+                />
               </CardFooter>
             </Card>
           </motion.div>

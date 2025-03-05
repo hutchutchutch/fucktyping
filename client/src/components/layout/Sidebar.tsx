@@ -14,7 +14,8 @@ import {
   MoveRight,
   Bot,
   Sparkles,
-  HelpCircle
+  HelpCircle,
+  Mic
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
