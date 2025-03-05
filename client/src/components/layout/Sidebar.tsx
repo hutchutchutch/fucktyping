@@ -68,16 +68,20 @@ export default function Sidebar() {
           name: "My Forms",
           path: "/forms",
           icon: <FileQuestion className="h-5 w-5 mr-3" />,
-        },
-        {
-          name: "Responses",
-          path: "/responses",
-          icon: <BarChart className="h-5 w-5 mr-3" />,
-        },
-        {
-          name: "Settings",
-          path: "/settings",
-          icon: <Settings className="h-5 w-5 mr-3" />,
+          subItems: [
+            {
+              name: "Customer Feedback",
+              path: "/forms?category=customer-feedback",
+            },
+            {
+              name: "Product Research",
+              path: "/forms?category=product-research",
+            },
+            {
+              name: "Event Registration",
+              path: "/forms?category=event-registration",
+            }
+          ]
         }
       ],
     },
@@ -92,16 +96,16 @@ export default function Sidebar() {
       className: "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 cta-review-results"
     },
     {
-      name: "Generate New Form",
-      path: "/forms/new",
-      icon: <PlusCircle className="h-4 w-4" />,
-      className: "bg-green-50 hover:bg-green-100 text-green-700 border-green-200 cta-generate-form"
-    },
-    {
       name: "Test Prior Forms",
       path: "/voice-agent-test",
       icon: <TestTube className="h-4 w-4" />,
       className: "bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 cta-test-forms"
+    },
+    {
+      name: "Explore Community Forms",
+      path: "/community-forms",
+      icon: <Sparkles className="h-4 w-4" />,
+      className: "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 cta-community-forms"
     }
   ];
 
@@ -155,48 +159,13 @@ export default function Sidebar() {
           ))}
         </div>
         
-        {/* Category section for demo */}
-        <div className="px-4 mb-2 category-section">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs uppercase font-semibold text-gray-500">
-              Categories
-            </h3>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-              <PlusCircle className="h-4 w-4 text-gray-500" />
-            </Button>
-          </div>
-          <div className="space-y-1">
-            <div className="text-sm flex items-center justify-between px-2 py-1 rounded hover:bg-gray-100 cursor-pointer">
-              <span className="flex items-center">
-                <span className="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
-                Customer Feedback
-              </span>
-              <span className="text-xs text-gray-500">8</span>
-            </div>
-            <div className="text-sm flex items-center justify-between px-2 py-1 rounded hover:bg-gray-100 cursor-pointer">
-              <span className="flex items-center">
-                <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-                Product Research
-              </span>
-              <span className="text-xs text-gray-500">5</span>
-            </div>
-            <div className="text-sm flex items-center justify-between px-2 py-1 rounded hover:bg-gray-100 cursor-pointer">
-              <span className="flex items-center">
-                <span className="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>
-                Event Registration
-              </span>
-              <span className="text-xs text-gray-500">3</span>
-            </div>
-          </div>
-        </div>
-
         <nav className="flex-1 overflow-y-auto p-4">
           {navItems.map((section) => (
             <div key={section.section} className="mb-8">
               <h3 className="text-xs uppercase font-semibold text-gray-500 mb-2">
                 {section.section}
               </h3>
-              <ul>
+              <ul className="space-y-1">
                 {section.items.map((item) => (
                   <li key={item.path} className="mb-1">
                     <div
@@ -215,6 +184,33 @@ export default function Sidebar() {
                       </span>
                       {item.name}
                     </div>
+                    
+                    {/* SubItems for hierarchical navigation */}
+                    {item.subItems && (
+                      <ul className="pl-8 mt-1 space-y-1">
+                        {item.subItems.map((subItem) => (
+                          <li key={subItem.path}>
+                            <div
+                              onClick={() => navigate(subItem.path)}
+                              className={cn(
+                                "flex items-center px-3 py-1.5 text-sm rounded-md cursor-pointer",
+                                isActive(subItem.path)
+                                  ? "text-primary bg-primary/5 font-medium"
+                                  : "text-gray-600 hover:bg-gray-50"
+                              )}
+                            >
+                              <span className="w-2 h-2 rounded-full mr-2"
+                                style={{ 
+                                  backgroundColor: subItem.name === 'Customer Feedback' ? '#3b82f6' : 
+                                                 subItem.name === 'Product Research' ? '#10b981' : 
+                                                 '#8b5cf6' 
+                                }}></span>
+                              {subItem.name}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -243,29 +239,52 @@ export default function Sidebar() {
           </Card>
         </div>
 
-        <div className="p-4 border-t border-gray-200 flex gap-2">
-          <Button 
-            variant="outline"
-            size="sm" 
-            className="flex-1 flex items-center justify-start gap-2 h-10 ai-assistant-trigger"
-            onClick={() => setShowAssistant(true)}
-          >
-            <Bot className="h-4 w-4 text-primary" />
-            <div className="flex flex-col items-start">
-              <span className="text-sm font-medium">AI Assistant</span>
-              <span className="text-xs text-muted-foreground">Get help</span>
-            </div>
-            <Sparkles className="h-3 w-3 text-yellow-500 ml-auto" />
-          </Button>
+        <div className="p-4 border-t border-gray-200">
+          <div className="mb-2">
+            <h3 className="text-xs uppercase font-semibold text-gray-500 mb-2 flex items-center">
+              AI Assistant <Sparkles className="h-3 w-3 text-yellow-500 ml-1" />
+            </h3>
+            <Card className="border border-indigo-100 bg-gradient-to-r from-indigo-50/50 to-purple-50/50">
+              <CardContent className="p-3">
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center">
+                    <Bot className="h-4 w-4 text-indigo-500 mr-2" />
+                    <span className="text-sm text-indigo-800">How can I help you today?</span>
+                  </div>
+                  <div className="flex space-x-2 mt-2">
+                    <div className="relative flex-1">
+                      <input 
+                        type="text" 
+                        placeholder="Type a message..." 
+                        className="w-full h-9 px-3 py-2 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary" 
+                        onClick={() => setShowAssistant(true)}
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 w-9 flex-shrink-0 border-gray-300 hover:bg-indigo-50 hover:text-indigo-600"
+                      onClick={() => setShowAssistant(true)}
+                    >
+                      <Mic className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
           
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-10 w-10 flex-shrink-0"
-            onClick={() => setShowTour(true)}
-          >
-            <HelpCircle className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2 mt-3 justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs text-gray-600"
+              onClick={() => setShowTour(true)}
+            >
+              <HelpCircle className="h-3 w-3 mr-1" />
+              Take tour
+            </Button>
+          </div>
         </div>
       </aside>
     </>
