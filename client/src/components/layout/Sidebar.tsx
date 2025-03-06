@@ -15,7 +15,6 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useState, useRef, useEffect } from "react";
 
 interface Message {
@@ -48,9 +47,9 @@ export default function Sidebar() {
         text: "How can I help you today?",
         timestamp: new Date(),
       };
-
+      
       setMessages([greeting]);
-
+      
       // Add welcome message with action CTA after a short delay
       setTimeout(() => {
         const actionMessage: Message = {
@@ -60,7 +59,7 @@ export default function Sidebar() {
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, actionMessage]);
-
+        
         // Add action buttons with a slight delay
         setTimeout(() => {
           // Using a forEach to add each action individually to avoid type issues
@@ -74,7 +73,7 @@ export default function Sidebar() {
             };
             setMessages(prev => [...prev, actionMsg]);
           });
-
+          
           setShowChat(true);
         }, 500);
       }, 1000);
@@ -108,7 +107,7 @@ export default function Sidebar() {
     setTimeout(() => {
       // Determine if we should show action buttons (33% chance)
       const showActionButtons = Math.random() < 0.33;
-
+      
       if (showActionButtons) {
         // Show text response followed by an action button
         const suggestedAction = quickActions[Math.floor(Math.random() * quickActions.length)];
@@ -117,16 +116,16 @@ export default function Sidebar() {
           `I think it might be helpful to ${suggestedAction.name.toLowerCase()}.`,
           `Based on your recent activity, you might want to ${suggestedAction.name.toLowerCase()}.`
         ];
-
+        
         const promptMessage: Message = {
           id: Date.now().toString(),
           sender: "assistant",
           text: actionPrompts[Math.floor(Math.random() * actionPrompts.length)],
           timestamp: new Date(),
         };
-
+        
         setMessages((prev) => [...prev, promptMessage]);
-
+        
         // Add action button after a short delay
         setTimeout(() => {
           const actionMessage: Message = {
@@ -158,7 +157,7 @@ export default function Sidebar() {
 
         setMessages((prev) => [...prev, aiMessage]);
       }
-
+      
       setShowChat(true); // Expand the chat area when there's a conversation
     }, 1000);
   };
@@ -273,6 +272,27 @@ export default function Sidebar() {
           </div>
         </div>
 
+        {/* Quick Action CTAs 
+        <div className="p-4 space-y-2">
+          {quickActions.map((action) => (
+            <Button
+              key={action.name}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "w-full justify-start border text-sm font-medium h-9",
+                action.className,
+              )}
+              onClick={() => navigate(action.path)}
+            >
+              <span className="flex items-center">
+                {action.icon}
+                <span className="ml-2">{action.name}</span>
+              </span>
+            </Button>
+          ))}
+        </div>
+        */}
 
         <nav className="flex-1 overflow-y-auto p-4">
           {navItems.map((section) => (
@@ -342,109 +362,108 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        {/* AI Assistant - Full-width component */}
-        <div className="p-4 pt-5 border-t border-gray-200 flex-grow flex flex-col">
+        {/* AI Assistant - Integrated with sidebar */}
+        <div className="px-4 pt-3 mt-auto border-t border-gray-200">
           <h3 className="text-xs uppercase font-semibold text-gray-500 mb-3 flex items-center">
             AI ASSISTANT <Sparkles className="h-3 w-3 text-yellow-500 ml-1" />
           </h3>
 
-          {/* AI Assistant Chat */}
-          <Card className="border border-indigo-100 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 flex-grow flex flex-col">
-            <CardContent className="p-3 flex flex-col flex-grow">
-              {showChat && (
-                <div className="flex-grow overflow-y-auto mb-3 space-y-2 max-h-80">
-                  {messages.map((message) => {
-                    if (message.action) {
-                      // Extract action properties safely
-                      const { 
-                        path = "/", 
-                        name = "Action", 
-                        icon = null, 
-                        className = "" 
-                      } = message.action;
+          {/* Chat area without card background */}
+          <div className="flex flex-col">
+            {showChat && (
+              <div className="overflow-y-auto mb-3 space-y-2 max-h-60">
+                {messages.map((message) => {
+                  if (message.action) {
+                    // Extract action properties safely
+                    const { 
+                      path = "/", 
+                      name = "Action", 
+                      icon = null, 
+                      className = "" 
+                    } = message.action;
+                    
+                    return (
+                      <Button
+                        key={message.id}
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "w-full justify-start border text-sm font-medium h-9 mb-1", 
+                          className
+                        )}
+                        onClick={() => navigate(path)}
+                      >
+                        <span className="flex items-center">
+                          {icon}
+                          <span className="ml-2">{name}</span>
+                        </span>
+                      </Button>
+                    );
+                  } else {
+                    // Regular text message
+                    return (
+                      <div
+                        key={message.id}
+                        className={cn(
+                          "px-3 py-2 rounded text-sm",
+                          message.sender === "assistant"
+                            ? "bg-indigo-100 text-indigo-900"
+                            : "bg-blue-100 text-blue-900 ml-4",
+                        )}
+                      >
+                        {message.text}
+                      </div>
+                    );
+                  }
+                })}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
 
-                      return (
-                        <Button
-                          key={message.id}
-                          variant="outline"
-                          size="sm"
-                          className={cn(
-                            "w-full justify-start border text-sm font-medium h-9 mb-1", 
-                            className
-                          )}
-                          onClick={() => navigate(path)}
-                        >
-                          <span className="flex items-center">
-                            {icon}
-                            <span className="ml-2">{name}</span>
-                          </span>
-                        </Button>
-                      );
-                    } else {
-                      // Regular text message
-                      return (
-                        <div
-                          key={message.id}
-                          className={cn(
-                            "px-3 py-2 rounded text-sm",
-                            message.sender === "assistant"
-                              ? "bg-indigo-100 text-indigo-900"
-                              : "bg-blue-100 text-blue-900 ml-4",
-                          )}
-                        >
-                          {message.text}
-                        </div>
-                      );
-                    }
-                  })}
-                  <div ref={messagesEndRef} />
+            <div className="flex flex-col space-y-3">
+              {!showChat && (
+                <div className="flex items-center">
+                  <Bot className="h-4 w-4 text-indigo-500 mr-2" />
+                  <span className="text-sm text-indigo-800">
+                    How can I help you today?
+                  </span>
                 </div>
               )}
 
-              <div className="flex flex-col space-y-2 mt-auto">
-                {!showChat && (
-                  <div className="flex items-center">
-                    <Bot className="h-4 w-4 text-indigo-500 mr-2" />
-                    <span className="text-sm text-indigo-800">
-                      How can I help you today?
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex space-x-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyPress={(e) =>
-                        e.key === "Enter" && handleSendMessage(inputValue)
-                      }
-                      placeholder="Type a message..."
-                      className="w-full h-9 px-3 py-2 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-1 top-1 h-7 w-7 p-0 text-gray-500"
-                      onClick={() => handleSendMessage(inputValue)}
-                      disabled={!inputValue.trim()}
-                    >
-                      <Send className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 w-9 flex-shrink-0 border-gray-300 hover:bg-indigo-50 hover:text-indigo-600"
-                    onClick={handleVoiceInput}
-                  >
-                    <Mic className="h-4 w-4" />
-                  </Button>
-                </div>
+              {/* Full-width input field */}
+              <div className="relative w-full">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={(e) =>
+                    e.key === "Enter" && handleSendMessage(inputValue)
+                  }
+                  placeholder="Type a message..."
+                  className="w-full h-9 px-3 py-2 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1 h-7 w-7 p-0 text-gray-500"
+                  onClick={() => handleSendMessage(inputValue)}
+                  disabled={!inputValue.trim()}
+                >
+                  <Send className="h-3.5 w-3.5" />
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+              
+              {/* Voice input option below */}
+              <button
+                className="flex items-center justify-center text-xs text-gray-600 hover:text-indigo-600 transition-colors"
+                onClick={handleVoiceInput}
+                type="button"
+              >
+                <Mic className="h-3 w-3 mr-1" />
+                Rather talk than type?
+              </button>
+            </div>
+          </div>
         </div>
       </aside>
     </>
