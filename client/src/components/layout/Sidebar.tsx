@@ -48,9 +48,9 @@ export default function Sidebar() {
         text: "How can I help you today?",
         timestamp: new Date(),
       };
-      
+
       setMessages([greeting]);
-      
+
       // Add welcome message with action CTA after a short delay
       setTimeout(() => {
         const actionMessage: Message = {
@@ -60,7 +60,7 @@ export default function Sidebar() {
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, actionMessage]);
-        
+
         // Add action buttons with a slight delay
         setTimeout(() => {
           // Using a forEach to add each action individually to avoid type issues
@@ -74,7 +74,7 @@ export default function Sidebar() {
             };
             setMessages(prev => [...prev, actionMsg]);
           });
-          
+
           setShowChat(true);
         }, 500);
       }, 1000);
@@ -108,7 +108,7 @@ export default function Sidebar() {
     setTimeout(() => {
       // Determine if we should show action buttons (33% chance)
       const showActionButtons = Math.random() < 0.33;
-      
+
       if (showActionButtons) {
         // Show text response followed by an action button
         const suggestedAction = quickActions[Math.floor(Math.random() * quickActions.length)];
@@ -117,16 +117,16 @@ export default function Sidebar() {
           `I think it might be helpful to ${suggestedAction.name.toLowerCase()}.`,
           `Based on your recent activity, you might want to ${suggestedAction.name.toLowerCase()}.`
         ];
-        
+
         const promptMessage: Message = {
           id: Date.now().toString(),
           sender: "assistant",
           text: actionPrompts[Math.floor(Math.random() * actionPrompts.length)],
           timestamp: new Date(),
         };
-        
+
         setMessages((prev) => [...prev, promptMessage]);
-        
+
         // Add action button after a short delay
         setTimeout(() => {
           const actionMessage: Message = {
@@ -158,7 +158,7 @@ export default function Sidebar() {
 
         setMessages((prev) => [...prev, aiMessage]);
       }
-      
+
       setShowChat(true); // Expand the chat area when there's a conversation
     }, 1000);
   };
@@ -273,26 +273,6 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Quick Action CTAs */}
-        <div className="p-4 space-y-2">
-          {quickActions.map((action) => (
-            <Button
-              key={action.name}
-              variant="outline"
-              size="sm"
-              className={cn(
-                "w-full justify-start border text-sm font-medium h-9",
-                action.className,
-              )}
-              onClick={() => navigate(action.path)}
-            >
-              <span className="flex items-center">
-                {action.icon}
-                <span className="ml-2">{action.name}</span>
-              </span>
-            </Button>
-          ))}
-        </div>
 
         <nav className="flex-1 overflow-y-auto p-4">
           {navItems.map((section) => (
@@ -382,7 +362,7 @@ export default function Sidebar() {
                         icon = null, 
                         className = "" 
                       } = message.action;
-                      
+
                       return (
                         <Button
                           key={message.id}
