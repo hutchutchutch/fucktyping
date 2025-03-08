@@ -1,7 +1,8 @@
 import { useLocation } from "wouter";
-import { Bell } from "lucide-react";
+import { Bell, Wand2 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthContext } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
 
 export default function Header() {
   const [location, navigate] = useLocation();
@@ -10,7 +11,7 @@ export default function Header() {
   return (
     <header className="bg-white border-b sticky top-0 z-10">
       <div className="max-w-full mx-auto px-4 py-3 flex justify-between items-center">
-        <div className="md:hidden flex items-center">
+        <div className="flex items-center">
           <div 
             className="flex items-center cursor-pointer" 
             onClick={() => navigate("/")}
@@ -21,10 +22,28 @@ export default function Header() {
             <h1 className="ml-2 text-lg font-semibold text-gray-900">Voice Form Agent</h1>
           </div>
         </div>
-        <div className="md:ml-0 flex-grow"></div>
-        <div className="flex items-center">
+        <div className="flex items-center space-x-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="hidden md:flex items-center" 
+            onClick={() => navigate("/create")}
+          >
+            <Wand2 className="mr-1.5 h-4 w-4" />
+            Create Your Own
+          </Button>
+          
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="hidden md:inline-block"
+            onClick={() => navigate("/login")}
+          >
+            Login
+          </Button>
+          
           {isAuthenticated && (
-            <button className="mr-4 p-2 rounded-full text-gray-500 hover:text-gray-700">
+            <button className="p-2 rounded-full text-gray-500 hover:text-gray-700">
               <Bell className="h-6 w-6" />
             </button>
           )}

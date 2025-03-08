@@ -39,6 +39,7 @@ const MOCK_USER: User = {
   email: "demo@example.com",
   firstName: "Demo",
   lastName: "User",
+  name: "Demo User",
   username: "demouser",
   role: "admin",
   organization: "Voice Form Inc."
@@ -49,16 +50,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing session on mount
+  // Check for existing session on mount and auto-login as Demo User
   useEffect(() => {
     const checkAuth = async () => {
       try {
         // In a real app, would verify session with API
-        // For now, just simulate the process
+        // For now, just simulate the process and auto-login as Demo User
         const hasSession = localStorage.getItem("auth_session");
         
-        if (hasSession) {
-          setUser(MOCK_USER);
+        // Auto-login as Demo User
+        setUser(MOCK_USER);
+        if (!hasSession) {
+          localStorage.setItem("auth_session", "active");
         }
       } catch (error) {
         console.error("Auth check failed:", error);
