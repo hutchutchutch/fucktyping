@@ -162,11 +162,10 @@ export default function QuestionEditor({
   };
   
   return (
-    <Card className="mt-4 border-[1.5px] shadow-sm">
+    <Card className="mt-4 border shadow-sm">
       <CardHeader className="py-4 px-5 bg-slate-50 border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Grip className="h-5 w-5 text-slate-400 cursor-move" />
             <div>
               <Badge variant="outline" className="font-normal bg-white mr-2">
                 {getQuestionTypeDisplay(localQuestion.type)}
@@ -177,20 +176,6 @@ export default function QuestionEditor({
                 </Badge>
               )}
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <ArrowUpDown className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Reorder question</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
         </div>
       </CardHeader>

@@ -89,60 +89,61 @@ export default function CreateForm() {
   
   // Modern, harmonious color palette
   const sectionColors = {
-    opening: "bg-green-50/80 border-green-200",
-    questions: "bg-purple-50/80 border-purple-200",
-    closing: "bg-red-50/80 border-red-200"
+    opening: "bg-green-50/50 border-b",
+    questions: "bg-purple-50/50 border-b",
+    closing: "bg-red-50/50 border-b"
   };
   
   return (
     <div className="container mx-auto py-6 max-w-5xl">
-      <div className="mb-6">
-        <Input
-          value={formName}
-          onChange={(e) => setFormName(e.target.value)}
-          className="text-3xl font-bold border-none text-gray-900 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
-          placeholder="Untitled Form"
-        />
-        <Textarea
-          value={formDescription}
-          onChange={(e) => setFormDescription(e.target.value)}
-          placeholder="Add a description for your form"
-          className="mt-2 resize-none border-none focus-visible:ring-0 text-muted-foreground p-0"
-          rows={2}
-        />
-      </div>
-      
-      <div className="mb-6 flex items-center justify-end">
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={() => setLocation("/forms/draft/test")}
-          >
-            <TestTube size={18} />
-            Test Form
-          </Button>
-          <Button className="flex items-center gap-2">
-            <Wand2 size={18} />
-            Generate Form
-          </Button>
+      <div className="mb-8">
+        <div className="flex justify-between items-start mb-1">
+          <Input
+            value={formName}
+            onChange={(e) => setFormName(e.target.value)}
+            className="text-3xl font-bold border-none bg-transparent p-0 h-auto max-w-lg focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-900"
+            placeholder="Untitled Form"
+          />
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-1.5"
+              onClick={() => setLocation("/forms/draft/test")}
+            >
+              <TestTube size={16} />
+              Test Form
+            </Button>
+            <Button className="flex items-center gap-1.5">
+              <Wand2 size={16} />
+              Generate Form
+            </Button>
+          </div>
+        </div>
+        <div className="max-w-2xl">
+          <Textarea
+            value={formDescription}
+            onChange={(e) => setFormDescription(e.target.value)}
+            placeholder="Add a description for your form"
+            className="resize-none border-none focus-visible:ring-0 text-muted-foreground p-0 min-h-[40px]"
+            rows={2}
+          />
         </div>
       </div>
       
       <div className="space-y-6">
         
-        {/* Dynamic Variables Section - Horizontal */}
-        <Card>
-          <CardContent className="py-6">
-            <div className="flex items-center gap-4 mb-4">
-              <h3 className="text-md font-medium">Dynamic Variables</h3>
-              <div className="flex-1 flex items-center gap-2">
+        {/* Dynamic Variables Section */}
+        <Card className="overflow-hidden">
+          <div className="bg-gray-50 border-b p-4">
+            <div className="flex items-center justify-between">
+              <div className="font-medium">Dynamic Variables</div>
+              <div className="flex items-center gap-2">
                 <Input 
                   placeholder="Enter variable name"
                   value={newVariable}
                   onChange={(e) => setNewVariable(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && addVariable()}
-                  className="max-w-xs"
+                  className="h-9 w-64"
                 />
                 <Button 
                   onClick={addVariable} 
@@ -154,7 +155,9 @@ export default function CreateForm() {
                 </Button>
               </div>
             </div>
-            
+          </div>
+          
+          <div className="p-4">
             <div className="flex flex-wrap gap-2">
               {variables.length > 0 ? (
                 variables.map((variable) => (
@@ -174,22 +177,23 @@ export default function CreateForm() {
                 </p>
               )}
             </div>
-          </CardContent>
+          </div>
         </Card>
         
         {/* Opening Activity (Voice Agent) */}
         <Card>
           <CardHeader 
             className={`cursor-pointer flex flex-row items-center justify-between ${sectionColors.opening}`}
-            onClick={() => toggleSection('opening')}
           >
-            <div>
+            <div onClick={() => toggleSection('opening')}>
               <CardTitle className="text-xl flex items-center">
                 Opening Activity
               </CardTitle>
               <CardDescription>Configure how the voice agent introduces itself</CardDescription>
             </div>
-            {isCollapsed.opening ? <ChevronDown /> : <ChevronUp />}
+            <div onClick={() => toggleSection('opening')} className="cursor-pointer">
+              {isCollapsed.opening ? <ChevronDown /> : <ChevronUp />}
+            </div>
           </CardHeader>
           
           {!isCollapsed.opening && (
@@ -235,15 +239,38 @@ export default function CreateForm() {
         <Card>
           <CardHeader 
             className={`cursor-pointer flex flex-row items-center justify-between ${sectionColors.questions}`}
-            onClick={() => toggleSection('questions')}
           >
-            <div>
+            <div onClick={() => toggleSection('questions')}>
               <CardTitle className="text-xl flex items-center">
                 Questions
               </CardTitle>
               <CardDescription>Define the questions for your form</CardDescription>
             </div>
-            {isCollapsed.questions ? <ChevronDown /> : <ChevronUp />}
+            <div className="flex items-center gap-2">
+              {isCollapsed.questions && (
+                <Button 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const newQuestion = addQuestion();
+                    setEditingQuestions({
+                      ...editingQuestions,
+                      [newQuestion.id]: true
+                    });
+                    if (isCollapsed.questions) {
+                      toggleSection('questions');
+                    }
+                  }} 
+                  className="h-8 flex items-center gap-1"
+                >
+                  <Plus size={16} />
+                  Add Question
+                </Button>
+              )}
+              <div onClick={() => toggleSection('questions')} className="cursor-pointer">
+                {isCollapsed.questions ? <ChevronDown /> : <ChevronUp />}
+              </div>
+            </div>
           </CardHeader>
           
           {!isCollapsed.questions && (
@@ -251,18 +278,6 @@ export default function CreateForm() {
               <div className="border rounded-md p-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-medium">Questions</h3>
-                  {questions.length === 0 && (
-                    <Button size="sm" onClick={() => {
-                      const newQuestion = addQuestion();
-                      setEditingQuestions({
-                        ...editingQuestions,
-                        [newQuestion.id]: true
-                      });
-                    }} className="h-8 flex items-center gap-1">
-                      <Plus size={16} />
-                      Add Question
-                    </Button>
-                  )}
                 </div>
                 
                 <div className="space-y-4">
@@ -358,46 +373,29 @@ export default function CreateForm() {
                     );
                   })}
                   
-                  {/* Individual Add Question Buttons after each question */}
-                  {questions.map((question, index) => (
-                    index === questions.length - 1 && (
-                      <Button 
-                        key={`add-after-${question.id}`}
-                        variant="outline" 
-                        className="w-full mt-2 py-4 border-dashed border-purple-200 flex items-center justify-center gap-2 hover:bg-purple-50/50"
-                        onClick={() => {
-                          const newQuestion = addQuestion();
-                          // Automatically open the editor for the new question
-                          setEditingQuestions({
-                            ...editingQuestions,
-                            [newQuestion.id]: true
-                          });
-                        }}
-                      >
-                        <Plus size={18} />
-                        <span>Add Question</span>
-                      </Button>
-                    )
-                  ))}
-                  
-                  {/* Add First Question Button (shown only when no questions exist) */}
+                  {/* Empty question state message */}
                   {questions.length === 0 && (
-                    <Button 
-                      variant="outline" 
-                      className="w-full py-6 border-dashed flex items-center justify-center gap-2 hover:bg-muted/50"
-                      onClick={() => {
-                        const newQuestion = addQuestion();
-                        // Automatically open the editor for the new question
-                        setEditingQuestions({
-                          ...editingQuestions,
-                          [newQuestion.id]: true
-                        });
-                      }}
-                    >
-                      <Plus size={18} />
-                      <span>Add Question</span>
-                    </Button>
+                    <div className="text-center py-10 text-muted-foreground">
+                      <p>No questions added yet. Click "Add Question" to get started.</p>
+                    </div>
                   )}
+                  
+                  {/* Add Question button that appears below the last question */}
+                  <Button 
+                    variant="outline" 
+                    className="w-full mt-4 py-4 border-dashed border-purple-200 flex items-center justify-center gap-2 hover:bg-purple-50/50"
+                    onClick={() => {
+                      const newQuestion = addQuestion();
+                      // Automatically open the editor for the new question
+                      setEditingQuestions({
+                        ...editingQuestions,
+                        [newQuestion.id]: true
+                      });
+                    }}
+                  >
+                    <Plus size={18} />
+                    <span>Add Question</span>
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -408,15 +406,16 @@ export default function CreateForm() {
         <Card>
           <CardHeader 
             className={`cursor-pointer flex flex-row items-center justify-between ${sectionColors.closing}`}
-            onClick={() => toggleSection('closing')}
           >
-            <div>
+            <div onClick={() => toggleSection('closing')}>
               <CardTitle className="text-xl flex items-center">
                 Closing Activity
               </CardTitle>
               <CardDescription>Configure how the voice agent ends the conversation</CardDescription>
             </div>
-            {isCollapsed.closing ? <ChevronDown /> : <ChevronUp />}
+            <div onClick={() => toggleSection('closing')} className="cursor-pointer">
+              {isCollapsed.closing ? <ChevronDown /> : <ChevronUp />}
+            </div>
           </CardHeader>
           
           {!isCollapsed.closing && (
