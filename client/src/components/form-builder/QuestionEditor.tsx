@@ -7,7 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { X, Plus, Trash, Shuffle } from "lucide-react";
+import { X, Plus, Trash, Shuffle, HelpCircle, ArrowUpDown, Settings, Grip, ChevronUp, ChevronDown } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface QuestionEditorProps {
   question?: {
@@ -50,6 +53,8 @@ export default function QuestionEditor({
       max: 5,
     },
   });
+
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   
   // Update local state when parent component passes new question
   useEffect(() => {
@@ -145,104 +150,194 @@ export default function QuestionEditor({
       onChange(updatedQuestion);
     }
   };
+
+  // Get display name for question type
+  const getQuestionTypeDisplay = (type: string) => {
+    const typeMap: Record<string, string> = {
+      'text': 'Short Text',
+      'multiple_choice': 'Multiple Choice',
+      'dropdown': 'Dropdown',
+      'yes_no': 'Yes/No',
+      'rating': 'Rating',
+      'date': 'Date'
+    };
+    return typeMap[type] || type;
+  };
   
   return (
-    <Card className="mt-6">
-      <CardContent className="space-y-4 pt-6">
-        <div className="space-y-2">
-          <Label htmlFor="question-title">Question</Label>
-          <Input
-            id="question-title"
-            value={localQuestion.text}
-            onChange={(e) => handleQuestionChange("text", e.target.value)}
-            placeholder="Enter your question"
-          />
+    <Card className="mt-4 border-[1.5px] shadow-sm">
+      <CardHeader className="py-4 px-5 bg-slate-50 border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Grip className="h-5 w-5 text-slate-400 cursor-move" />
+            <div>
+              <Badge variant="outline" className="font-normal bg-white mr-2">
+                {getQuestionTypeDisplay(localQuestion.type)}
+              </Badge>
+              {localQuestion.required && (
+                <Badge variant="secondary" className="font-normal text-xs">
+                  Required
+                </Badge>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <ArrowUpDown className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Reorder question</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                >
+                  {showAdvancedSettings ? <ChevronUp className="h-4 w-4" /> : <Settings className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+            </Collapsible>
+          </div>
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="question-description">Description (Optional)</Label>
-          <Textarea
-            id="question-description"
-            value={localQuestion.description || ""}
-            onChange={(e) => handleQuestionChange("description", e.target.value)}
-            placeholder="Add a description or instructions"
-            rows={2}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="question-type">Question Type</Label>
-          <Select
-            value={localQuestion.type}
-            onValueChange={(value) => handleQuestionChange("type", value)}
-          >
-            <SelectTrigger id="question-type">
-              <SelectValue placeholder="Select question type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="text">Text</SelectItem>
-              <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
-              <SelectItem value="dropdown">Dropdown</SelectItem>
-              <SelectItem value="yes_no">Yes/No</SelectItem>
-              <SelectItem value="rating">Rating</SelectItem>
-              <SelectItem value="date">Date</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="question-required"
-            checked={localQuestion.required}
-            onCheckedChange={(checked) => handleQuestionChange("required", checked)}
-          />
-          <Label htmlFor="question-required">Required question</Label>
-        </div>
-        
-        {(localQuestion.type === "multiple_choice" || localQuestion.type === "dropdown") && (
-          <div className="space-y-3">
-            <Separator />
-            
+      </CardHeader>
+      
+      <CardContent className="space-y-4 p-5">
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <Label htmlFor="question-title" className="text-sm font-medium">
+              Question Text
+            </Label>
+            <Input
+              id="question-title"
+              value={localQuestion.text}
+              onChange={(e) => handleQuestionChange("text", e.target.value)}
+              placeholder="Enter your question"
+              className="border-slate-300"
+            />
+          </div>
+          
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Answer Options</Label>
+              <Label htmlFor="question-type" className="text-sm font-medium">
+                Question Type
+              </Label>
+              <div className="flex items-center">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <HelpCircle className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-60">Choose how respondents will answer this question</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
+            <Select
+              value={localQuestion.type}
+              onValueChange={(value) => handleQuestionChange("type", value)}
+            >
+              <SelectTrigger id="question-type" className="border-slate-300">
+                <SelectValue placeholder="Select question type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="text">Short Text</SelectItem>
+                <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
+                <SelectItem value="dropdown">Dropdown</SelectItem>
+                <SelectItem value="yes_no">Yes/No</SelectItem>
+                <SelectItem value="rating">Rating</SelectItem>
+                <SelectItem value="date">Date</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center space-x-2 pt-1">
+            <Switch
+              id="question-required"
+              checked={localQuestion.required}
+              onCheckedChange={(checked) => handleQuestionChange("required", checked)}
+            />
+            <Label htmlFor="question-required" className="text-sm">Mark as required</Label>
+          </div>
+        </div>
+
+        {/* Advanced settings (collapsible) */}
+        {showAdvancedSettings && (
+          <div className="space-y-4 pt-2 pb-1 border-t border-dashed mt-4">
+            <div className="space-y-2 pt-3">
+              <Label htmlFor="question-description" className="text-sm font-medium">Help Text</Label>
+              <Textarea
+                id="question-description"
+                value={localQuestion.description || ""}
+                onChange={(e) => handleQuestionChange("description", e.target.value)}
+                placeholder="Add additional instructions for respondents"
+                rows={2}
+                className="border-slate-300 text-sm resize-none"
+              />
+            </div>
+          </div>
+        )}
+        
+        {/* Question Type Specific Settings */}
+        {(localQuestion.type === "multiple_choice" || localQuestion.type === "dropdown") && (
+          <div className="space-y-3 pt-2 border-t">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Answer Options</Label>
               <div className="space-x-2">
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={shuffleOptions}
-                  className="h-8"
+                  className="h-8 text-xs"
                 >
-                  <Shuffle size={14} className="mr-1" />
+                  <Shuffle size={12} className="mr-1" />
                   Shuffle
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={addOption}
-                  className="h-8"
+                  className="h-8 text-xs"
                 >
-                  <Plus size={14} className="mr-1" />
+                  <Plus size={12} className="mr-1" />
                   Add Option
                 </Button>
               </div>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-2 mt-1">
               {localQuestion.options.map((option, index) => (
                 <div key={index} className="flex items-center space-x-2">
+                  {localQuestion.type === "multiple_choice" && (
+                    <div className="h-5 w-5 rounded-full border border-slate-300 flex-shrink-0"></div>
+                  )}
                   <Input
                     value={option}
                     onChange={(e) => handleOptionChange(index, e.target.value)}
                     placeholder={`Option ${index + 1}`}
+                    className="border-slate-300"
                   />
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => removeOption(index)}
                     disabled={localQuestion.options.length <= 1}
-                    className="h-10 w-10 shrink-0"
+                    className="h-9 w-9 shrink-0 text-slate-500 hover:text-red-500"
                   >
-                    <Trash size={16} />
+                    <Trash size={14} />
                   </Button>
                 </div>
               ))}
@@ -251,11 +346,13 @@ export default function QuestionEditor({
         )}
         
         {localQuestion.type === "rating" && (
-          <div className="space-y-4">
-            <Separator />
+          <div className="space-y-4 pt-2 border-t">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Rating Scale</Label>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="min-rating">Min Rating</Label>
+                <Label htmlFor="min-rating" className="text-xs text-slate-500">Min Value</Label>
                 <Select
                   value={localQuestion.validation?.min?.toString() || "1"}
                   onValueChange={(value) => 
@@ -265,7 +362,7 @@ export default function QuestionEditor({
                     })
                   }
                 >
-                  <SelectTrigger id="min-rating">
+                  <SelectTrigger id="min-rating" className="border-slate-300">
                     <SelectValue placeholder="Min" />
                   </SelectTrigger>
                   <SelectContent>
@@ -275,7 +372,7 @@ export default function QuestionEditor({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="max-rating">Max Rating</Label>
+                <Label htmlFor="max-rating" className="text-xs text-slate-500">Max Value</Label>
                 <Select
                   value={localQuestion.validation?.max?.toString() || "5"}
                   onValueChange={(value) => 
@@ -285,7 +382,7 @@ export default function QuestionEditor({
                     })
                   }
                 >
-                  <SelectTrigger id="max-rating">
+                  <SelectTrigger id="max-rating" className="border-slate-300">
                     <SelectValue placeholder="Max" />
                   </SelectTrigger>
                   <SelectContent>
@@ -296,14 +393,23 @@ export default function QuestionEditor({
                 </Select>
               </div>
             </div>
+            <div className="flex justify-center py-2">
+              <div className="flex items-center gap-1">
+                {Array.from({ length: localQuestion.validation?.max || 5 }).map((_, i) => (
+                  <div key={i} className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-sm">
+                    {i + 1}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
       
-      <CardFooter className="border-t p-4 flex justify-end space-x-2">
-        {onRemove && <Button variant="outline" onClick={onRemove}>Delete Question</Button>}
-        {onCancel && <Button variant="outline" onClick={onCancel}>Cancel</Button>}
-        <Button onClick={() => onChange && onChange(localQuestion)}>Apply Changes</Button>
+      <CardFooter className="border-t p-4 flex justify-end space-x-2 bg-slate-50">
+        {onRemove && <Button variant="outline" size="sm" onClick={onRemove}>Delete</Button>}
+        {onCancel && <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>}
+        <Button size="sm" onClick={() => onChange && onChange(localQuestion)}>Apply Changes</Button>
       </CardFooter>
     </Card>
   );
