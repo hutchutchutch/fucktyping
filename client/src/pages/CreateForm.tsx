@@ -96,13 +96,23 @@ export default function CreateForm() {
   
   return (
     <div className="container mx-auto py-6 max-w-5xl">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">
-            {formName}
-          </h1>
-          <p className="text-muted-foreground">Design your form with the builder below</p>
-        </div>
+      <div className="mb-6">
+        <Input
+          value={formName}
+          onChange={(e) => setFormName(e.target.value)}
+          className="text-3xl font-bold border-none text-gray-900 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+          placeholder="Untitled Form"
+        />
+        <Textarea
+          value={formDescription}
+          onChange={(e) => setFormDescription(e.target.value)}
+          placeholder="Add a description for your form"
+          className="mt-2 resize-none border-none focus-visible:ring-0 text-muted-foreground p-0"
+          rows={2}
+        />
+      </div>
+      
+      <div className="mb-6 flex items-center justify-end">
         <div className="flex gap-2">
           <Button 
             variant="outline" 
@@ -120,33 +130,6 @@ export default function CreateForm() {
       </div>
       
       <div className="space-y-6">
-        {/* Form Details Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Form Details</CardTitle>
-            <CardDescription>Basic information about your form</CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            <div>
-              <Input 
-                id="formName" 
-                value={formName} 
-                onChange={(e) => setFormName(e.target.value)} 
-                placeholder="Enter form name" 
-              />
-            </div>
-            <div>
-              <Textarea 
-                id="formDescription" 
-                value={formDescription} 
-                onChange={(e) => setFormDescription(e.target.value)} 
-                placeholder="Enter form description" 
-                rows={3}
-              />
-            </div>
-          </CardContent>
-        </Card>
         
         {/* Dynamic Variables Section - Horizontal */}
         <Card>

@@ -7,10 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { X, Plus, Trash, Shuffle, HelpCircle, ArrowUpDown, Settings, Grip, ChevronUp, ChevronDown } from "lucide-react";
+import { X, Plus, Trash, Shuffle, HelpCircle, ArrowUpDown, Grip } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface QuestionEditorProps {
   question?: {
@@ -53,8 +52,6 @@ export default function QuestionEditor({
       max: 5,
     },
   });
-
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   
   // Update local state when parent component passes new question
   useEffect(() => {
@@ -194,19 +191,6 @@ export default function QuestionEditor({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-
-            <Collapsible>
-              <CollapsibleTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-                >
-                  {showAdvancedSettings ? <ChevronUp className="h-4 w-4" /> : <Settings className="h-4 w-4" />}
-                </Button>
-              </CollapsibleTrigger>
-            </Collapsible>
           </div>
         </div>
       </CardHeader>
@@ -273,23 +257,6 @@ export default function QuestionEditor({
             <Label htmlFor="question-required" className="text-sm">Mark as required</Label>
           </div>
         </div>
-
-        {/* Advanced settings (collapsible) */}
-        {showAdvancedSettings && (
-          <div className="space-y-4 pt-2 pb-1 border-t border-dashed mt-4">
-            <div className="space-y-2 pt-3">
-              <Label htmlFor="question-description" className="text-sm font-medium">Help Text</Label>
-              <Textarea
-                id="question-description"
-                value={localQuestion.description || ""}
-                onChange={(e) => handleQuestionChange("description", e.target.value)}
-                placeholder="Add additional instructions for respondents"
-                rows={2}
-                className="border-slate-300 text-sm resize-none"
-              />
-            </div>
-          </div>
-        )}
         
         {/* Question Type Specific Settings */}
         {(localQuestion.type === "multiple_choice" || localQuestion.type === "dropdown") && (
