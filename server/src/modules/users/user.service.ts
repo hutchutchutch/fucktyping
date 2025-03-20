@@ -1,16 +1,26 @@
 import { UserData } from "./user.interface";
 import { User } from "../../entities/user.entity";
 import { UserRepository } from "./user.repository";
+import { Server, Socket } from 'socket.io';
 
 export class UserService {
   private userRepository: UserRepository;
-
-  constructor() {
+  private io: Server;
+  constructor(io: Server) {
+    this.io = io;
     this.userRepository = new UserRepository();
   }
 
+  async sendMessage(userId: string, message: string) {
+    // Save message to database (if needed)
+    console.log(`User ${userId} sent message: ${message}`);
+
+    // Broadcast message to all clients
+    this.io.emit('message', `${userId}: ${message}`);
+  }
   async getAllUsers(): Promise<User[]> {
-    return this.userRepository.findAll();
+
+     return this.userRepository.findAll();
   }
 
   async getUserById(id: number): Promise<User | null> {
