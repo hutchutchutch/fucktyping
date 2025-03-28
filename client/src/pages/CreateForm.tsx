@@ -10,6 +10,8 @@ import { Label } from "../components/ui/label";
 import { ChevronDown, ChevronUp, Upload, Mic, Edit, Plus, Save, TestTube, Wand2, X } from "lucide-react";
 import QuestionEditor from "../components/form-builder/QuestionEditor";
 import { Badge } from "../components/ui/badge";
+import {downloadGraphFile} from '../services/generateGraphFileContent'
+import { api } from "../services/api.ts";
 
 export default function CreateForm() {
   const [, setLocation] = useLocation();
@@ -46,6 +48,7 @@ export default function CreateForm() {
   
   // Track which questions are being edited
   const [editingQuestions, setEditingQuestions] = useState<Record<string, boolean>>({});
+  const [voiceType, setVoiceType] = useState<string>('male');
   
   const toggleSection = (section: SectionType) => {
     setIsCollapsed({
@@ -67,9 +70,32 @@ export default function CreateForm() {
     return newQuestion; // Return the new question for reference
   };
   
-  const handleSave = () => {
-    // TODO: Save form logic
-    alert("Form saved as draft");
+  const handleSave = async () => {
+    try {
+      let obj = {
+        title: formName,
+        description: formDescription,
+        dynamicVariables: variables,
+        questions: questions.map((question) => ({
+          ...question,
+          options: question.options ? question.options : [],
+        })),
+        openingActivity: {
+          text: "Hello, I'm your form assistant. I'll be guiding you through this form today. What's your name?",
+          type: "voice",
+        },
+        status: 'active',
+        categoryId: 1,
+        credentials: "include",
+        userId: 1,
+        voiceType: voiceType,
+      }
+      const res = await api.createForm(obj)
+      downloadGraphFile(formName, formDescription, variables, questions, voiceType);
+      setLocation("/forms/draft/test");
+    } catch (e) {
+      console.error("Error saving form:", e);
+    }
   };
 
   const handleCancel = () => {
@@ -221,7 +247,10 @@ export default function CreateForm() {
                   <div className="flex justify-between items-center mb-2">
                     <Label htmlFor="voice-type">Voice Type</Label>
                   </div>
-                  <Tabs defaultValue="male" className="w-full">
+                  <Tabs defaultValue="male"
+                   onValueChange={(value)=> setVoiceType(value)} 
+                   value={voiceType}
+                   className="w-full">
                     <TabsList className="grid grid-cols-4 w-full">
                       <TabsTrigger value="male">Male</TabsTrigger>
                       <TabsTrigger value="female">Female</TabsTrigger>
