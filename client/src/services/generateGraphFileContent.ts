@@ -17,29 +17,61 @@ export const generateGraphFileContent = (
   const formattedQuestions = questions.length
     ? questions.map((q, idx) => q.text || `Please answer question ${idx + 1}:`)
     : ["Please answer the first question:"];
-
-  const questionSubgraphs = formattedQuestions.map((question, idx) => {
+    const getValidatorCode = (q: QuestionType, idx: number) => {
+      const key = `question${idx + 1}`;
+      const base = `lastUserMessage`; // using this as a reference for the last user message
+      const questionKey = key;
+  
+      switch (q.type) {
+        case "number":
+          return `
+            const isValid = !isNaN(Number(${base}));
+            return new Command({
+              update: { questionResponses: { ${questionKey}: ${base} } },
+              goto: isValid ? Command.PARENT : "rephraser${idx + 1}",
+              graph: isValid ? Command.PARENT : undefined,
+            });
+          `;
+        case "choice":
+          const optionsList:any = JSON.stringify(q.options ?? []);
+          const validOptions = optionsList.map((o:string) => o.toLowerCase());
+          return `
+            const isValid = ${validOptions}.includes(${base.toLowerCase()});
+            return new Command({
+              update: { questionResponses: { ${questionKey}: ${base} } },
+              goto: isValid ? Command.PARENT : "rephraser${idx + 1}",
+              graph: isValid ? Command.PARENT : undefined,
+            });
+          `;
+        case "text":
+        default:
+          return `
+            const isValid = ${base}.trim().length > 0;
+            return new Command({
+              update: { questionResponses: { ${questionKey}: ${base} } },
+              goto: isValid ? Command.PARENT : "rephraser${idx + 1}",
+              graph: isValid ? Command.PARENT : undefined,
+            });
+          `;
+      }
+    };
+  
+  const questionSubgraphs = formattedQuestions.map((question, idx: number) => {
     return `
-    const questioner${idx + 1} = async (state) => {
+    const questioner${idx + 1} = async (state:StateType) => {
       return new Command({
         update: pushMessage(state, "assistant", "${question}"),
         goto: "validator${idx + 1}",
       });
     };
+    const validator${idx + 1} = async (state:StateType) => { 
+      const lastUserMessage = state.messages
+      .slice()
+      .reverse()
+      .find((m: { role: string }) => m.role === "user")?.content || ""; 
+      ${getValidatorCode(questions[idx], idx)} };;
 
-    const validator${idx + 1} = async (state) => {
-      const lastUserMessage = state.messages.findLast((m) => m.role === "user")?.content || "";
-      const valid = lastUserMessage.length > 0;
-      return new Command({
-        update: {
-          question${idx + 1}Response: lastUserMessage,
-        },
-        goto: valid ? Command.PARENT : "rephraser${idx + 1}",
-        graph: valid ? Command.PARENT : undefined,
-      });
-    };
-
-    const rephraser${idx + 1} = async (state) => {
+    const rephraser${idx + 1} = async (state:StateType) => {
       return new Command({
         update: pushMessage(state, "assistant", "I didn't understand that. Could you please rephrase your answer to question ${idx + 1}?"),
         goto: "validator${idx + 1}",
@@ -77,21 +109,30 @@ type QuestionType = {
   options: string[] | null;
 };
 
-const llm = new ChatOpenAI({ temperature: 0.7 });
+type StateType = {
+  questionResponses: Record<string, string>;
+  messages: any[];
+};
 
+
+const llm = new ChatOpenAI({ temperature: 0.7 });
 const State = Annotation.Root({
-  ${formattedQuestions.map((_, idx) => `question${idx + 1}Response: Annotation.String(),`).join("\n  ")}
+  questionResponses: Annotation<Record<string, string>>({
+    reducer: (prev = {}, update = {}) => ({ ...prev, ...update }),
+    default: () => ({}),
+  }),
   messages: Annotation<any[]>({
     reducer: (x = [], y = []) => x.concat(y),
     default: () => [],
   }),
 });
 
-const pushMessage = (state, role, content) => ({
+
+const pushMessage = (state:StateType, role: string, content: string) => ({
   messages: state.messages.concat([{ role, content }]),
 });
 
-const startNode = async (state) => {
+const startNode = async (state:StateType) => {
   return new Command({
     update: pushMessage(state, "assistant", "${formDescription}"),
     goto: "question1_subgraph",
@@ -100,7 +141,7 @@ const startNode = async (state) => {
 
 ${questionSubgraphs}
 
-const closer = async (state) => {
+const closer = async (state:StateType) => {
   return new Command({
     update: pushMessage(state, "assistant", "Thank you for completing the form. We will process your responses shortly."),
   });
@@ -139,7 +180,7 @@ export const downloadGraphFile = (
   const link = document.createElement("a");
   link.href = url;
   // Ensure formName is defined in this scope
-  link.download = `${formName.replace(/\s+/g, "_").toLowerCase()}_graph.js`;
+  link.download = `${formName.replace(/\s+/g, "_").toLowerCase()}_graph.ts`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
