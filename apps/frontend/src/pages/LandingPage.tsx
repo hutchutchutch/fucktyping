@@ -626,6 +626,8 @@ export default function LandingPage() {
               <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">Pricing</a>
               <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">Documentation</a>
               <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">Support</a>
+              <Link href="/webrtc-test" className="text-indigo-600 hover:text-indigo-800 transition-colors font-semibold">WebRTC Demo</Link>
+              <Link href="/webrtc-audio-test" className="text-indigo-600 hover:text-indigo-800 transition-colors font-semibold">Audio Demo</Link>
             </nav>
           </div>
           <p className="text-center text-gray-500">

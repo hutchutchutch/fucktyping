@@ -1,12 +1,12 @@
 import { Express } from "express";
-import { WebSocketServer } from "ws";
+import { Server as SocketIOServer } from "socket.io";
 import * as formController from "./controllers/formController";
 import * as responseController from "./controllers/responseController";
 import * as conversationController from "./controllers/conversationController";
 import * as voiceFormController from "./controllers/voiceFormController";
 import * as emailController from "./controllers/emailController";
 
-export async function registerRoutes(app: Express, wss: WebSocketServer) {
+export async function registerRoutes(app: Express, io: SocketIOServer) {
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });

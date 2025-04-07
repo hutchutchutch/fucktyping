@@ -22,7 +22,7 @@ export interface WebRTCClientOptions {
   onError?: (error: Error) => void;
 }
 
-export class WebRTCClient {
+export default class WebRTCClient {
   private socket: Socket;
   private peerConnection: RTCPeerConnection | null = null;
   private localStream: MediaStream | null = null;

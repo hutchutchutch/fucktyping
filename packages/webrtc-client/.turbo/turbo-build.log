@@ -2,5 +2,3 @@
 > webrtc-client@0.1.0 build /Users/hutch/Documents/projects/yakyak/case_study/fucktyping/packages/webrtc-client
 > tsc
 
-src/index.ts(2,10): error TS2305: Module '"../client"' has no exported member 'default'.
- ELIFECYCLE  Command failed with exit code 2.

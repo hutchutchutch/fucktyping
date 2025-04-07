@@ -4,7 +4,7 @@ import { initializeStorage } from "./storage";
 import { initializeSignalingServer } from "./rtc/webrtc-signaling";
 import dotenv from "dotenv";
 import cors from "cors";
-import { WebSocketServer } from "ws";
+import { Server as SocketIOServer } from "socket.io";
 import http from "http";
 
 // Load environment variables
@@ -13,12 +13,17 @@ dotenv.config();
 // Create Express application
 const app = express();
 
-// Create HTTP server and WebSocket server for signaling
+// Create HTTP server and Socket.IO server for signaling
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
 // Initialize WebRTC signaling
-initializeSignalingServer(wss);
+initializeSignalingServer(io);
 
 // Middleware
 app.use(cors());
