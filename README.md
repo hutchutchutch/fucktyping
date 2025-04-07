@@ -163,6 +163,53 @@ fucktyping/
 
 ---
 
+## Security & Best Practices
+
+1. **Rate Limiting**
+   - Implemented Express rate limiter to prevent abuse
+   - Configurable per-endpoint limits to match expected usage patterns
+   - IP-based and user-based limits to prevent spam and DoS attacks
+
+2. **Row-Level Security (RLS)**
+   - Database access restricted by user ID
+   - Custom middleware validates resource ownership before access
+   - Ensures users can only see and modify their own data
+
+3. **CAPTCHA Protection**
+   - reCAPTCHA v3 integration for form submissions
+   - Invisible to users while effectively blocking bot traffic
+   - Configurable risk thresholds for different actions
+
+4. **Cloudflare Security Integration**
+   - Cloudflare WAF configured for application protection
+   - DDoS mitigation with Cloudflare's global network
+   - Bot Management for automated threat detection
+   - Protection against SQL injection, XSS, and other OWASP Top 10
+   - Geo-blocking capabilities for regional compliance
+   - SSL/TLS encryption with automatic certificate management
+
+5. **Secure Secrets Management**
+   - All API keys stored in .env files (gitignored)
+   - No hardcoded credentials anywhere in the codebase
+   - Environment-specific secrets for dev/staging/prod
+
+6. **Server-Side Validation**
+   - Zod schemas for comprehensive data validation
+   - All user inputs validated regardless of frontend validation
+   - Type-safe validation shared between frontend and backend
+
+7. **Dependency Management**
+   - Regular audit with `pnpm audit`
+   - Minimal dependencies to reduce attack surface
+   - Dependabot enabled for timely security updates
+
+8. **Monitoring & Observability**
+   - Error tracking with Sentry for real-time alerts
+   - Performance monitoring with custom metrics
+   - Health check endpoints for uptime monitoring
+
+---
+
 ## Development Workflow
 
 1. **pnpm Install**  

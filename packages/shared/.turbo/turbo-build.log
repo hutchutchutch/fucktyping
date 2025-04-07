@@ -1,0 +1,6 @@
+
+> shared@0.1.0 build /Users/hutch/Documents/projects/yakyak/case_study/fucktyping/packages/shared
+> tsc
+
+error TS18003: No inputs were found in config file '/Users/hutch/Documents/projects/yakyak/case_study/fucktyping/tsconfig.json'. Specified 'include' paths were '["client/src/**/*","shared/**/*","server/**/*"]' and 'exclude' paths were '["node_modules","build","dist","**/*.test.ts"]'.
+ ELIFECYCLE  Command failed with exit code 1.
