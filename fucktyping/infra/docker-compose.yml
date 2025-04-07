@@ -1,0 +1,62 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=fucktyping
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  turn:
+    image: coturn/coturn
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+      - "5349:5349"
+      - "5349:5349/udp"
+    environment:
+      - TURN_USERNAME=user
+      - TURN_PASSWORD=password
+    command: ["--no-cli", "--no-tls", "--no-dtls", "--realm=fucktyping", "--use-auth-secret", "--rest-api-separator=:"]
+
+  backend:
+    build:
+      context: ../apps/backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/fucktyping
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - TURN_SERVER=turn:turn:3478
+      - TURN_USERNAME=user
+      - TURN_PASSWORD=password
+    volumes:
+      - ../apps/backend:/app
+      - /app/node_modules
+    depends_on:
+      - db
+      - turn
+
+  frontend:
+    build:
+      context: ../apps/frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    volumes:
+      - ../apps/frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
