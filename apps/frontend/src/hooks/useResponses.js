@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { apiRequest } from '../services/api';
-import { useNotification } from '../components/common/Notification';
+import { apiRequest } from '@services/api';
+import { useNotification } from '@components/common/Notification';
 
 export function useResponses(formId, responseId) {
   const [responses, setResponses] = useState([]);

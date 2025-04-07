@@ -1,12 +1,12 @@
 // src/components/form-builder/ResponseOptions.jsx
 import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "./components/ui/card";
-import { Label } from "./components/ui/label";
-import { Switch } from "./components/ui/switch";
-import { Separator } from "./components/ui/separator";
-import { Input } from "./components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
-import { Checkbox } from "./components/ui/checkbox";
+import { Card, CardHeader, CardTitle, CardContent } from "@ui/card";
+import { Label } from "@ui/label";
+import { Switch } from "@ui/switch";
+import { Separator } from "@ui/separator";
+import { Input } from "@ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@ui/select";
+import { Checkbox } from "@ui/checkbox";
 
 const ResponseOptions = () => {
   const [settings, setSettings] = useState({

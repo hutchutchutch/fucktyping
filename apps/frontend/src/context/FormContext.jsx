@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { apiRequest } from "../services/api";
-import { useNotification } from "../components/common/Notification";
-import { useAuthContext } from "./AuthContext";
+import { apiRequest } from "@services/api";
+import { useNotification } from "@components/common/Notification";
+import { useAuthContext } from "@context/AuthContext";
 
 const FormContext = createContext(null);
 

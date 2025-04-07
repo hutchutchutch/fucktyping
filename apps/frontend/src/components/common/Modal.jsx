@@ -6,9 +6,9 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
-} from "./components/ui/dialog";
-import Button from "./Button";
-import { cn } from "./lib/utils";
+} from "@ui/dialog";
+import Button from "@components/common/Button";
+import { cn } from "@lib/utils";
 
 function Modal({ 
   open, 

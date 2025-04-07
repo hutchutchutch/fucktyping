@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import WebRTCClient from 'webrtc-client';
-import { Button } from '../components/ui/button';
+import WebRTCClient from '@webrtc/client';
+import { Button } from '@ui/button';
 
 const WebRTCTest = () => {
   const [roomId, setRoomId] = useState<string>(`room-${Math.floor(Math.random() * 1000)}`);

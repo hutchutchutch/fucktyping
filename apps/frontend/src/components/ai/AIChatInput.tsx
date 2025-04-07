@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Mic, MicOff, Send, Sparkles } from 'lucide-react';
-import { Button } from "./components/ui/button";
-import { Card, CardContent } from "./components/ui/card";
-import { cn } from "./lib/utils";
+import { Button } from "@ui/button";
+import { Card, CardContent } from "@ui/card";
+import { cn } from "@lib/utils";
 
 interface AIChatInputProps {
   onSendMessage: (text: string) => void;

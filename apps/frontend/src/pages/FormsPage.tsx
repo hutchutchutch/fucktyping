@@ -9,8 +9,8 @@ import {
   CardHeader, 
   CardTitle 
 } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
+import { Badge } from "@ui/badge";
+import { Button } from "@ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,15 +29,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../components/ui/alert-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ui/tabs";
 import { 
   Loader2, BarChart2, ClipboardCheck, MoreVertical, Edit, Trash2, Copy, 
   Eye, Share2, Star, Users, Calendar, Megaphone, PlusCircle, Inbox,
   ChevronRight, Percent, ThumbsUp, MessageSquare
 } from 'lucide-react';
-import { mockForms } from '../services/mockData';
-import { FormWithQuestions, CategoryWithStats } from '../../../shared/schema';
-import { Progress } from "../components/ui/progress";
+import { mockForms } from '@services/mockData';
+import {  FormWithQuestions, CategoryWithStats  } from "@schemas/schema";
+import { Progress } from "@ui/progress";
 import { 
   mockCategoriesWithStats, 
   updateFormsWithCategories, 

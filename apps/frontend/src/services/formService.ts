@@ -1,5 +1,5 @@
-import { api } from "./api";
-import { Form, FormWithQuestions, Question, Response } from "shared/schema";
+import { api } from "@services/api";
+import {  Form, FormWithQuestions, Question, Response  } from "@schemas/schema";
 
 export const formService = {
   // Form operations

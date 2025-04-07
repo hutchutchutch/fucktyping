@@ -1,23 +1,24 @@
 import { Switch, Route, Redirect, useLocation } from "wouter";
-import { useAuthContext } from "./context/AuthContext";
-import LandingPage from "./pages/LandingPage";
-import Dashboard from "./pages/Dashboard";
-import FormBuilder from "./pages/FormBuilder";
-import CreateForm from "./pages/CreateForm";
-import EditForm from "./pages/EditForm";
-import TestForm from "./pages/TestForm";
-import FormResponder from "./pages/FormResponder";
-import ResponseViewer from "./pages/ResponseViewer";
-import FormsPage from "./pages/FormsPage";
-import ResponsesPage from "./pages/ResponsesPage";
-import VoiceTest from "./pages/VoiceTest";
-import VoiceAgentPage from "./pages/VoiceAgentPage";
-import VoiceAgentTest from "./pages/VoiceAgentTest";
-import WebRTCTest from "./pages/WebRTCTest";
-import WebRTCAudioTest from "./pages/WebRTCAudioTest";
-import Login from "./pages/Login";
-import NotFound from "./pages/not-found";
-import AppLayout from "./components/layout/AppLayout";
+import { useAuthContext } from "@context/AuthContext";
+import LandingPage from "@pages/LandingPage";
+import Dashboard from "@pages/Dashboard";
+import FormBuilder from "@pages/FormBuilder";
+import CreateForm from "@pages/CreateForm";
+import EditForm from "@pages/EditForm";
+import TestForm from "@pages/TestForm";
+import FormResponder from "@pages/FormResponder";
+import ResponseViewer from "@pages/ResponseViewer";
+import FormsPage from "@pages/FormsPage";
+import ResponsesPage from "@pages/ResponsesPage";
+import VoiceTest from "@pages/VoiceTest";
+import VoiceAgentPage from "@pages/VoiceAgentPage";
+import VoiceAgentTest from "@pages/VoiceAgentTest";
+import WebRTCTest from "@pages/WebRTCTest";
+import WebRTCAudioTest from "@pages/WebRTCAudioTest";
+import TestUI from "@pages/TestUI";
+import Login from "@pages/Login";
+import NotFound from "@pages/not-found";
+import AppLayout from "@components/layout/AppLayout";
 
 function PrivateRoute({ component: Component, ...rest }) {
   const { isAuthenticated, isLoading } = useAuthContext();
@@ -152,6 +153,7 @@ export default function Routes() {
       <Route path="/voice-agent-test" component={VoiceAgentTest} />
       <Route path="/webrtc-test" component={WebRTCTest} />
       <Route path="/webrtc-audio-test" component={WebRTCAudioTest} />
+      <Route path="/test-ui" component={TestUI} />
 
       {/* Fallback to 404 */}
       <Route component={NotFound} />

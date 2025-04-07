@@ -1,7 +1,7 @@
 import React from 'react';
-import Header from './Header';
-import Sidebar from './Sidebar';
-import MobileNav from './MobileNav';
+import Header from '@components/layout/Header';
+import Sidebar from '@components/layout/Sidebar';
+import MobileNav from '@components/layout/MobileNav';
 
 interface AppLayoutProps {
   children: React.ReactNode;

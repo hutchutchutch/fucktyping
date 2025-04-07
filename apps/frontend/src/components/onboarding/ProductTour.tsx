@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from './components/ui/button';
-import { Card, CardContent } from './components/ui/card';
-import { useToast } from './hooks/use-toast';
+import { Button } from '@ui/button';
+import { Card, CardContent } from '@ui/card';
+import { useToast } from '@hooks/use-toast';
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 
 interface TourStep {

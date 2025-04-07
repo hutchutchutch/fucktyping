@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useAuthContext } from "../../context/AuthContext";
-import { Button } from "./components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
+import { useAuthContext } from "@context/AuthContext";
+import { Button } from "@ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu";
-import { Input } from "./components/ui/input";
+import { Input } from "@ui/input";
 import { 
   Bell, 
   LogOut, 
@@ -21,7 +21,7 @@ import {
   User,
   HelpCircle
 } from "lucide-react";
-import SimpleTour from "./components/onboarding/SimpleTour";
+import SimpleTour from "@components/onboarding/SimpleTour";
 
 function TopNavBar({ onToggleSidebar }) {
   const { user, logout } = useAuthContext();

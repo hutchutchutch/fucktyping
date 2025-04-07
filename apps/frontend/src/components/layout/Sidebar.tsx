@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
-import { cn } from "./lib/utils";
-import { useAuthContext } from "./context/AuthContext";
+import { cn } from "@lib/utils";
+import { useAuthContext } from "@context/AuthContext";
 import {
   FileEdit,
   FileQuestion,
@@ -14,7 +14,7 @@ import {
   Mic,
   HelpCircle,
 } from "lucide-react";
-import { Button } from "./components/ui/button";
+import { Button } from "@ui/button";
 import { useState, useRef, useEffect } from "react";
 
 interface Message {

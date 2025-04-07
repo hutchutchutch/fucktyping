@@ -2,7 +2,7 @@
  * WebSocket Service - For real-time voice interactions with Groq Llama models
  */
 
-import { toast } from "../hooks/use-toast";
+import { toast } from "@hooks/use-toast";
 
 // Event types supported by the WebSocket
 export type WebSocketEventType = 

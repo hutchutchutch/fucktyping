@@ -7,8 +7,8 @@ import {
   CardFooter, 
   CardHeader, 
   CardTitle
-} from "./components/ui/card";
-import { Button } from "./components/ui/button";
+} from "@ui/card";
+import { Button } from "@ui/button";
 import { 
   Loader2, 
   Mic, 
@@ -28,39 +28,39 @@ import {
   WifiOff,
   Wifi
 } from 'lucide-react';
-import { Textarea } from "./components/ui/textarea";
-import { Badge } from "./components/ui/badge";
+import { Textarea } from "@ui/textarea";
+import { Badge } from "@ui/badge";
 import { 
   Popover,
   PopoverContent,
   PopoverTrigger 
-} from "./components/ui/popover";
+} from "@ui/popover";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "./components/ui/tooltip";
+} from "@ui/tooltip";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "./components/ui/tabs";
+} from "@ui/tabs";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "./components/ui/collapsible";
-import { Input } from "./components/ui/input";
-import { Label } from "./components/ui/label";
-import { Slider } from "./components/ui/slider";
-import { Switch } from "./components/ui/switch";
-import { mockForms } from '../services/mockData';
-import { FormWithQuestions } from 'shared/schema';
-import VoiceRecorder from '../components/form-responder/VoiceRecorder';
-import AudioVisualizer from '../components/form-responder/AudioVisualizer';
-import Transcript from '../components/form-responder/Transcript';
+} from "@ui/collapsible";
+import { Input } from "@ui/input";
+import { Label } from "@ui/label";
+import { Slider } from "@ui/slider";
+import { Switch } from "@ui/switch";
+import { mockForms } from '@services/mockData';
+import {  FormWithQuestions  } from "@schemas/schema";
+import VoiceRecorder from '@components/form-responder/VoiceRecorder';
+import AudioVisualizer from '@components/form-responder/AudioVisualizer';
+import Transcript from '@components/form-responder/Transcript';
 
 interface Message {
   id: string;

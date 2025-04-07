@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Button } from './components/ui/button';
-import { Card, CardContent } from './components/ui/card';
+import { Button } from '@ui/button';
+import { Card, CardContent } from '@ui/card';
 import { Mic, MicOff, Send, Loader2, Volume2, Pause, Play, X, CheckCircle2, ArrowRight } from 'lucide-react';
-import AudioVisualizer from './AudioVisualizer';
-import { useToast } from './hooks/use-toast';
+import AudioVisualizer from '@components/form-responder/AudioVisualizer';
+import { useToast } from '@hooks/use-toast';
 
 interface VoiceInterfaceProps {
   question?: {

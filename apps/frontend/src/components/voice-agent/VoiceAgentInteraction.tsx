@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button } from './components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from './components/ui/card';
+import { Button } from '@ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@ui/card';
 import { Mic, MicOff, Play, Square, Send, RotateCw, Volume2 } from 'lucide-react';
-import { useToast } from './hooks/use-toast';
-import AudioVisualizer from './components/form-responder/AudioVisualizer';
-import Transcript from './components/form-responder/Transcript';
+import { useToast } from '@hooks/use-toast';
+import AudioVisualizer from '@components/form-responder/AudioVisualizer';
+import Transcript from '@components/form-responder/Transcript';
 
 interface Message {
   id: string;

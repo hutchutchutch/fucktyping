@@ -8,10 +8,10 @@ import {
   Inbox,
   PlusCircle
 } from 'lucide-react';
-import { Button } from './components/ui/button';
-import { Badge } from './components/ui/badge';
-import { cn } from './lib/utils';
-import { CategoryWithStats } from 'shared/schema';
+import { Button } from '@ui/button';
+import { Badge } from '@ui/badge';
+import { cn } from '@lib/utils';
+import {  CategoryWithStats  } from "@schemas/schema";
 
 interface FormsCategorySidebarProps {
   categories: CategoryWithStats[];

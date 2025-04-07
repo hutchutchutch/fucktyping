@@ -1,4 +1,4 @@
-import { Form, Response, Question, FormWithQuestions, Category, CategoryWithStats } from "../../../shared/schema";
+import {  Form, Response, Question, FormWithQuestions, Category, CategoryWithStats  } from "@schemas/schema";
 import { Star, Users, Calendar, Megaphone, Inbox } from 'lucide-react';
 
 // Simulate data from Supabase

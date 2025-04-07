@@ -1,5 +1,5 @@
-import { Card as ShadcnCard, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "./components/ui/card";
-import { cn } from "./lib/utils";
+import { Card as ShadcnCard, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@ui/card";
+import { cn } from "@lib/utils";
 
 function Card({ children, className, ...props }) {
   return (

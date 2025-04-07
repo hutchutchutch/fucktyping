@@ -1,7 +1,7 @@
 /**
  * Service for interacting with form-related API endpoints
  */
-import { get, post, put, del } from './api';
+import { get, post, put, del } from '@services/api';
 
 /**
  * Get all forms for the current user

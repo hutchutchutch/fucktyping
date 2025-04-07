@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import VoiceInterface from '../components/form-responder/VoiceInterface';
-import { apiRequest } from '../services/api';
-import Header from "./components/layout/Header";
-import { Button } from './components/ui/button';
-import { Progress } from './components/ui/progress';
-import { Skeleton } from './components/ui/skeleton';
+import VoiceInterface from '@components/form-responder/VoiceInterface';
+import { apiRequest } from '@services/api';
+import Header from "@components/layout/Header";
+import { Button } from '@ui/button';
+import { Progress } from '@ui/progress';
+import { Skeleton } from '@ui/skeleton';
 import { CheckCircle } from 'lucide-react';
-import Card from '../components/common/Card';
+import Card from '@components/common/Card';
 
 // Fallback implementation for Card if the component doesn't exist
 const CardFallback = ({ children, className = '', ...props }) => (

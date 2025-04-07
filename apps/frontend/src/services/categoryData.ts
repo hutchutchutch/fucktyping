@@ -1,5 +1,5 @@
-import { Category, CategoryWithStats } from '../../../shared/schema';
-import { mockForms } from './mockData';
+import {  Category, CategoryWithStats  } from "@schemas/schema";
+import { mockForms } from '@services/mockData';
 
 // Mock categories
 export const mockCategories: Category[] = [

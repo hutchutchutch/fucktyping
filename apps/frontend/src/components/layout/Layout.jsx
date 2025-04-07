@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useAuthContext } from "../../context/AuthContext";
-import Sidebar from "./Sidebar";
-import TopNavBar from "./TopNavBar";
-import MobileNav from "./MobileNav";
+import { useAuthContext } from "@context/AuthContext";
+import Sidebar from "@components/layout/Sidebar";
+import TopNavBar from "@components/layout/TopNavBar";
+import MobileNav from "@components/layout/MobileNav";
 
 function Layout({ children }) {
   const [showSidebar, setShowSidebar] = useState(false);

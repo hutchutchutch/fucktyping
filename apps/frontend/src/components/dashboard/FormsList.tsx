@@ -6,8 +6,8 @@ import {
   PencilIcon, 
   ChevronRightIcon 
 } from "@heroicons/react/24/outline";
-import { Form } from "shared/schema";
-import { getRecentForms, getRelativeTimeString } from "./services/mockData";
+import {  Form  } from "@schemas/schema";
+import { getRecentForms, getRelativeTimeString } from "@services/mockData";
 
 interface FormWithStats extends Form {
   responseCount: number;

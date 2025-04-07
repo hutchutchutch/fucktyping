@@ -1,8 +1,8 @@
 import { useLocation } from "wouter";
 import { Bell, Wand2 } from "lucide-react";
-import UserMenu from "./UserMenu";
-import { useAuthContext } from "./context/AuthContext";
-import { Button } from "./components/ui/button";
+import UserMenu from "@components/layout/UserMenu";
+import { useAuthContext } from "@context/AuthContext";
+import { Button } from "@ui/button";
 
 export default function Header() {
   const [location, navigate] = useLocation();

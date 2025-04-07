@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { useAuthContext } from '../context/AuthContext';
+import { useAuthContext } from '@context/AuthContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from './components/ui/button';
-import { Input } from './components/ui/input';
-import { Checkbox } from './components/ui/checkbox';
-import { Label } from './components/ui/label';
+import { Button } from '@ui/button';
+import { Input } from '@ui/input';
+import { Checkbox } from '@ui/checkbox';
+import { Label } from '@ui/label';
 import {
   Form,
   FormControl,
@@ -15,8 +15,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from './components/ui/form';
-import Card from '../components/common/Card';
+} from '@ui/form';
+import Card from '@components/common/Card';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),

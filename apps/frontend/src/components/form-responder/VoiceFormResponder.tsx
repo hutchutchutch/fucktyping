@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useToast } from "./hooks/use-toast";
-import websocketService from '../../services/websocketService';
-import VoiceInterface from './VoiceInterface';
-import Transcript from './Transcript';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './components/ui/card';
-import { Button } from './components/ui/button';
+import { useToast } from "@hooks/use-toast";
+import websocketService from '@services/websocketService';
+import VoiceInterface from '@components/form-responder/VoiceInterface';
+import Transcript from '@components/form-responder/Transcript';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@ui/card';
+import { Button } from '@ui/button';
 import { Mic, MicOff, Radio, MessageSquare, AlertTriangle } from 'lucide-react';
-import { Badge } from "./components/ui/badge";
+import { Badge } from "@ui/badge";
 import { useParams, useLocation } from 'wouter';
 
 interface Message {

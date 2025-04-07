@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useResponses } from "../../hooks/useResponses";
-import Card from "../common/Card";
-import Button from "../common/Button";
-import { Badge } from "./components/ui/badge";
-import { Skeleton } from "./components/ui/skeleton";
+import { useResponses } from "@hooks/useResponses";
+import Card from "@components/common/Card";
+import Button from "@components/common/Button";
+import { Badge } from "@ui/badge";
+import { Skeleton } from "@ui/skeleton";
 import { ArrowLeft, Download, MailIcon, Share2 } from "lucide-react";
 import { Link } from "wouter";
 

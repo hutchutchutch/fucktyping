@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from './components/ui/button';
-import AudioVisualizer from './AudioVisualizer';
-import Transcript from './Transcript';
-import voiceService from './services/voiceService';
+import { Button } from '@ui/button';
+import AudioVisualizer from '@components/form-responder/AudioVisualizer';
+import Transcript from '@components/form-responder/Transcript';
+import voiceService from '@services/voiceService';
 import { Mic, MicOff, StopCircle, Play } from 'lucide-react';
-import websocketService, { WebSocketService } from './services/websocketService';
+import websocketService, { WebSocketService } from '@services/websocketService';
 
 interface VoiceRecorderProps {
   onTranscriptionComplete: (transcript: string) => void;

@@ -1,7 +1,7 @@
 /**
  * Service for managing conversation state and flow
  */
-import { post, get } from './api';
+import { post, get } from '@services/api';
 
 /**
  * Initialize a new conversation for a form response

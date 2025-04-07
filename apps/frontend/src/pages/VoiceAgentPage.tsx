@@ -1,6 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
-import VoiceAgentInteraction from '../components/voice-agent/VoiceAgentInteraction';
+import VoiceAgentInteraction from '@components/voice-agent/VoiceAgentInteraction';
 
 export default function VoiceAgentPage() {
   return (

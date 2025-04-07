@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChartPieIcon, DocumentIcon, ChartBarIcon } from "@heroicons/react/24/outline";
-import { getStatsData } from "./services/mockData";
+import { getStatsData } from "@services/mockData";
 
 interface StatsData {
   totalForms: number;

@@ -1,8 +1,8 @@
 import { useLocation, Link } from "wouter";
-import { Button } from "../components/ui/button";
-import { useAuthContext } from "../context/AuthContext";
-import { Badge } from "../components/ui/badge";
-import DigitalRain from "../components/animation/DigitalRain";
+import { Button } from "@ui/button";
+import { useAuthContext } from "@context/AuthContext";
+import { Badge } from "@ui/badge";
+import DigitalRain from "@components/animation/DigitalRain";
 import { 
   FileQuestion, 
   Mic, 

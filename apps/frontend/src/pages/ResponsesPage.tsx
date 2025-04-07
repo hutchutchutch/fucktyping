@@ -8,8 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
+import { Button } from "@ui/button";
+import { Input } from "@ui/input";
 import {
   Table,
   TableBody,
@@ -35,7 +35,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "../components/ui/pagination";
-import { Skeleton } from "../components/ui/skeleton";
+import { Skeleton } from "@ui/skeleton";
 import { 
   ArrowLeft, 
   Search, 
@@ -48,8 +48,8 @@ import {
   ChevronRight,
   SlidersHorizontal
 } from 'lucide-react';
-import { mockForms, mockResponses } from '../services/mockData';
-import { FormWithQuestions, Question, Response } from '../../../shared/schema';
+import { mockForms, mockResponses } from '@services/mockData';
+import {  FormWithQuestions, Question, Response  } from "@schemas/schema";
 
 interface ResponseData {
   id: number;

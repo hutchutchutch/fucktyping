@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { useLocation } from "wouter";
-import { Button } from "../components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Textarea } from "../components/ui/textarea";
-import { Switch } from "../components/ui/switch";
-import { Label } from "../components/ui/label";
+import { Button } from "@ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/card";
+import { Input } from "@ui/input";
+import { Textarea } from "@ui/textarea";
+import { Switch } from "@ui/switch";
+import { Label } from "@ui/label";
 import { ChevronDown, ChevronUp, Upload, Mic, Edit, Plus, Save, TestTube, Wand2, X } from "lucide-react";
-import QuestionEditor from "../components/form-builder/QuestionEditor";
-import { Badge } from "../components/ui/badge";
-import {downloadGraphFile} from '../services/generateGraphFileContent'
-import { api } from "../services/api.ts";
+import QuestionEditor from "@components/form-builder/QuestionEditor";
+import { Badge } from "@ui/badge";
+import {downloadGraphFile} from '@services/generateGraphFileContent'
+import { api } from "@services/api.ts";
 
 export default function CreateForm() {
   const [, setLocation] = useLocation();

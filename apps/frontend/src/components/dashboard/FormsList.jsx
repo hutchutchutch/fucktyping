@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useFormContext } from "../../context/FormContext";
-import Card from "../common/Card";
-import Button from "../common/Button";
-import { Badge } from "./components/ui/badge";
+import { useFormContext } from "@context/FormContext";
+import Card from "@components/common/Card";
+import Button from "@components/common/Button";
+import { Badge } from "@ui/badge";
 import {
   Table,
   TableBody,
@@ -11,13 +11,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./components/ui/table";
+} from "@ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "./components/ui/dropdown-menu";
+} from "@ui/dropdown-menu";
 import {
   Edit,
   Eye,

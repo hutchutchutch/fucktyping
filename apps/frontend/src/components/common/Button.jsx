@@ -1,5 +1,5 @@
-import { Button as ShadcnButton } from "./components/ui/button";
-import { cn } from "./lib/utils";
+import { Button as ShadcnButton } from "@ui/button";
+import { cn } from "@lib/utils";
 import { forwardRef } from "react";
 
 const Button = forwardRef(

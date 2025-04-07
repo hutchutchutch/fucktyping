@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { Download, Search } from "lucide-react";
-import { Button } from "./components/ui/button";
-import { Input } from "./components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
-import { FormWithQuestions, ResponseWithAnswers } from "shared/schema";
+import { Button } from "@ui/button";
+import { Input } from "@ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@ui/select";
+import {  FormWithQuestions, ResponseWithAnswers  } from "@schemas/schema";
 
 export default function ResponseViewer() {
   const { id } = useParams<{ id: string }>();

@@ -1,48 +1,22 @@
 import React, { useState } from 'react';
-import { useFormContext } from "../../context/FormContext";
-import QuestionEditor from './QuestionEditor';
-import EmailTemplateEditor from './EmailTemplateEditor';
-import { Button } from "./components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
-import { Input } from "./components/ui/input";
-import { Textarea } from "./components/ui/textarea";
-import { Checkbox } from "./components/ui/checkbox";
-import { Label } from "./components/ui/label";
+import { useFormContext } from "@context/FormContext";
+import QuestionEditor from '@components/form-builder/QuestionEditor';
+import EmailTemplateEditor from '@components/form-builder/EmailTemplateEditor';
+import { Button } from "@ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@ui/card";
+import { Input } from "@ui/input";
+import { Textarea } from "@ui/textarea";
+import { Checkbox } from "@ui/checkbox";
+import { Label } from "@ui/label";
 import { PlusCircle, Save, SendHorizontal, Pencil, Trash } from "lucide-react";
-import Modal from "./components/ui/dialog";
-
-interface Question {
-  id: string | number;
-  text: string;
-  type: string;
-  required: boolean;
-  order: number;
-  options: string[] | null;
-  description?: string;
-  validation?: {
-    min: number;
-    max: number;
-  };
-}
-
-interface Form {
-  id?: number;
-  title: string;
-  description: string;
-  requireAuth?: boolean;
-  allowVoice?: boolean;
-  emailNotification?: boolean;
-  limitOneResponse?: boolean;
-  emailSubject?: string;
-  emailRecipients?: string;
-  emailTemplate?: string;
-}
+import Modal from "@ui/dialog";
+import { FormBuilderForm, FormBuilderQuestion } from "@schemas/schema";
 
 interface FormBuilderProps {
-  currentForm?: Form;
-  questions?: Question[];
+  currentForm?: FormBuilderForm;
+  questions?: FormBuilderQuestion[];
   updateFormField?: (field: string, value: any) => void;
-  addQuestion?: (question: Question) => void;
+  addQuestion?: (question: FormBuilderQuestion) => void;
   saveForm?: () => Promise<void>;
   publishForm?: () => Promise<void>;
   isSaving?: boolean;
@@ -63,7 +37,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({
   const contextValues = useFormContext();
   
   // Define values either from props or from context
-  const currentForm = propCurrentForm || (contextValues?.currentForm as Form) || {
+  const currentForm = propCurrentForm || (contextValues?.currentForm as FormBuilderForm) || {
     title: "",
     description: "",
     requireAuth: false,
@@ -83,7 +57,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({
   const isSaving = propIsSaving || false;
   
   // For standalone mode - define necessary state
-  const [localQuestions, setLocalQuestions] = useState<Question[]>([
+  const [localQuestions, setLocalQuestions] = useState<FormBuilderQuestion[]>([
     { id: 'q1', text: 'What is your name?', type: 'text', required: true, order: 1, options: null },
     { id: 'q2', text: 'How satisfied are you with our service?', type: 'rating', required: true, order: 2, options: null },
     { id: 'q3', text: 'Any additional comments?', type: 'textarea', required: false, order: 3, options: null }
@@ -91,7 +65,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({
   
   // State for modal
   const [showQuestionEditor, setShowQuestionEditor] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState<FormBuilderQuestion | null>(null);
   
   // Use local state for standalone mode, otherwise use provided questions
   const displayQuestions = standalone ? localQuestions : questions;

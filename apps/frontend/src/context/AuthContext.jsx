@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { apiRequest } from "../services/api";
-import { useNotification } from "../components/common/Notification";
+import { apiRequest } from "@services/api";
+import { useNotification } from "@components/common/Notification";
 
 const AuthContext = createContext(null);
 

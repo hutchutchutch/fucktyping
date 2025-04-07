@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useAuthContext } from "./context/AuthContext";
-import { Button } from "./components/ui/button";
+import { useAuthContext } from "@context/AuthContext";
+import { Button } from "@ui/button";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuSeparator,
   DropdownMenuTrigger 
-} from "./components/ui/dropdown-menu";
-import { Input } from "./components/ui/input";
+} from "@ui/dropdown-menu";
+import { Input } from "@ui/input";
 import { 
   Dialog, 
   DialogContent, 
@@ -17,7 +17,7 @@ import {
   DialogFooter, 
   DialogHeader, 
   DialogTitle 
-} from "./components/ui/dialog";
+} from "@ui/dialog";
 import { 
   ArrowRightOnRectangleIcon, 
   UserCircleIcon,

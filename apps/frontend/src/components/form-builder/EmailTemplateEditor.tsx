@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
-import { Button } from "./components/ui/button";
-import { Input } from "./components/ui/input";
-import { Textarea } from "./components/ui/textarea";
-import { Label } from "./components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent } from "./components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ui/tabs";
+import { Button } from "@ui/button";
+import { Input } from "@ui/input";
+import { Textarea } from "@ui/textarea";
+import { Label } from "@ui/label";
+import { Card, CardHeader, CardTitle, CardContent } from "@ui/card";
 
 interface EmailTemplateEditorProps {
   emailSubject?: string;

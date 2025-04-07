@@ -16,8 +16,18 @@
     "types": ["node", "vite/client"],
     "paths": {
       "@/*": ["./src/*"],
-      "shared": ["../../packages/shared"],
-      "webrtc-client": ["../../packages/webrtc-client"]
+      "@app/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@ui/*": ["./src/components/ui/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@services/*": ["./src/services/*"],
+      "@context/*": ["./src/context/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@schemas/*": ["./src/schemas/*"],
+      "@shared/*": ["../../packages/shared/*"],
+      "@webrtc/*": ["../../packages/webrtc-client/*"]
     }
   },
   "include": ["src/**/*"],

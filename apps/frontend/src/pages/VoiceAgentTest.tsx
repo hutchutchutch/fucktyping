@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import VoiceAgentInteraction from './components/voice-agent/VoiceAgentInteraction';
-import { Button } from './components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
-import { FormWithQuestions } from 'shared/schema';
+import VoiceAgentInteraction from '@components/voice-agent/VoiceAgentInteraction';
+import { Button } from '@ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
+import {  FormWithQuestions  } from "@schemas/schema";
 
 export default function VoiceAgentTest() {
   const [selectedFormId, setSelectedFormId] = useState<number | null>(null);

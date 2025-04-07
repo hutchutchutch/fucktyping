@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, Maximize2, Minimize2, Play } from 'lucide-react';
-import { Button } from './components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from './components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
-import { Badge } from './components/ui/badge';
-import { Textarea } from './components/ui/textarea';
-import { useToast } from './hooks/use-toast';
+import { Button } from '@ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
+import { Badge } from '@ui/badge';
+import { Textarea } from '@ui/textarea';
+import { useToast } from '@hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Message {
