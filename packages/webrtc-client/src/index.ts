@@ -1,4 +1,5 @@
 export * from '../client';
+export { default } from '../client';
 
 /**
  * WebRTC Client Package
