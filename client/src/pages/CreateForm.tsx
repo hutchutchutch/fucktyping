@@ -42,6 +42,7 @@ export default function CreateForm() {
     required: boolean;
     order: number;
     options: string[] | null;
+    context: string;
   };
   
   const [questions, setQuestions] = useState<QuestionType[]>([]);
@@ -61,6 +62,7 @@ export default function CreateForm() {
     const newQuestion: QuestionType = {
       id: `q${questions.length + 1}`,
       text: 'New Question',
+      context: "Context",
       type: 'text',
       required: false,
       order: questions.length + 1,
@@ -76,22 +78,24 @@ export default function CreateForm() {
         title: formName,
         description: formDescription,
         dynamicVariables: variables,
-        questions: questions.map((question) => ({
-          ...question,
-          options: question.options ? question.options : [],
-        })),
-        openingActivity: {
-          text: "Hello, I'm your form assistant. I'll be guiding you through this form today. What's your name?",
-          type: "voice",
-        },
+        openingMessage: "Hey {Name}! Thanks for reaching out, I'm looking forward to meeting you and working with you. I've got a few questions to ask in order to make sure I can give you the best service you need quickly.",
+        closingMessage: "Thank you so much for your responses, I'll be reaching out within the next day! Take care.",
         status: 'active',
         categoryId: 1,
         credentials: "include",
         userId: 1,
         voiceType: voiceType,
       }
-      const res = await api.createForm(obj)
-      downloadGraphFile(formName, formDescription, variables, questions, voiceType);
+      const res = await api.createForm(obj);
+      questions.map(async (question) => {
+        let obj = {
+          ...question,
+          options: question.options ? question.options : [],
+          formId: res?.id,
+        };
+        await api.createQuestion(obj);
+      });
+      downloadGraphFile(formName, formDescription, variables, questions, voiceType, res?.openingMessage,res?.closingMessage);
       setLocation("/forms/draft/test");
     } catch (e) {
       console.error("Error saving form:", e);
@@ -372,7 +376,9 @@ export default function CreateForm() {
                                   const newQuestions = [...questions];
                                   newQuestions[index] = updatedQuestion;
                                   setQuestions(newQuestions);
+                                  toggleEditing()
                                 }}
+                                showContextField={true}
                                 onRemove={() => {
                                   // Remove from editing state and filter questions
                                   const newEditingQuestions = {...editingQuestions};
