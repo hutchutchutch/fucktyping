@@ -107,8 +107,9 @@ export default function CreateForm() {
   };
   
   const addVariable = () => {
-    if (newVariable.trim() && !variables.includes(newVariable)) {
-      setVariables([...variables, newVariable]);
+    let variableNew = `{${newVariable}}`
+    if (variableNew.trim() && !variables.includes(variableNew)) {
+      setVariables([...variables, variableNew]);
       setNewVariable("");
     }
   };
@@ -192,7 +193,7 @@ export default function CreateForm() {
               {variables.length > 0 ? (
                 variables.map((variable) => (
                   <Badge key={variable} variant="outline" className="px-3 py-1.5 flex items-center gap-1.5">
-                    <span className="text-sm font-medium">{'{'}{variable}{'}'}</span>
+                    <span className="text-sm font-medium">{variable}</span>
                     <button 
                       onClick={() => removeVariable(variable)}
                       className="text-muted-foreground hover:text-foreground"

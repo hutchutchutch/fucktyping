@@ -17,7 +17,6 @@ export const generateGraphFileContent = (
   openingMessage:string,
   closingMessage:string,
 ) => {
-
   return `// Auto-generated LangGraph for ${formName}
 import * as fs from 'fs';
 import {
@@ -31,8 +30,102 @@ import { ChatOpenAI } from "@langchain/openai";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import * as readline from "readline";
 import 'dotenv/config'
+let dynamicReplacementValues = ["user", "user@test.com"];
+let variables:string[] = ${JSON.stringify(variables, null, 2)};
+let questionsData = ${JSON.stringify(questions, null, 2)};
+let openingMessage = "${openingMessage}"
+let closingMessage = "${closingMessage}"
 
-  const rl = readline.createInterface({
+function replaceStringsInData(data: any, variables: string[], replacementValues: string[]): any {
+  if (Array.isArray(data)) {
+    return data.map(item => 
+      (typeof item === 'string' ? replaceStringInText(item, variables, replacementValues) : replaceStringsInData(item, variables, replacementValues))
+    );
+  } else if (typeof data === 'object' && data !== null) {
+    const updatedData: Record<string, any> = {};
+    for (const key in data) {
+      updatedData[key] = replaceStringsInData(data[key], variables, replacementValues);
+    }
+    return updatedData;
+  } else if (typeof data === 'string') {
+    return replaceStringInText(data, variables, replacementValues);
+  }
+  return data;
+}
+
+function replaceStringInText(text: string, variables: string[], replacementValues: string[]): string {
+  let updatedText = text;
+  variables.forEach((variable, index) => {
+    const regex = new RegExp(\`\\\\\${variable}\`, "g");
+    if (regex.test(updatedText)) {
+      updatedText = updatedText.replace(regex, replacementValues[index]);
+    }
+  });
+  return updatedText;
+}
+
+questionsData = replaceStringsInData(questionsData, variables, dynamicReplacementValues);
+openingMessage = replaceStringsInData(openingMessage, variables, dynamicReplacementValues);
+closingMessage = replaceStringsInData(closingMessage, variables, dynamicReplacementValues);
+
+
+type QuestionType = {
+  id: string | number;
+  text: string;
+  type: string;
+  required: boolean;
+  order: number;
+  options: string[] | null;
+  context?: string;
+  validation?: {
+    min: number;
+    max: number;
+  };
+};
+
+  function generateValidationPrompt(question: QuestionType): string {
+    let validationPrompt = '';
+  
+    switch (question.type) {
+      case "multiple_choice":
+        if (question.options?.length) {
+          validationPrompt += \`This is a multiple choice question. The user may select one or more of the following options: \${question.options.join(", ")}\n\`;
+        }
+        break;
+  
+      case "dropdown":
+        if (question.options?.length) {
+          validationPrompt += \`This is a dropdown question. The user may select one option from: \${question.options.join(", ")}\n\`;
+        }
+        break;
+  
+      case "yes_no":
+        validationPrompt += \`Please note, this is a yes or no question.\n\`;
+        break;
+  
+      case "text":
+        validationPrompt += \`This is a text-based question. Please provide a text answer.\n\`;
+        break;
+  
+      case "rating":
+        validationPrompt += \`This is a rating question. Please provide a rating between \${question?.validation?.min} and \${question?.validation?.max}.\n\`;
+        break;
+  
+      case "date":
+        validationPrompt += \`This is a date-based question. Please ensure the response is a valid date in the format YYYY-MM-DD (for example, 2025-04-05).\n\`;
+        validationPrompt += \`If the response is not a valid date or not in the correct format, ask the user to provide the date again using the YYYY-MM-DD format.\n\`;
+        validationPrompt += \`Only accept answers that clearly represent a valid calendar date.\n\`;
+        break;
+  
+      default:
+        validationPrompt += \`This is a text-based question. Please provide a text answer.\n\`;
+        break;
+    }
+  
+    return validationPrompt;
+  }
+
+const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
@@ -48,6 +141,7 @@ import 'dotenv/config'
   
   type StateType = {
     questions: Record<string, string>;
+    history: Record<string, Array<{ answer: string, isCorrect: boolean, question: string }>>;
     messages: any[];
   };
   
@@ -66,14 +160,20 @@ import 'dotenv/config'
     });
   }
   
-  const llm = createOpenAIChat({ modelName: "gpt-4o-mini-2024-07-18" });
+const llm = createOpenAIChat({ modelName: "gpt-4o-mini-2024-07-18" });
 const State = Annotation.Root({
   questions: Annotation<Record<string, string>>({
     reducer: (prev = {}, update = {}) => ({ ...prev, ...update }),
     default: () => ({}),
   }),
+  history: Annotation<Record<string, Array<{ answer: string, isCorrect: boolean, question: string }>>>({
+    reducer: (prev = {}, update = {}) => ({ ...prev, ...update }),
+    default: () => ({}),
+  }),
   messages: Annotation<any[]>({
-    reducer: (x = [], y = []) => x.concat(y),
+    reducer: (x = [], y = []) => {
+      return Array.isArray(x) && Array.isArray(y) ? x.concat(y) : x;
+    },
     default: () => [],
   }),
 });
@@ -86,16 +186,20 @@ const pushMessage = (state: StateType, role: string, content: string,questionTex
 
 const startNode = async (state:StateType) => {
   return new Command({
-    update: pushMessage(state, "assistant", "${openingMessage}",'openActivity:'),
+    update: pushMessage(state, "assistant", openingMessage,'openActivity:'),
     goto: "question1_subgraph",
   });
 };
 
-const createQuestionNodes = (id: string, prompt: string) => {
+const createQuestionNodes = (id: string, question: QuestionType) => {
   const questioner = async (state: StateType) => {
+    let validationPrompt = "You are validating a user's answer to a form question";
+    validationPrompt += generateValidationPrompt(question);
+    validationPrompt += \`Context: \${question.context || "N/A"}\n\`;
+    validationPrompt += \`Question: \${question.text}\n\`;
     const messages = [
       new SystemMessage("You are helping guide a user through a form. Use the context to naturally lead into the question."),
-      new HumanMessage(prompt),
+      new HumanMessage(validationPrompt),
     ];
     const response = await llm.invoke(messages);
     const content = response?.content.toString() || "";
@@ -108,31 +212,59 @@ const createQuestionNodes = (id: string, prompt: string) => {
   const validator = async (state: StateType) => {
     const lastMsg = state.messages.slice().reverse().find((m) => m.role === "assistant")?.content || "";
     const userInput = await getUserInput('');
+    let validationPrompt = \`You are validating a user's answer to a form question.\n\`;
+    validationPrompt += \`\${lastMsg}\n\`;
+    validationPrompt += \`Answer: \${userInput}\n\`;
+    validationPrompt += \`\nIs this a valid response? Respond ONLY with "yes" or "no".\`;
 
     const messages = [
       new SystemMessage("You are a form assistant validating user responses. If the input is vague, off-topic, or empty, respond 'no'. Otherwise, respond 'yes'. Reply with only 'yes' or 'no'."),
-      new HumanMessage(\`Question: \${lastMsg}\\nAnswer: \${userInput}\`),
+      new HumanMessage(validationPrompt),
     ];
 
     const validationResponse = await llm.invoke(messages);
     const isValid = validationResponse?.content.toString()?.toLowerCase().includes("yes");
-    if (!isValid) {
-      pushMessage(state, "assistant", "Your answer seems invalid. Please provide a more clear or relevant response.", \`question \${id} :\`);
-    }    
+
+    const questionKey = \`question\${id}\`;
+    const newHistory = (state.history[questionKey] || []).concat([
+      { answer: userInput, isCorrect: isValid, question: lastMsg },
+    ]);
+
+    const updates: Partial<StateType> = {
+      messages: state.messages.concat([{ role: "user", content: userInput }]),
+      history: { [questionKey]: newHistory },
+    };
+    if (isValid) {
+      updates.questions = { [\`question\${id}\`]: userInput };
+    } else {
+      console.log(
+        \`question \${id} : Your answer seems invalid. Please provide a more clear or relevant response.\`
+      );
+      updates.messages = updates?.messages?.concat([
+        {
+          role: "assistant",
+          content:
+            "Your answer seems invalid. Please provide a more clear or relevant response.",
+        },
+      ]);
+    }
     return new Command({
-      update: {
-        messages: state.messages.concat([{ role: "user", content: userInput }]),
-        questions: isValid ? { [\`question\${id}\`]: userInput } : {},
-      },
+      update: updates,
       goto: isValid ? Command.PARENT : \`rephraser\${id}\`,
       graph: isValid ? Command.PARENT : undefined,
     });
   };
 
   const rephraser = async (state: StateType) => {
+    let rephrasePrompt = \`The user gave an invalid answer.\n\`;
+    rephrasePrompt += \`Rephrase the question to make it clearer.\n\`;
+    rephrasePrompt += generateValidationPrompt(question);
+         rephrasePrompt += \`Context: \${question.context || "N/A"}\n\`;
+    rephrasePrompt += \`Original Question: \${question.text}\`;
+
     const messages = [
       new SystemMessage("The user gave an invalid answer. Rephrase the question in a helpful and clear way using the context."),
-      new HumanMessage(prompt),
+      new HumanMessage(rephrasePrompt),
     ];
     const response = await llm.invoke(messages);
     const content = response?.content.toString() || "";
@@ -154,19 +286,25 @@ const createQuestionNodes = (id: string, prompt: string) => {
 };
 
 ${questions?.map((question, index) => {
-  return `const question${index + 1}_Subgraph = createQuestionNodes("${index + 1}", \`${question?.context?.replace(/`/g, '\\`')}\\n${question?.text?.replace(/`/g, '\\`')}\`);`;
+  return `const question${index + 1}_Subgraph = createQuestionNodes("${index + 1}",questionsData[${index}]);`;
 }).join('\n')}
 
-
-
 const closer = async (state:StateType) => {
-const questionTexts = [${questions.map(q => `\`${q.text ? q.text.replace(/`/g, '\\`') : ''}\``).join(", ")}];
   const responsesArray = Object.entries(state.questions).map(([key, answer]) => {
     const idx = parseInt(key.replace("question", ""), 10) - 1;
-    const question = questionTexts[idx] || "Unknown Question";
-
-    return { question, answer };
-  });
+    let questionData = questionsData[idx]
+    const question = questionData.text || "Unknown Question";
+    const context = questionData.context || "Context";
+    const type = questionData.type || "text";
+    let options = {};
+    if (
+      ["multiple_choice", "dropdown"].includes(questionData.type) &&
+      questionData.options?.length
+    ) {
+      options = questionData.options;
+    }
+    const history = state.history[key] || [];
+    return { question, context, type, answer, options, history };  });
 
   const compiledResponses = {
     responses: responsesArray,
@@ -179,7 +317,7 @@ const questionTexts = [${questions.map(q => `\`${q.text ? q.text.replace(/`/g, '
   rl.close();
 
   return new Command({
-    update: pushMessage(state, "assistant", "${closingMessage}",'closeActivity: '),
+    update: pushMessage(state, "assistant", closingMessage,'closeActivity: '),
   });
 };
 
@@ -204,7 +342,7 @@ const builder = new StateGraph(State)
 export const graph = builder.compile();
 
 async function runGraph() {
-  let state = { questions: {}, messages: [] };
+  let state = { questions: {},history: {}, messages: [] };
   await graph.invoke(state);
 }
 runGraph().catch(console.error);

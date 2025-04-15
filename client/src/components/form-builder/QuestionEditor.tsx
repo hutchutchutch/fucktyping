@@ -107,7 +107,7 @@ export default function QuestionEditor({
     setLocalQuestion(updatedQuestion);
     
     // Notify parent component about the changes
-    if (onChange) {
+    if (onChange && !showContextField) {
       onChange(updatedQuestion);
     }
   };
@@ -123,7 +123,7 @@ export default function QuestionEditor({
     setLocalQuestion(updatedQuestion);
     
     // Notify parent component about the changes
-    if (onChange) {
+    if (onChange && !showContextField) {
       onChange(updatedQuestion);
     }
   };
@@ -140,7 +140,7 @@ export default function QuestionEditor({
     setLocalQuestion(updatedQuestion);
     
     // Notify parent component about the changes
-    if (onChange) {
+    if (onChange && !showContextField) {
       onChange(updatedQuestion);
     }
   };
@@ -156,7 +156,7 @@ export default function QuestionEditor({
     setLocalQuestion(updatedQuestion);
     
     // Notify parent component about the changes
-    if (onChange) {
+    if (onChange && !showContextField) {
       onChange(updatedQuestion);
     }
   };
