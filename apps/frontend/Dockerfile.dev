@@ -18,7 +18,7 @@ COPY packages/tsconfig ./packages/tsconfig/
 COPY apps/frontend ./apps/frontend/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 # Build shared packages first
 RUN pnpm --filter shared build
 RUN pnpm --filter webrtc-client build
