@@ -1,4 +1,5 @@
-import { useToast } from "@hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { Toast } from "@/components/ui/toast";
 import {
   CheckCircle,
   AlertCircle,
@@ -13,10 +14,15 @@ import {
 // notification.info("Don't forget to publish your form");
 // notification.warning("Your subscription is about to expire");
 
+interface NotificationOptions extends Partial<typeof Toast> {
+  title?: string;
+  icon?: React.ReactNode;
+}
+
 export function useNotification() {
   const { toast } = useToast();
 
-  const success = (message, options = {}) => {
+  const success = (message: string, options: NotificationOptions = {}) => {
     toast({
       variant: "default",
       title: options.title || "Success",
@@ -26,7 +32,7 @@ export function useNotification() {
     });
   };
 
-  const error = (message, options = {}) => {
+  const error = (message: string, options: NotificationOptions = {}) => {
     toast({
       variant: "destructive",
       title: options.title || "Error",
@@ -36,7 +42,7 @@ export function useNotification() {
     });
   };
 
-  const info = (message, options = {}) => {
+  const info = (message: string, options: NotificationOptions = {}) => {
     toast({
       variant: "default",
       title: options.title || "Information",
@@ -46,7 +52,7 @@ export function useNotification() {
     });
   };
 
-  const warning = (message, options = {}) => {
+  const warning = (message: string, options: NotificationOptions = {}) => {
     toast({
       variant: "default",
       title: options.title || "Warning",

@@ -1,19 +1,16 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import * as schema from "database";
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from "ws";
+import * as schema from "shared/schemas";
+import 'dotenv/config'
 
-// Parse database URL from environment
+neonConfig.webSocketConstructor = ws;
+
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is required");
+  throw new Error(
+    "DATABASE_URL must be set. Did you forget to provision a database?",
+  );
 }
 
-// Configure postgres client
-const client = postgres(process.env.DATABASE_URL, {
-  max: 10, // Max number of connections in the pool
-});
-
-// Initialize Drizzle ORM with our schema
-export const db = drizzle(client, { schema });
-
-// Export the pg client for direct SQL queries if needed
-export const pgClient = client;
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle({ client: pool, schema });

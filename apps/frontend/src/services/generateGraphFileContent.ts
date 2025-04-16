@@ -6,91 +6,19 @@ type QuestionType = {
   required: boolean;
   order: number;
   options: string[] | null;
+  context?: string;
 };
 export const generateGraphFileContent = (
   formName: string,
   formDescription: string,
   variables: string[],
   questions: QuestionType[],
-  voiceType: string
+  voiceType: string,
+  openingMessage:string,
+  closingMessage:string,
 ) => {
-  const formattedQuestions = questions.length
-    ? questions.map((q, idx) => q.text || `Please answer question ${idx + 1}:`)
-    : ["Please answer the first question:"];
-    const getValidatorCode = (q: QuestionType, idx: number) => {
-      const key = `question${idx + 1}`;
-      const base = `lastUserMessage`; // using this as a reference for the last user message
-      const questionKey = key;
-  
-      switch (q.type) {
-        case "number":
-          return `
-            const isValid = !isNaN(Number(${base}));
-            return new Command({
-              update: { questionResponses: { ${questionKey}: ${base} } },
-              goto: isValid ? Command.PARENT : "rephraser${idx + 1}",
-              graph: isValid ? Command.PARENT : undefined,
-            });
-          `;
-        case "choice":
-          const optionsList:any = JSON.stringify(q.options ?? []);
-          const validOptions = optionsList.map((o:string) => o.toLowerCase());
-          return `
-            const isValid = ${validOptions}.includes(${base.toLowerCase()});
-            return new Command({
-              update: { questionResponses: { ${questionKey}: ${base} } },
-              goto: isValid ? Command.PARENT : "rephraser${idx + 1}",
-              graph: isValid ? Command.PARENT : undefined,
-            });
-          `;
-        case "text":
-        default:
-          return `
-            const isValid = ${base}.trim().length > 0;
-            return new Command({
-              update: { questionResponses: { ${questionKey}: ${base} } },
-              goto: isValid ? Command.PARENT : "rephraser${idx + 1}",
-              graph: isValid ? Command.PARENT : undefined,
-            });
-          `;
-      }
-    };
-  
-  const questionSubgraphs = formattedQuestions.map((question, idx: number) => {
-    return `
-    const questioner${idx + 1} = async (state:StateType) => {
-      return new Command({
-        update: pushMessage(state, "assistant", "${question}"),
-        goto: "validator${idx + 1}",
-      });
-    };
-    const validator${idx + 1} = async (state:StateType) => { 
-      const lastUserMessage = state.messages
-      .slice()
-      .reverse()
-      .find((m: { role: string }) => m.role === "user")?.content || ""; 
-      ${getValidatorCode(questions[idx], idx)} };;
-
-    const rephraser${idx + 1} = async (state:StateType) => {
-      return new Command({
-        update: pushMessage(state, "assistant", "I didn't understand that. Could you please rephrase your answer to question ${idx + 1}?"),
-        goto: "validator${idx + 1}",
-      });
-    };
-
-    const question${idx + 1}Subgraph = new StateGraph(State)
-      .addNode("questioner${idx + 1}", questioner${idx + 1})
-      .addNode("validator${idx + 1}", validator${idx + 1}, { ends: ["rephraser${idx + 1}"] })
-      .addNode("rephraser${idx + 1}", rephraser${idx + 1})
-      .addEdge(START, "questioner${idx + 1}")
-      .addEdge("questioner${idx + 1}", "validator${idx + 1}")
-      .addEdge("validator${idx + 1}", "rephraser${idx + 1}")
-      .addEdge("rephraser${idx + 1}", "validator${idx + 1}")
-      .compile();
-    `;
-  }).join("\n");
-
-  return `// Auto-generated LangGraph for ${formDescription}
+  return `// Auto-generated LangGraph for ${formName}
+import * as fs from 'fs';
 import {
   StateGraph,
   Annotation,
@@ -99,6 +27,47 @@ import {
   END
 } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+import * as readline from "readline";
+import 'dotenv/config'
+let dynamicReplacementValues = ["user", "user@test.com"];
+let variables:string[] = ${JSON.stringify(variables, null, 2)};
+let questionsData = ${JSON.stringify(questions, null, 2)};
+let openingMessage = "${openingMessage}"
+let closingMessage = "${closingMessage}"
+
+function replaceStringsInData(data: any, variables: string[], replacementValues: string[]): any {
+  if (Array.isArray(data)) {
+    return data.map(item => 
+      (typeof item === 'string' ? replaceStringInText(item, variables, replacementValues) : replaceStringsInData(item, variables, replacementValues))
+    );
+  } else if (typeof data === 'object' && data !== null) {
+    const updatedData: Record<string, any> = {};
+    for (const key in data) {
+      updatedData[key] = replaceStringsInData(data[key], variables, replacementValues);
+    }
+    return updatedData;
+  } else if (typeof data === 'string') {
+    return replaceStringInText(data, variables, replacementValues);
+  }
+  return data;
+}
+
+function replaceStringInText(text: string, variables: string[], replacementValues: string[]): string {
+  let updatedText = text;
+  variables.forEach((variable, index) => {
+    const regex = new RegExp(\`\\\\\${variable}\`, "g");
+    if (regex.test(updatedText)) {
+      updatedText = updatedText.replace(regex, replacementValues[index]);
+    }
+  });
+  return updatedText;
+}
+
+questionsData = replaceStringsInData(questionsData, variables, dynamicReplacementValues);
+openingMessage = replaceStringsInData(openingMessage, variables, dynamicReplacementValues);
+closingMessage = replaceStringsInData(closingMessage, variables, dynamicReplacementValues);
+
 
 type QuestionType = {
   id: string | number;
@@ -107,55 +76,277 @@ type QuestionType = {
   required: boolean;
   order: number;
   options: string[] | null;
+  context?: string;
+  validation?: {
+    min: number;
+    max: number;
+  };
 };
 
-type StateType = {
-  questionResponses: Record<string, string>;
-  messages: any[];
-};
+  function generateValidationPrompt(question: QuestionType): string {
+    let validationPrompt = '';
+  
+    switch (question.type) {
+      case "multiple_choice":
+        if (question.options?.length) {
+          validationPrompt += \`This is a multiple choice question. The user may select one or more of the following options: \${question.options.join(", ")}\n\`;
+        }
+        break;
+  
+      case "dropdown":
+        if (question.options?.length) {
+          validationPrompt += \`This is a dropdown question. The user may select one option from: \${question.options.join(", ")}\n\`;
+        }
+        break;
+  
+      case "yes_no":
+        validationPrompt += \`Please note, this is a yes or no question.\n\`;
+        break;
+  
+      case "text":
+        validationPrompt += \`This is a text-based question. Please provide a text answer.\n\`;
+        break;
+  
+      case "rating":
+        validationPrompt += \`This is a rating question. Please provide a rating between \${question?.validation?.min} and \${question?.validation?.max}.\n\`;
+        break;
+  
+      case "date":
+        validationPrompt += \`This is a date-based question. Please ensure the response is a valid date in the format YYYY-MM-DD (for example, 2025-04-05).\n\`;
+        validationPrompt += \`If the response is not a valid date or not in the correct format, ask the user to provide the date again using the YYYY-MM-DD format.\n\`;
+        validationPrompt += \`Only accept answers that clearly represent a valid calendar date.\n\`;
+        break;
+  
+      default:
+        validationPrompt += \`This is a text-based question. Please provide a text answer.\n\`;
+        break;
+    }
+  
+    return validationPrompt;
+  }
 
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  
+  function getUserInput(prompt: string): Promise<string> {
+    return new Promise((resolve) => {
+      rl.question(prompt + "\\n> ", (answer) => {
+        resolve(answer.trim());
+      });
+    });
+  }
 
-const llm = new ChatOpenAI({ temperature: 0.7 });
+  
+  type StateType = {
+    questions: Record<string, string>;
+    history: Record<string, Array<{ answer: string, isCorrect: boolean, question: string }>>;
+    messages: any[];
+  };
+  
+  function createOpenAIChat({
+    modelName,
+    openaiApiKey = process.env.OPENAI_API_KEY,
+    ...kwargs
+  }: any) {
+    if (!openaiApiKey) {
+      throw new Error("API key is required");
+    }
+  
+    return new ChatOpenAI({
+      modelName,
+      openAIApiKey: openaiApiKey,
+    });
+  }
+  
+const llm = createOpenAIChat({ modelName: "gpt-4o-mini-2024-07-18" });
 const State = Annotation.Root({
-  questionResponses: Annotation<Record<string, string>>({
+  questions: Annotation<Record<string, string>>({
+    reducer: (prev = {}, update = {}) => ({ ...prev, ...update }),
+    default: () => ({}),
+  }),
+  history: Annotation<Record<string, Array<{ answer: string, isCorrect: boolean, question: string }>>>({
     reducer: (prev = {}, update = {}) => ({ ...prev, ...update }),
     default: () => ({}),
   }),
   messages: Annotation<any[]>({
-    reducer: (x = [], y = []) => x.concat(y),
+    reducer: (x = [], y = []) => {
+      return Array.isArray(x) && Array.isArray(y) ? x.concat(y) : x;
+    },
     default: () => [],
   }),
 });
 
-
-const pushMessage = (state:StateType, role: string, content: string) => ({
-  messages: state.messages.concat([{ role, content }]),
-});
+const pushMessage = (state: StateType, role: string, content: string,questionText: string) => {
+  console.log(\`\${questionText} \${content}\`);
+  const newMessage = { role, content };
+  return { messages: state.messages.concat([newMessage]) };
+};
 
 const startNode = async (state:StateType) => {
   return new Command({
-    update: pushMessage(state, "assistant", "${formDescription}"),
+    update: pushMessage(state, "assistant", openingMessage,'openActivity:'),
     goto: "question1_subgraph",
   });
 };
 
-${questionSubgraphs}
+const createQuestionNodes = (id: string, question: QuestionType) => {
+  const questioner = async (state: StateType) => {
+    let validationPrompt = "You are validating a user's answer to a form question";
+    validationPrompt += generateValidationPrompt(question);
+    validationPrompt += \`Context: \${question.context || "N/A"}\n\`;
+    validationPrompt += \`Question: \${question.text}\n\`;
+    const messages = [
+      new SystemMessage("You are helping guide a user through a form. Use the context to naturally lead into the question."),
+      new HumanMessage(validationPrompt),
+    ];
+    const response = await llm.invoke(messages);
+    const content = response?.content.toString() || "";
+    return new Command({
+      update: pushMessage(state, "assistant", content,\`question \${id} :\`),
+      goto: \`validator\${id}\`,
+    });
+  };
+
+  const validator = async (state: StateType) => {
+    const lastMsg = state.messages.slice().reverse().find((m) => m.role === "assistant")?.content || "";
+    const userInput = await getUserInput('');
+    let validationPrompt = \`You are validating a user's answer to a form question.\n\`;
+    validationPrompt += \`\${lastMsg}\n\`;
+    validationPrompt += \`Answer: \${userInput}\n\`;
+    validationPrompt += \`\nIs this a valid response? Respond ONLY with "yes" or "no".\`;
+
+    const messages = [
+      new SystemMessage("You are a form assistant validating user responses. If the input is vague, off-topic, or empty, respond 'no'. Otherwise, respond 'yes'. Reply with only 'yes' or 'no'."),
+      new HumanMessage(validationPrompt),
+    ];
+
+    const validationResponse = await llm.invoke(messages);
+    const isValid = validationResponse?.content.toString()?.toLowerCase().includes("yes");
+
+    const questionKey = \`question\${id}\`;
+    const newHistory = (state.history[questionKey] || []).concat([
+      { answer: userInput, isCorrect: isValid, question: lastMsg },
+    ]);
+
+    const updates: Partial<StateType> = {
+      messages: state.messages.concat([{ role: "user", content: userInput }]),
+      history: { [questionKey]: newHistory },
+    };
+    if (isValid) {
+      updates.questions = { [\`question\${id}\`]: userInput };
+    } else {
+      console.log(
+        \`question \${id} : Your answer seems invalid. Please provide a more clear or relevant response.\`
+      );
+      updates.messages = updates?.messages?.concat([
+        {
+          role: "assistant",
+          content:
+            "Your answer seems invalid. Please provide a more clear or relevant response.",
+        },
+      ]);
+    }
+    return new Command({
+      update: updates,
+      goto: isValid ? Command.PARENT : \`rephraser\${id}\`,
+      graph: isValid ? Command.PARENT : undefined,
+    });
+  };
+
+  const rephraser = async (state: StateType) => {
+    let rephrasePrompt = \`The user gave an invalid answer.\n\`;
+    rephrasePrompt += \`Rephrase the question to make it clearer.\n\`;
+    rephrasePrompt += generateValidationPrompt(question);
+         rephrasePrompt += \`Context: \${question.context || "N/A"}\n\`;
+    rephrasePrompt += \`Original Question: \${question.text}\`;
+
+    const messages = [
+      new SystemMessage("The user gave an invalid answer. Rephrase the question in a helpful and clear way using the context."),
+      new HumanMessage(rephrasePrompt),
+    ];
+    const response = await llm.invoke(messages);
+    const content = response?.content.toString() || "";
+    return new Command({
+      update: pushMessage(state, "assistant", content, \`question \${id} :\`),
+      goto: \`validator\${id}\`,
+    });
+  };
+
+  return new StateGraph(State)
+    .addNode(\`questioner\${id}\`, questioner)
+    .addNode(\`validator\${id}\`, validator, { ends: [\`rephraser\${id}\`] })
+    .addNode(\`rephraser\${id}\`, rephraser)
+    .addEdge(START, \`questioner\${id}\`)
+    .addEdge(\`questioner\${id}\`, \`validator\${id}\`)
+    .addEdge(\`validator\${id}\`, \`rephraser\${id}\`)
+    .addEdge(\`rephraser\${id}\`, \`validator\${id}\`)
+    .compile();
+};
+
+${questions?.map((question, index) => {
+  return `const question${index + 1}_Subgraph = createQuestionNodes("${index + 1}",questionsData[${index}]);`;
+}).join('\n')}
 
 const closer = async (state:StateType) => {
+  const responsesArray = Object.entries(state.questions).map(([key, answer]) => {
+    const idx = parseInt(key.replace("question", ""), 10) - 1;
+    let questionData = questionsData[idx]
+    const question = questionData.text || "Unknown Question";
+    const context = questionData.context || "Context";
+    const type = questionData.type || "text";
+    let options = {};
+    if (
+      ["multiple_choice", "dropdown"].includes(questionData.type) &&
+      questionData.options?.length
+    ) {
+      options = questionData.options;
+    }
+    const history = state.history[key] || [];
+    return { question, context, type, answer, options, history };  });
+
+  const compiledResponses = {
+    responses: responsesArray,
+    timestamp: new Date().toISOString(),
+  };
+
+  const fileName = '${formName.replace(/\s+/g, '_').toLowerCase()}_responses.json';
+  fs.writeFileSync(fileName, JSON.stringify(compiledResponses, null, 2));
+
+  rl.close();
+
   return new Command({
-    update: pushMessage(state, "assistant", "Thank you for completing the form. We will process your responses shortly."),
+    update: pushMessage(state, "assistant", closingMessage,'closeActivity: '),
   });
 };
 
 const builder = new StateGraph(State)
-  .addNode("start", startNode, { ends: ["question1_subgraph"] })
-  ${formattedQuestions.map((_, idx) => `.addNode("question${idx + 1}_subgraph", question${idx + 1}Subgraph, { ends: ["${idx + 2 <= formattedQuestions.length ? `question${idx + 2}_subgraph` : "closer"}"] })`).join("\n  ")}
+  .addNode("start", startNode, { ends: ["question1_Subgraph"] })
+  ${questions.map((_, idx) => {
+    const curr = `question${idx + 1}_Subgraph`;
+    const next = idx < questions.length - 1 ? `question${idx + 2}_Subgraph` : 'closer';
+    return `.addNode("${curr}", ${curr}, { ends: ["${next}"] })`;
+  }).join('\n  ')}
   .addNode("closer", closer)
   .addEdge(START, "start")
-  ${formattedQuestions.map((_, idx) => `.addEdge("question${idx + 1}_subgraph", "${idx + 2 <= formattedQuestions.length ? `question${idx + 2}_subgraph` : "closer"}")`).join("\n  ")}
+  .addEdge("start", "question1_Subgraph")
+  ${questions.map((_, idx) => {
+    const curr = `question${idx + 1}_Subgraph`;
+    const next = idx < questions.length - 1 ? `question${idx + 2}_Subgraph` : 'closer';
+    return `.addEdge("${curr}", "${next}")`;
+  }).join('\n  ')}
   .addEdge("closer", END);
 
-export const graph = builder.compile();`;
+
+export const graph = builder.compile();
+
+async function runGraph() {
+  let state = { questions: {},history: {}, messages: [] };
+  await graph.invoke(state);
+}
+runGraph().catch(console.error);
+`;
 };
 
 
@@ -167,6 +358,8 @@ export const downloadGraphFile = (
   variables: string[],
   questions: QuestionType[],
   voiceType: string,
+  openingMessage:string,
+  closingMessage:string,
 ) => {
   const fileContent = generateGraphFileContent(
     formName,
@@ -174,6 +367,8 @@ export const downloadGraphFile = (
     variables,
     questions,
     voiceType,
+    openingMessage,
+    closingMessage,
   );
   const blob = new Blob([fileContent], { type: "text/javascript" });
   const url = URL.createObjectURL(blob);

@@ -1,0 +1,22 @@
+---
+description: Voice interface implementation guidelines
+globs: ["**/voice-agent/**/*.tsx", "**/form-responder/**/*.tsx"]
+alwaysApply: false
+---
+
+# Voice Interface Guidelines
+
+- Implement voice interfaces with WebRTC for audio streaming
+- Ensure proper audio visualization and feedback during recording
+- Implement clear user feedback mechanisms for voice interactions
+- Use the Web Audio API for voice recording and processing
+- Ensure proper handling of microphone permissions
+- Provide fallback text input when voice recognition fails
+- Implement proper error handling for voice recognition issues
+- Use consistent voice interaction patterns across the application
+- Ensure voice interface components are accessible
+- Implement proper silence detection and auto-completion
+- Use visual cues to indicate recording status
+- Ensure voice data is handled securely and with proper privacy considerations
+- Implement voice recognition with appropriate feedback mechanisms
+- Use consistent voice prompt patterns

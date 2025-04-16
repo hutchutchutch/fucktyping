@@ -1,0 +1,23 @@
+---
+description: Monorepo structure and management practices
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Monorepo Structure and Management
+
+- Follow Turborepo conventions for monorepo structure
+- Use pnpm for package management
+- Maintain clean separation between packages and apps
+- Use consistent versioning across the monorepo
+- Share types and utilities through the shared package
+- Avoid unnecessary dependencies between packages
+- Follow consistent naming conventions across packages
+- Implement proper workspace configuration
+- Use consistent build and development scripts
+- Implement proper dependency management between packages
+- Avoid duplication of code across packages
+- Use proper package exports and imports
+- Follow consistent documentation patterns
+- Implement proper testing for each package
+- Use consistent tooling across the monorepo

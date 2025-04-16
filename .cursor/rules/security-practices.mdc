@@ -1,0 +1,23 @@
+---
+description: Security best practices for the application
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+alwaysApply: true
+---
+
+# Security Best Practices
+
+- Implement proper authentication and authorization
+- Use secure connections (HTTPS) for all API requests
+- Implement proper input validation and sanitization
+- Protect against common web vulnerabilities (XSS, CSRF, SQL Injection)
+- Store sensitive data securely (e.g., API keys, credentials)
+- Never commit secrets or API keys to the repository
+- Implement proper rate limiting for API endpoints
+- Use secure cookies with appropriate flags
+- Implement proper CORS policies
+- Follow the principle of least privilege
+- Implement proper error handling without leaking sensitive information
+- Use environment variables for configuration
+- Implement proper logging without exposing sensitive data
+- Regularly update dependencies for security patches
+- Implement proper content security policies

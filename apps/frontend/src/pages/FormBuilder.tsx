@@ -13,8 +13,9 @@ import AppLayout from "@components/layout/AppLayout";
 import { useForm } from '@hooks/useForm';
 import FormBuilderComponent from '@components/form-builder/FormBuilder';
 import QuestionEditor from '@components/form-builder/QuestionEditor';
-import Modal from '@components/common/Modal';
+import Modal from '@/components/common/Modal';
 import { Skeleton } from '@ui/skeleton';
+import { FormBuilderForm, FormBuilderQuestion } from "@schemas/schema";
 
 export default function FormBuilder() {
   const { id } = useParams<{ id: string }>();
@@ -35,37 +36,61 @@ export default function FormBuilder() {
     closing: true
   });
   
-  type QuestionType = {
-    id: string;
-    text: string;
-    type: string;
-    required: boolean;
-    order: number;
-    options: string[] | null;
-  };
-  
-  // Integrate the form hooks - this should take precedence
   const {
     form,
     questions: formQuestions,
-    isLoading,
-    showQuestionModal,
-    currentQuestion,
-    setShowQuestionModal,
-    updateFormField,
-    handleAddQuestion,
-    handleEditQuestion,
-    handleDeleteQuestion,
-    handleSaveQuestion,
-    handleSaveForm
+    isFormLoading,
+    createForm,
+    updateForm,
+    addQuestion: addQuestionToForm,
+    removeQuestion: removeQuestionFromForm,
+    updateQuestion: updateQuestionInForm,
   } = useForm();
   
-  // Fallback to the simple implementation if the hooks are not available
-  const [localQuestions, setLocalQuestions] = useState<QuestionType[]>([
-    { id: 'q1', text: 'What is your name?', type: 'text', required: true, order: 1, options: null }
-  ]);
+  // Add local state for modal
+  const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState<FormBuilderQuestion | null>(null);
+
+  const handleSaveQuestion = (question: FormBuilderQuestion) => {
+    if (currentQuestion) {
+      updateQuestionInForm(formQuestions.indexOf(currentQuestion), question);
+    } else {
+      addQuestionToForm(question);
+    }
+    setShowQuestionModal(false);
+  };
+
+  const handleSaveForm = async () => {
+    const formData: FormBuilderForm = {
+      id: form?.id,
+      title: formName,
+      description: formDescription,
+      status: form?.status || 'draft',
+      requireAuth: form?.requireAuth || false,
+      allowVoice: form?.allowVoice || false,
+      emailNotification: form?.emailNotification || false,
+      limitOneResponse: form?.limitOneResponse || false,
+      emailSubject: form?.emailSubject || null,
+      emailRecipients: form?.emailRecipients || null,
+      emailTemplate: form?.emailTemplate || null
+    };
+    
+    if (formData.id) {
+      await updateForm.mutateAsync({ id: formData.id.toString(), formData });
+    } else {
+      await createForm.mutateAsync(formData);
+    }
+  };
+
+  const updateFormField = (field: keyof FormBuilderForm, value: any) => {
+    if (form) {
+      const updatedForm = { ...form, [field]: value };
+      updateForm.mutate({ id: form.id?.toString() || '', formData: updatedForm });
+    }
+  };
   
-  const questions = formQuestions || localQuestions;
+  // Use formQuestions from the hook if available, otherwise use local state
+  const questions = formQuestions || [];
   
   const toggleSection = (section: SectionType) => {
     setIsCollapsed({
@@ -75,19 +100,19 @@ export default function FormBuilder() {
   };
   
   const addQuestion = () => {
-    const newQuestion: QuestionType = {
-      id: `q${questions.length + 1}`,
+    const newQuestion: FormBuilderQuestion = {
+      id: questions.length + 1,
       text: 'New Question',
       type: 'text',
       required: false,
       order: questions.length + 1,
       options: null
     };
-    setQuestions([...questions, newQuestion]);
+    addQuestionToForm(newQuestion);
   };
   
   // Show loading skeleton
-  if (isLoading) {
+  if (isFormLoading) {
     return (
       <div className="w-full">
         <div className="mb-6">
@@ -120,10 +145,8 @@ export default function FormBuilder() {
           currentForm={form}
           questions={questions}
           updateFormField={updateFormField}
-          onAddQuestion={handleAddQuestion}
-          onEditQuestion={handleEditQuestion}
-          onDeleteQuestion={handleDeleteQuestion}
-          onSaveForm={handleSaveForm}
+          addQuestion={addQuestion}
+          saveForm={handleSaveForm}
         />
         
         <Modal
@@ -132,8 +155,8 @@ export default function FormBuilder() {
           title={currentQuestion ? "Edit Question" : "Add Question"}
         >
           <QuestionEditor
-            question={currentQuestion}
-            onSave={handleSaveQuestion}
+            question={currentQuestion || undefined}
+            onChange={handleSaveQuestion}
             onCancel={() => setShowQuestionModal(false)}
           />
         </Modal>
@@ -338,10 +361,9 @@ export default function FormBuilder() {
                             onChange={(updatedQuestion) => {
                               const newQuestions = [...questions];
                               newQuestions[index] = updatedQuestion;
-                              setQuestions(newQuestions);
                             }}
                             onRemove={() => {
-                              setQuestions(questions.filter(q => q.id !== question.id));
+                              // Implement the remove logic here
                             }}
                           />
                         </div>

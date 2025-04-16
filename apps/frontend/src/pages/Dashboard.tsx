@@ -3,9 +3,9 @@ import { useLocation } from "wouter";
 import { PlusIcon, Cog6ToothIcon, QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { Button } from "@ui/button";
 import Stats from "@components/dashboard/Stats";
-import FormsList from "@components/dashboard/FormsList";
-import ResponseViewer from "@components/dashboard/ResponseViewer";
-import Analytics from '@components/dashboard/Analytics';
+import FormsList from "@/components/dashboard/FormsList";
+import ResponseViewer from "@/components/dashboard/ResponseViewer";
+import Analytics from '@/components/dashboard/Analytics';
 import { useAuthContext } from '@context/AuthContext';
 
 export default function Dashboard() {

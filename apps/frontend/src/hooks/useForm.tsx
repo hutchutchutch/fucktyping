@@ -1,27 +1,43 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@lib/queryClient";
 import { useToast } from "@hooks/use-toast";
-import {  FormWithQuestions, Question  } from "@schemas/schema";
+import { FormBuilderForm, FormBuilderQuestion, FormWithQuestions, Question } from "@schemas/schema";
+
+interface ExtendedFormBuilderQuestion extends FormBuilderQuestion {
+  helpText?: string;
+}
 
 export function useForm(formId?: string) {
   const { toast } = useToast();
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<ExtendedFormBuilderQuestion[]>([]);
   
   // Fetch form if editing an existing form
   const { data: form, isLoading: isFormLoading } = useQuery<FormWithQuestions>({
-    queryKey: formId ? [`/api/forms/${formId}`] : null,
+    queryKey: formId ? [`/api/forms/${formId}`] : [],
     enabled: !!formId,
-    onSuccess: (formData) => {
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/forms/${formId}`);
+      const formData = await response.json() as FormWithQuestions;
       if (formData.questions) {
-        setQuestions(formData.questions);
+        // Convert to FormBuilderQuestion[]
+        setQuestions(formData.questions.map((q: Question) => ({
+          id: q.id,
+          text: q.text,
+          type: q.type,
+          required: q.required,
+          order: q.order,
+          options: q.options || null,
+          helpText: q.helpText
+        })));
       }
+      return formData;
     }
   });
   
   // Create new form
   const createForm = useMutation({
-    mutationFn: async (formData: any) => {
+    mutationFn: async (formData: FormBuilderForm) => {
       const response = await apiRequest("POST", "/api/forms", formData);
       return response.json();
     },
@@ -33,16 +49,15 @@ export function useForm(formId?: string) {
       
       // Create questions for the new form
       if (questions.length > 0) {
-        const questionsWithFormId = questions.map(q => ({
-          ...q,
-          formId: data.id
-        }));
-        
         questions.forEach(async (question, index) => {
           await createQuestion.mutateAsync({
-            ...question,
+            text: question.text,
+            type: question.type,
+            required: question.required,
+            order: index + 1,
+            options: question.options,
             formId: data.id,
-            order: index + 1
+            description: question.helpText
           });
         });
       }
@@ -61,7 +76,7 @@ export function useForm(formId?: string) {
   
   // Update existing form
   const updateForm = useMutation({
-    mutationFn: async ({ id, formData }: { id: string, formData: any }) => {
+    mutationFn: async ({ id, formData }: { id: string, formData: FormBuilderForm }) => {
       const response = await apiRequest("PUT", `/api/forms/${id}`, formData);
       return response.json();
     },
@@ -86,7 +101,7 @@ export function useForm(formId?: string) {
   
   // Create a question
   const createQuestion = useMutation({
-    mutationFn: async (questionData: any) => {
+    mutationFn: async (questionData: Omit<FormBuilderQuestion, 'id'> & { formId: number }) => {
       const response = await apiRequest("POST", "/api/questions", questionData);
       return response.json();
     },
@@ -99,7 +114,7 @@ export function useForm(formId?: string) {
   
   // Update a question
   const updateQuestion = useMutation({
-    mutationFn: async ({ id, questionData }: { id: number, questionData: any }) => {
+    mutationFn: async ({ id, questionData }: { id: number, questionData: Partial<FormBuilderQuestion> }) => {
       const response = await apiRequest("PUT", `/api/questions/${id}`, questionData);
       return response.json();
     },
@@ -124,16 +139,15 @@ export function useForm(formId?: string) {
   });
   
   // Add a question to the current form
-  const addQuestion = (question: Partial<Question>) => {
-    const newQuestion = {
+  const addQuestion = (question: Partial<FormBuilderQuestion>) => {
+    const newQuestion: FormBuilderQuestion = {
       id: questions.length + 1,
-      formId: formId ? parseInt(formId) : 0,
       text: question.text || "",
       type: question.type || "text",
+      required: question.required ?? true,
       order: questions.length + 1,
       options: question.options || null,
-      required: question.required ?? true,
-      createdAt: new Date()
+      description: question.description
     };
     
     setQuestions([...questions, newQuestion]);
@@ -153,7 +167,7 @@ export function useForm(formId?: string) {
   };
   
   // Update a question in the current form
-  const updateQuestionInList = (index: number, updatedQuestion: Partial<Question>) => {
+  const updateQuestionInList = (index: number, updatedQuestion: Partial<FormBuilderQuestion>) => {
     const newQuestions = [...questions];
     newQuestions[index] = { ...newQuestions[index], ...updatedQuestion };
     setQuestions(newQuestions);

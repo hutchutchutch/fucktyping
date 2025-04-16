@@ -1,37 +1,52 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { useParams, Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import VoiceInterface from '@components/form-responder/VoiceInterface';
-import { apiRequest } from '@services/api';
+import { apiRequest } from '@lib/queryClient';
 import Header from "@components/layout/Header";
 import { Button } from '@ui/button';
 import { Progress } from '@ui/progress';
 import { Skeleton } from '@ui/skeleton';
 import { CheckCircle } from 'lucide-react';
-import Card from '@components/common/Card';
+import Card from '@/components/common/Card';
+
+// Add at the top of the file after imports
+declare global {
+  interface Window {
+    notification?: {
+      success(message: string): void;
+      error(message: string): void;
+    }
+  }
+}
 
 // Fallback implementation for Card if the component doesn't exist
-const CardFallback = ({ children, className = '', ...props }) => (
+const CardFallback = ({ children, className = '', ...props }: { children: ReactNode; className?: string; [key: string]: any }) => (
   <div className={`bg-white rounded-lg shadow overflow-hidden ${className}`} {...props}>
     {children}
   </div>
 );
 
-const CardContent = ({ children, className = '', ...props }) => (
+const CardContent = ({ children, className = '', ...props }: { children: ReactNode; className?: string; [key: string]: any }) => (
   <div className={className} {...props}>{children}</div>
 );
 
+type CardComponentType = {
+  (props: { children: ReactNode; className?: string; [key: string]: any }): JSX.Element;
+  Content: typeof CardContent;
+};
+
 // Determine which Card component to use
-const CardComponent = typeof Card !== 'undefined' ? Card : CardFallback;
-if (typeof CardComponent === 'object' && !CardComponent.Content) {
+const CardComponent = (typeof Card !== 'undefined' ? Card : CardFallback) as CardComponentType;
+if (!CardComponent.Content) {
   CardComponent.Content = CardContent;
 }
 
 // Simple notification system as a fallback
 const useNotificationFallback = () => {
   return {
-    success: (message) => console.log('Success:', message),
-    error: (message) => console.error('Error:', message)
+    success: (message: string) => console.log('Success:', message),
+    error: (message: string) => console.error('Error:', message)
   };
 };
 

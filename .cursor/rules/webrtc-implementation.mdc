@@ -1,0 +1,23 @@
+---
+description: WebRTC implementation standards
+globs: ["**/rtc/**/*.ts", "**/webrtc-client/**/*.ts", "**/frontend/src/services/websocketService.ts"]
+alwaysApply: false
+---
+
+# WebRTC Implementation Standards
+
+- Follow WebRTC best practices for peer-to-peer connections
+- Implement proper signaling server communication
+- Handle ICE candidates and SDP exchanges correctly
+- Implement proper error handling for connection failures
+- Use secure WebRTC connections with DTLS/SRTP
+- Implement reconnection logic for dropped connections
+- Handle edge cases like NAT traversal using the TURN server
+- Ensure proper audio quality settings for voice communication
+- Implement fallback mechanisms for challenging network environments
+- Use consistent patterns for stream handling
+- Ensure proper cleanup of resources when connections end
+- Implement proper logging for connection issues
+- Handle browser compatibility issues appropriately
+- Ensure proper handling of microphone permissions
+- Follow consistent patterns for signaling state management

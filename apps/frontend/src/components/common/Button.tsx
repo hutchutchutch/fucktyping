@@ -1,8 +1,9 @@
-import { Button as ShadcnButton } from "@ui/button";
-import { cn } from "@lib/utils";
+import { Button as ShadcnButton } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { forwardRef } from "react";
+import { ButtonProps } from "@/components/ui/button";
 
-const Button = forwardRef(
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ children, variant = "default", className, ...props }, ref) => {
     return (
       <ShadcnButton

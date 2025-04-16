@@ -1,5 +1,5 @@
 import { useParams } from "wouter";
-import ResponseViewerComponent from "@components/dashboard/ResponseViewer";
+import ResponseViewerComponent from "@/components/dashboard/ResponseViewer";
 
 export default function ResponseViewer() {
   const { id } = useParams<{ id: string }>();

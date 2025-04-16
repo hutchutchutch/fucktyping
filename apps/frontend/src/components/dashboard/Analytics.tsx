@@ -1,4 +1,4 @@
-import Card from "@components/common/Card";
+import Card from "../common/Card";
 import {
   Bar,
   BarChart,
@@ -12,7 +12,15 @@ import {
   YAxis,
 } from "recharts";
 
-function Analytics({ stats }) {
+interface AnalyticsStats {
+  activeForms: number;
+  totalResponses: number;
+  responseRate: string;
+  weeklyResponses: Array<{ name: string; responses: number }>;
+  formPerformance: Array<{ name: string; responses: number; completion: number }>;
+}
+
+function Analytics({ stats }: { stats?: AnalyticsStats }) {
   const demoData = {
     activeForms: 8,
     totalResponses: 124,

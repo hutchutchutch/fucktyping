@@ -6,9 +6,27 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
-} from "@ui/dialog";
-import Button from "@components/common/Button";
-import { cn } from "@lib/utils";
+} from "@/components/ui/dialog";
+import Button from "./Button";
+import { cn } from "@/lib/utils";
+import { ComponentProps } from "react";
+import { ButtonProps } from "@/components/ui/button";
+
+interface ModalProps extends ComponentProps<typeof Dialog> {
+  title?: string;
+  description?: string;
+  footer?: React.ReactNode;
+  className?: string;
+}
+
+interface ModalFooterProps {
+  cancelText?: string;
+  confirmText?: string;
+  onCancel?: () => void;
+  onConfirm?: () => void;
+  confirmDisabled?: boolean;
+  confirmVariant?: ButtonProps["variant"];
+}
 
 function Modal({ 
   open, 
@@ -19,7 +37,7 @@ function Modal({
   footer,
   className, 
   ...props 
-}) {
+}: ModalProps & { children?: React.ReactNode }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange} {...props}>
       <DialogContent className={cn("sm:max-w-[425px]", className)}>
@@ -44,7 +62,7 @@ Modal.Footer = function ModalFooter({
   confirmDisabled = false,
   confirmVariant = "default",
   ...props 
-}) {
+}: ModalFooterProps & ComponentProps<typeof DialogFooter>) {
   return (
     <DialogFooter className="gap-2 sm:gap-0" {...props}>
       <DialogClose asChild>

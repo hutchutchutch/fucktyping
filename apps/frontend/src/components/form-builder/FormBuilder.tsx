@@ -15,7 +15,7 @@ import { FormBuilderForm, FormBuilderQuestion } from "@schemas/schema";
 interface FormBuilderProps {
   currentForm?: FormBuilderForm;
   questions?: FormBuilderQuestion[];
-  updateFormField?: (field: string, value: any) => void;
+  updateFormField?: (field: keyof FormBuilderForm, value: any) => void;
   addQuestion?: (question: FormBuilderQuestion) => void;
   saveForm?: () => Promise<void>;
   publishForm?: () => Promise<void>;
@@ -73,7 +73,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({
   // Helper to handle form field updates in standalone mode
   const handleUpdateFormField = (field: string, value: any) => {
     if (propUpdateFormField) {
-      propUpdateFormField(field, value);
+      propUpdateFormField(field as keyof FormBuilderForm, value);
     } else if (contextValues?.setCurrentForm) {
       const updatedForm = { ...currentForm, [field]: value };
       contextValues.setCurrentForm(updatedForm);
@@ -98,12 +98,12 @@ const FormBuilder: React.FC<FormBuilderProps> = ({
     setShowQuestionEditor(true);
   };
   
-  const handleEditQuestion = (question: Question) => {
+  const handleEditQuestion = (question: FormBuilderQuestion) => {
     setEditingQuestion(question);
     setShowQuestionEditor(true);
   };
   
-  const handleQuestionSave = (question: Question) => {
+  const handleQuestionSave = (question: FormBuilderQuestion) => {
     if (standalone) {
       if (editingQuestion) {
         // Update existing question

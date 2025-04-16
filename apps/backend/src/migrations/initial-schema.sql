@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS questions (
   id SERIAL PRIMARY KEY,
   form_id INTEGER NOT NULL REFERENCES forms(id) ON DELETE CASCADE,
   text TEXT NOT NULL,
+  context TEXT NOT NULL,
   type TEXT NOT NULL,
   "order" INTEGER NOT NULL,
   options JSONB,
