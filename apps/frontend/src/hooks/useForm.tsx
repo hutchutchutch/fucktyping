@@ -1,8 +1,30 @@
 import { useState } from "react";
-import { useQuery, useMutation, UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@lib/queryClient";
 import { useToast } from "@hooks/use-toast";
-import { FormBuilderForm, FormBuilderQuestion, FormWithQuestions, Question } from "@schemas/schema";
+import type { Question, Form } from "@schemas/schema";
+
+interface FormBuilderQuestion {
+  id: number;
+  text: string;
+  type: string;
+  required: boolean;
+  order: number;
+  options: any[] | null;
+  description?: string;
+}
+
+interface FormBuilderForm {
+  title: string;
+  description?: string;
+  status?: string;
+  isActive?: boolean;
+  collectEmail?: boolean;
+}
+
+interface FormWithQuestions extends Form {
+  questions: Question[];
+}
 
 interface ExtendedFormBuilderQuestion extends FormBuilderQuestion {
   helpText?: string;
@@ -13,7 +35,7 @@ export function useForm(formId?: string) {
   const [questions, setQuestions] = useState<ExtendedFormBuilderQuestion[]>([]);
   
   // Fetch form if editing an existing form
-  const { data: form, isLoading: isFormLoading } = useQuery<FormWithQuestions>({
+  const { data: form, isLoading: isFormLoading } = useQuery({
     queryKey: formId ? [`/api/forms/${formId}`] : [],
     enabled: !!formId,
     queryFn: async () => {
@@ -21,14 +43,14 @@ export function useForm(formId?: string) {
       const formData = await response.json() as FormWithQuestions;
       if (formData.questions) {
         // Convert to FormBuilderQuestion[]
-        setQuestions(formData.questions.map((q: Question) => ({
+        setQuestions(formData.questions.map((q) => ({
           id: q.id,
           text: q.text,
           type: q.type,
           required: q.required,
           order: q.order,
           options: q.options || null,
-          helpText: q.helpText
+          helpText: (q as any).description
         })));
       }
       return formData;

@@ -46,17 +46,21 @@ services:
 
   frontend:
     build:
-      context: ../apps/frontend
-      dockerfile: Dockerfile.dev
+      context: ..
+      dockerfile: apps/frontend/Dockerfile.dev
     ports:
       - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:3000
     volumes:
-      - ../apps/frontend:/app
-      - /app/node_modules
-    depends_on:
-      - backend
+      - ../apps/frontend:/app/apps/frontend
+      - ../packages/lib:/app/packages/lib
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    networks:
+      - app-network
 
 volumes:
   postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
