@@ -1,44 +1,43 @@
 # ==== BUILDER ====
 FROM node:18-alpine AS builder
-WORKDIR /app
+RUN apk add --no-cache python3 make g++
 
-# Install pnpm
+WORKDIR /app
 RUN npm install -g pnpm
 
-# Copy package files and workspace config
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
-
-# Copy shared packages
 COPY packages/shared ./packages/shared/
 COPY packages/webrtc-client ./packages/webrtc-client/
+COPY packages/lib ./packages/lib/
 COPY packages/tsconfig ./packages/tsconfig/
-
-# Copy frontend app
 COPY apps/frontend ./apps/frontend/
 
-# Install dependencies
 RUN pnpm install --no-frozen-lockfile
-
-# Build shared packages first
 RUN pnpm --filter shared build
 RUN pnpm --filter webrtc-client build
 RUN pnpm --filter frontend build
 
 # ==== PRODUCTION ====
-FROM nginx:alpine AS production
-WORKDIR /usr/share/nginx/html
+FROM node:18-alpine AS production
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/frontend/dist ./apps/frontend/dist
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-workspace.yaml ./
 
-# Copy the built frontend app
-COPY --from=builder /app/apps/frontend/dist .
-
-# Copy custom nginx config
-COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Set environment variables for frontend
 ENV NODE_ENV=production
-ENV BACKEND_URL=/api
+EXPOSE 5173
+CMD ["pnpm", "preview"] # or serve using node-based static server
 
-EXPOSE 80
+# ==== DEVELOPMENT ====
+FROM node:18-alpine AS dev
+WORKDIR /app
+RUN npm install -g pnpm
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app ./
+
+WORKDIR /app/apps/frontend
+ENV NODE_ENV=development
+EXPOSE 5173
+CMD ["pnpm", "dev"]
