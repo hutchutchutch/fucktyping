@@ -38,7 +38,7 @@ fucktyping/
 │       └── ...
 ├── infra/                  # Infrastructure for Docker Compose, deployment configs
 │   ├── docker-compose.yml  # Orchestrates local dev environment
-│   ├── aws/                # AWS deployment resources (if applicable)
+│   ├── aws/                # AWS deployment resources (ECS, RDS, etc.)
 │   ├── turn-server/        # TURN server configuration for WebRTC
 │   └── ...
 ├── packages/               # Shared libraries across apps
@@ -73,7 +73,7 @@ fucktyping/
 2. **`apps/backend/`**  
    - **Express.js** with TypeScript.  
    - **Database Integration**:
-     - SQL database with Drizzle ORM.
+     - PostgreSQL database with Drizzle ORM.
      - Models for forms, questions, responses, and users.
      - Schema definitions and migrations.
    - **RESTful API**:
@@ -92,8 +92,9 @@ fucktyping/
 
 3. **`infra/`**  
    - **docker-compose.yml**: For local dev, spins up the backend, frontend, and database.
+   - **aws/**: AWS ECS (Fargate) and RDS PostgreSQL deployment configurations.
    - **turn-server/**: Configuration for TURN server to facilitate WebRTC connections through NATs and firewalls.
-   - Deployment configurations for various cloud providers.  
+   - Deployment configurations for AWS.  
 
 4. **`packages/`**  
    - **`shared/`**: Shared type definitions, utilities, and constants used by both frontend and backend.
@@ -103,6 +104,20 @@ fucktyping/
 5. **`scripts/`**  
    - **`seed-db.ts`**: Seeds the database with sample forms and questions.  
    - Other utilities for development and deployment.
+
+---
+
+## AWS Deployment
+
+The application is deployed to AWS using:
+
+- **ECS (Fargate)** for running containerized backend and frontend services
+- **RDS PostgreSQL** for the database
+- **ECR** for storing Docker images
+- **Application Load Balancer** for routing traffic
+- **Secrets Manager** for secure storage of credentials and API keys
+
+Terraform configurations for the AWS infrastructure can be found in the `/infra/aws` directory.
 
 ---
 
@@ -180,16 +195,15 @@ fucktyping/
    - Invisible to users while effectively blocking bot traffic
    - Configurable risk thresholds for different actions
 
-4. **Cloudflare Security Integration**
-   - Cloudflare WAF configured for application protection
-   - DDoS mitigation with Cloudflare's global network
-   - Bot Management for automated threat detection
-   - Protection against SQL injection, XSS, and other OWASP Top 10
-   - Geo-blocking capabilities for regional compliance
+4. **AWS Security Integration**
+   - AWS Secrets Manager for secure credentials storage
+   - IAM roles with least privilege principle
+   - Security groups for network isolation
+   - VPC configuration with private subnets for databases
    - SSL/TLS encryption with automatic certificate management
 
 5. **Secure Secrets Management**
-   - All API keys stored in .env files (gitignored)
+   - All API keys stored in AWS Secrets Manager
    - No hardcoded credentials anywhere in the codebase
    - Environment-specific secrets for dev/staging/prod
 
@@ -204,7 +218,7 @@ fucktyping/
    - Dependabot enabled for timely security updates
 
 8. **Monitoring & Observability**
-   - Error tracking with Sentry for real-time alerts
+   - Error tracking with CloudWatch for real-time alerts
    - Performance monitoring with custom metrics
    - Health check endpoints for uptime monitoring
 
@@ -231,37 +245,15 @@ fucktyping/
    pnpm --filter=frontend dev
    ```
 
-3. **Credentials & Env Variables**  
-   Manage environment variables (Groq API keys, database credentials, TURN server secrets) through `.env` in dev and container secrets in production.
-
----
-
-## Use Cases
-
-### Customer Feedback
-Gather detailed, contextual feedback through conversations rather than rigid rating scales.
-
-### Lead Generation
-Increase conversion by removing friction from contact forms and qualification questions.
-
-### Patient Intake
-Make medical forms less daunting and more accessible for all patients.
-
-### Support Requests
-Let users explain their problems naturally instead of forcing them into predefined categories.
-
-### Surveys & Research
-Collect richer qualitative data with higher completion rates.
-
----
-
-## Why Voice-First Matters
-
-Voice input is:
-- **3x faster** than typing on mobile
-- **More accessible** to people with disabilities
-- **More natural** for expressing complex thoughts
-- **Less intimidating** than blank form fields
+3. **AWS Deployment**
+   In `infra/aws/`, run:
+   ```bash
+   ./deploy.sh
+   ```
+   This script will:
+   - Apply the Terraform configuration
+   - Build and push Docker images to ECR
+   - Output the application URLs
 
 ---
 
@@ -277,7 +269,7 @@ This voice-first form platform uses:
 
 - **Backend**:
   - Express.js with TypeScript for a robust API server
-  - SQL database with Drizzle ORM
+  - PostgreSQL database with Drizzle ORM
   - WebRTC signaling server
   - LangGraph for orchestrating conversational flows
   - Groq integration for fast AI inference
@@ -285,64 +277,11 @@ This voice-first form platform uses:
 - **Infrastructure**:
   - Turborepo + pnpm for consolidated multi-app dev
   - Docker for local dev/prod builds
+  - AWS ECS (Fargate) for containerized deployment
+  - AWS RDS for PostgreSQL database
   - TURN server for WebRTC NAT traversal
-  - Containerized deployment for optimal scaling
 
 ---
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js v18+ and pnpm
-- Docker and Docker Compose
-- Groq API key
-
-### Setup
-
-1. **Clone the repository**
-
-   ```bash
-   git clone <repository-url>
-   cd fucktyping
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   pnpm install
-   ```
-
-3. **Environment variables**
-
-   Create a `.env` file in the backend directory:
-
-   ```bash
-   cp apps/backend/.env.example apps/backend/.env
-   ```
-
-   Add your Groq API key and TURN server credentials to the `.env` file.
-
-4. **Start the development environment**
-
-   ```bash
-   cd infra
-   docker compose up
-   ```
-
-   This will start:
-   - Database
-   - TURN server
-   - Backend Express server
-   - Frontend React server
-
-5. **Access the application**
-
-   Visit `http://localhost:5173` to see the application running.
-
-## Deployment
-
-The application is designed to be deployed as a containerized solution, with the frontend, backend, and TURN server deployed separately for optimal scaling.
 
 ## License
 

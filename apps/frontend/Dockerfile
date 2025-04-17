@@ -1,41 +1,44 @@
-FROM node:18-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
+# ==== BUILDER ====
+FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Install pnpm
 RUN npm install -g pnpm
 
-# Install dependencies based on the preferred package manager
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+# Copy package files and workspace config
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+# Copy shared packages
+COPY packages/shared ./packages/shared/
+COPY packages/webrtc-client ./packages/webrtc-client/
+COPY packages/tsconfig ./packages/tsconfig/
 
-RUN pnpm build
+# Copy frontend app
+COPY apps/frontend ./apps/frontend/
 
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
+# Install dependencies
+RUN pnpm install --no-frozen-lockfile
 
-ENV NODE_ENV production
+# Build shared packages first
+RUN pnpm --filter shared build
+RUN pnpm --filter webrtc-client build
+RUN pnpm --filter frontend build
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# ==== PRODUCTION ====
+FROM nginx:alpine AS production
+WORKDIR /usr/share/nginx/html
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+# Copy the built frontend app
+COPY --from=builder /app/apps/frontend/dist .
 
-USER nextjs
+# Copy custom nginx config
+COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 5173
+# Set environment variables for frontend
+ENV NODE_ENV=production
+ENV BACKEND_URL=/api
 
-ENV PORT 5173
+EXPOSE 80
 
-CMD ["npm", "start"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

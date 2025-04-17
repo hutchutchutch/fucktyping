@@ -1,41 +1,56 @@
-FROM node:18-alpine AS base
+# ==== BUILDER ====
+FROM node:18-alpine AS builder
+RUN apk add --no-cache python3 make g++
 
-# Install dependencies only when needed
-FROM base AS deps
 WORKDIR /app
-
-# Install pnpm
 RUN npm install -g pnpm
 
-# Install dependencies based on the preferred package manager
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
+COPY packages/shared ./packages/shared/
+COPY packages/database ./packages/database/
+COPY packages/tsconfig ./packages/tsconfig/
+COPY apps/backend ./apps/backend/
 
-# Rebuild the source code only when needed
-FROM base AS builder
+RUN pnpm install --no-frozen-lockfile
+RUN pnpm --filter shared build
+RUN pnpm --filter database build
+RUN pnpm --filter backend build
+
+# ==== PRODUCTION ====
+FROM node:18-alpine AS production
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-RUN pnpm build
-
-# Production image, copy all the files and run
-FROM base AS runner
-WORKDIR /app
-
-ENV NODE_ENV production
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 expressjs
-
-COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder /app/packages/shared/package.json ./packages/shared/package.json
+COPY --from=builder /app/packages/database/dist ./packages/database/dist
+COPY --from=builder /app/packages/database/package.json ./packages/database/package.json
+COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-workspace.yaml ./
 
-USER expressjs
+# Add AWS-specific environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# These will be overridden by ECS task definition
+ENV RDS_HOSTNAME=localhost
+ENV RDS_PORT=5432
+ENV RDS_DB_NAME=fucktyping
+ENV RDS_USERNAME=postgres
+ENV RDS_PASSWORD=postgres
 
 EXPOSE 3000
+CMD ["node", "apps/backend/dist/index.js"]
 
-ENV PORT 3000
+# ==== DEVELOPMENT ====
+FROM node:18-alpine AS dev
+WORKDIR /app
+RUN npm install -g pnpm
 
-CMD ["node", "dist/index.js"]
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app ./
+
+WORKDIR /app/apps/backend
+ENV NODE_ENV=development
+EXPOSE 3000
+CMD ["pnpm", "dev"]

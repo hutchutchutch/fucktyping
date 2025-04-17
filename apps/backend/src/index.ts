@@ -69,7 +69,7 @@ app.use((req, res, next) => {
     console.log("Database initialized successfully");
 
     // Register API routes
-    await registerRoutes(app, wss);
+    await registerRoutes(app, io);
 
     // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
