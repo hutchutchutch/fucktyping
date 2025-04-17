@@ -30,7 +30,7 @@ export interface Form extends FormBuilderForm {
 
 // Question type for FormBuilder
 export interface FormBuilderQuestion {
-  id: string | number;
+  id: number;
   text: string;
   type: string;
   required: boolean;

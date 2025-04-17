@@ -16,6 +16,7 @@ import QuestionEditor from '@components/form-builder/QuestionEditor';
 import Modal from '@/components/common/Modal';
 import { Skeleton } from '@ui/skeleton';
 import { FormBuilderForm, FormBuilderQuestion } from "@schemas/schema";
+import type { ExtendedFormBuilderQuestion, FormBuilderQuestion as HookFormBuilderQuestion } from "@hooks/useForm";
 
 export default function FormBuilder() {
   const { id } = useParams<{ id: string }>();
@@ -52,10 +53,20 @@ export default function FormBuilder() {
   const [currentQuestion, setCurrentQuestion] = useState<FormBuilderQuestion | null>(null);
 
   const handleSaveQuestion = (question: FormBuilderQuestion) => {
+    const questionWithNumberId: ExtendedFormBuilderQuestion = {
+      id: Number(question.id) || formQuestions.length + 1,
+      text: question.text,
+      type: question.type,
+      required: question.required,
+      order: question.order,
+      options: question.options,
+      description: question.description
+    };
+    
     if (currentQuestion) {
-      updateQuestionInForm(formQuestions.indexOf(currentQuestion), question);
+      updateQuestionInForm(formQuestions.indexOf(currentQuestion), questionWithNumberId);
     } else {
-      addQuestionToForm(question);
+      addQuestionToForm(questionWithNumberId);
     }
     setShowQuestionModal(false);
   };

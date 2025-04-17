@@ -4,7 +4,7 @@ import { apiRequest, queryClient } from "@lib/queryClient";
 import { useToast } from "@hooks/use-toast";
 import type { Question, Form } from "@schemas/schema";
 
-interface FormBuilderQuestion {
+export interface FormBuilderQuestion {
   id: number;
   text: string;
   type: string;
@@ -26,7 +26,7 @@ interface FormWithQuestions extends Form {
   questions: Question[];
 }
 
-interface ExtendedFormBuilderQuestion extends FormBuilderQuestion {
+export interface ExtendedFormBuilderQuestion extends FormBuilderQuestion {
   helpText?: string;
 }
 
