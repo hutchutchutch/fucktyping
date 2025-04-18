@@ -32,9 +32,23 @@ const DraggableWindow = ({ id, children }: DraggableWindowProps) => {
     zIndex: 10
   };
 
+  // Create a new React element with the listeners and attributes applied only to the title bar
+  const childrenWithProps = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child, {
+        // Pass the drag handle ref to the title bar of RetroWindow
+        dragHandleRef: setNodeRef,
+        // Pass the listeners and attributes to be applied to the title bar
+        dragHandleListeners: listeners,
+        dragHandleAttributes: attributes
+      });
+    }
+    return child;
+  });
+
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
-      {children}
+    <div style={style}>
+      {childrenWithProps}
     </div>
   );
 };

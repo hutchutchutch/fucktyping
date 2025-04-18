@@ -17,7 +17,8 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onMinimize();
+            e.preventDefault();
+            if (onMinimize) onMinimize();
           }}
           className="w-5 h-5 flex items-center justify-center bevel-up hover:bevel-down active:bevel-down"
           aria-label="Minimize"
@@ -30,7 +31,8 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onMaximize();
+            e.preventDefault();
+            if (onMaximize) onMaximize();
           }}
           className="w-5 h-5 flex items-center justify-center bevel-up hover:bevel-down active:bevel-down"
           aria-label="Maximize"
@@ -43,7 +45,8 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onClose();
+            e.preventDefault();
+            if (onClose) onClose();
           }}
           className="w-5 h-5 flex items-center justify-center bevel-up hover:bevel-down active:bevel-down cursor-pointer"
           aria-label="Close"

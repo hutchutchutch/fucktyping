@@ -10,6 +10,10 @@ type Props = PropsWithChildren<{
   init: { x: number; y: number }       // starting position
   width?: number
   height?: number
+  // Props for drag handling
+  dragHandleRef?: React.Ref<HTMLDivElement>
+  dragHandleListeners?: Record<string, any>
+  dragHandleAttributes?: Record<string, any>
 }>
 
 export function RetroWindow({ 
@@ -21,7 +25,10 @@ export function RetroWindow({
   init, 
   width = 320, 
   height = 360, 
-  children 
+  children,
+  dragHandleRef,
+  dragHandleListeners,
+  dragHandleAttributes
 }: Props) {
   return (
     <div
@@ -36,7 +43,12 @@ export function RetroWindow({
       }}
     >
       {/* title bar */}
-      <div className="w98-titlebar">
+      <div 
+        className="w98-titlebar"
+        ref={dragHandleRef}
+        {...dragHandleListeners}
+        {...dragHandleAttributes}
+      >
         <div className="flex items-center gap-1">
           {icon && <img src={icon} alt="" className="w-4 h-4" />}
           <span className="truncate font-w98 text-sm">{title}</span>
