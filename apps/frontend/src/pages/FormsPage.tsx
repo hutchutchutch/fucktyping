@@ -385,131 +385,54 @@ const FormsPage = () => {
   );
 
   return (
-    <div className="container max-w-[1280px] mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold">My Forms</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage all your forms and surveys in one place
-          </p>
+          <h1 className="retro-heading mb-2">My Forms</h1>
+          <p className="retro-text text-gray-600">Manage all your forms and surveys in one place</p>
         </div>
-        <div className="flex gap-3 items-center">
-          <div className="flex border rounded-md overflow-hidden">
-            <Button 
-              variant={viewMode === 'categories' ? 'default' : 'outline'} 
-              size="sm"
-              className="rounded-none border-0"
-              onClick={() => {
-                setViewMode('categories');
-              }}
-            >
-              <Inbox className="h-4 w-4 mr-2" /> 
-              Categories
-            </Button>
-            <Button 
-              variant={viewMode === 'tabs' ? 'default' : 'outline'} 
-              size="sm"
-              className="rounded-none border-0"
-              onClick={() => {
-                setViewMode('tabs');
-              }}
-            >
-              <BarChart2 className="h-4 w-4 mr-2" /> 
-              Status
-            </Button>
-          </div>
-          <Button onClick={() => navigate("/forms/new")}>
+        <div className="flex gap-4">
+          <Button variant="outline" className="retro-text">
+            Categories
+          </Button>
+          <Button variant="outline" className="retro-text">
+            Status
+          </Button>
+          <Button className="retro-text bg-primary text-white">
             Create New Form
           </Button>
         </div>
       </div>
 
-      {/* Category navigation (horizontal tabs) */}
-      {viewMode === 'categories' && (
-        <div className="mb-6 overflow-x-auto">
-          <div className="flex space-x-2 border-b pb-2">
-            <Button 
-              variant={activeCategory === null ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleCategorySelect(null)}
-              className="whitespace-nowrap"
-            >
-              <Inbox className="h-4 w-4 mr-2" />
-              All Categories
-            </Button>
-            {categories.map(category => (
-              <Button
-                key={category.id}
-                variant={activeCategory === category.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleCategorySelect(category.id)}
-                className="whitespace-nowrap"
-              >
-                <div className="h-4 w-4 mr-2" style={{ color: category.color }}>
-                  {getCategoryIcon(category.icon || '')}
-                </div>
-                {category.name} ({category.forms?.length || 0})
-              </Button>
-            ))}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/categories/new")}
-              className="whitespace-nowrap"
-            >
-              <PlusCircle className="h-4 w-4 mr-2" />
-              New Category
-            </Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="retro-card p-6">
+          <h2 className="retro-subheading mb-4">Customer Feedback</h2>
+          <p className="retro-text text-gray-600 mb-4">Forms for gathering customer input and feedback</p>
+          
+          <div className="flex justify-between items-center mb-4">
+            <div className="retro-text">
+              <span className="text-gray-600">Response Rate:</span>
+              <span className="ml-2 text-green-600">2400%</span>
+            </div>
+            <div className="retro-text">
+              <span className="text-gray-600">Forms:</span>
+              <span className="ml-2">1</span>
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <div className="retro-text">
+              <span className="text-gray-600">Completion:</span>
+              <span className="ml-2 text-green-600">79%</span>
+            </div>
+            <div className="retro-text">
+              <span className="text-gray-600">Sentiment:</span>
+              <span className="ml-2 text-green-600">Very Positive</span>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Main content */}
-      <div>
-        {viewMode === 'categories' ? (
-          renderCategoryView()
-        ) : (
-          <Tabs defaultValue={activeTab} className="space-y-4" onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="all">All Forms ({filteredForms.length})</TabsTrigger>
-              <TabsTrigger value="active">Active ({filteredForms.filter(form => form.status === 'active').length})</TabsTrigger>
-              <TabsTrigger value="drafts">Drafts ({filteredForms.filter(form => form.status === 'draft').length})</TabsTrigger>
-              <TabsTrigger value="archived">Archived ({filteredForms.filter(form => form.status === 'archived').length})</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="all" className="space-y-4">
-              {filteredForms.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredForms.map(form => renderFormCard(form))}
-                </div>
-              ) : renderEmptyState()}
-            </TabsContent>
-            
-            <TabsContent value="active" className="space-y-4">
-              {filteredForms.filter(form => form.status === 'active').length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredForms.filter(form => form.status === 'active').map(form => renderFormCard(form))}
-                </div>
-              ) : renderEmptyState()}
-            </TabsContent>
-            
-            <TabsContent value="drafts" className="space-y-4">
-              {filteredForms.filter(form => form.status === 'draft').length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredForms.filter(form => form.status === 'draft').map(form => renderFormCard(form))}
-                </div>
-              ) : renderEmptyState()}
-            </TabsContent>
-            
-            <TabsContent value="archived" className="space-y-4">
-              {filteredForms.filter(form => form.status === 'archived').length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredForms.filter(form => form.status === 'archived').map(form => renderFormCard(form))}
-                </div>
-              ) : renderEmptyState()}
-            </TabsContent>
-          </Tabs>
-        )}
+        {/* Add more form category cards here */}
       </div>
 
       {/* Delete confirmation dialog */}

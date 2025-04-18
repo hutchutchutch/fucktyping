@@ -1,28 +1,29 @@
-import { Close } from "@react95/icons";
-import { PropsWithChildren } from "react";
+import { PropsWithChildren } from "react"
 
-type RetroWindowProps = PropsWithChildren<{ title: string; onClose?: () => void }>;
+type Props = PropsWithChildren<{
+  title: string
+  onClose?: () => void
+  init: { x: number; y: number }       // starting position
+}>
 
-export const RetroWindow = ({ title, onClose, children }: RetroWindowProps) => (
-  <div className="bg-bg border border-border-dark shadow-lg m-4">
-    <div className="bg-primary text-primary-contrast px-2 py-1 flex justify-between items-center">
-      <span>{title}</span>
-      <button 
-        className="bg-bg text-fg px-1 text-xs"
-        onClick={onClose}
-      >
-        <Close variant="16x16_4" />
-      </button>
+export function RetroWindow({ title, onClose, init, children }: Props) {
+  return (
+    <div
+      className="absolute select-none shadow-md bg-w95-1 bevel-up"
+      style={{ top: init.y, left: init.x, width: 320, minHeight: 360 }}
+    >
+      {/* title bar */}
+      <div className="h-6 flex items-center justify-between px-2 bg-w95-2 text-white">
+        <span className="truncate">{title}</span>
+        <button
+          onClick={onClose}
+          className="w-5 h-5 flex items-center justify-center bg-w95-0 text-w95-3 bevel-up hover:bevel-down active:bevel-down"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="p-3 text-w95-3">{children}</div>
     </div>
-
-    {/* Optional button bar */}
-    <div className="px-2 py-1 space-x-2 bg-bg border-t border-border-light">
-      <button className="bg-bg border border-border-dark px-2 py-1 text-sm">Submit</button>
-      <button className="bg-bg border border-border-dark px-2 py-1 text-sm">Cancel</button>
-    </div>
-
-    <div className="p-4 bg-bg text-fg border border-border-dark m-1">
-      {children}
-    </div>
-  </div>
-);
+  )
+}

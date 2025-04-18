@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-retro: 'Press Start 2P', cursive;
+    --font-retro-text: 'VT323', monospace;
+    --win98-grey: #c0c0c0;
+    --win98-grey-dark: #808080;
+    --win98-grey-light: #dfdfdf;
+    --win98-blue: #000080;
+
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+}
+
+@layer components {
+  .retro-heading {
+    @apply font-retro text-2xl leading-relaxed tracking-wide;
+  }
+  
+  .retro-subheading {
+    @apply font-retro text-lg leading-relaxed;
+  }
+  
+  .retro-text {
+    @apply font-retro-text text-base leading-relaxed;
+  }
+  
+  .retro-card {
+    @apply border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white;
+  }
+
+  .win98-window {
+    @apply bg-[var(--win98-grey)] border-2;
+    border-color: var(--win98-grey-light) var(--win98-grey-dark) var(--win98-grey-dark) var(--win98-grey-light);
+    box-shadow: inset -1px -1px var(--win98-grey-dark), inset 1px 1px var(--win98-grey-light);
+  }
+
+  .win98-titlebar {
+    @apply bg-[var(--win98-blue)] text-white px-2 py-1 flex justify-between items-center;
+  }
+
+  .win98-button {
+    @apply bg-[var(--win98-grey)] px-4 py-1 border-2 active:border-[var(--win98-grey-dark)] active:border-t-[var(--win98-grey-dark)] active:border-l-[var(--win98-grey-dark)] active:border-b-[var(--win98-grey-light)] active:border-r-[var(--win98-grey-light)];
+    border-color: var(--win98-grey-light) var(--win98-grey-dark) var(--win98-grey-dark) var(--win98-grey-light);
+  }
+
+  .win98-taskbar {
+    @apply fixed bottom-0 left-0 right-0 h-12 bg-[var(--win98-grey)] border-t-2 border-[var(--win98-grey-light)] flex items-center px-2;
+  }
+
+  .win98-start {
+    @apply win98-button font-bold flex items-center gap-2;
+  }
+
+  .win98-input {
+    @apply bg-white border-2 border-[var(--win98-grey-dark)] px-2 py-1;
+  }
+
+  .win98-checkbox {
+    @apply h-4 w-4 border-2 border-[var(--win98-grey-dark)] bg-white;
+  }
+
+  .win98-desktop {
+    @apply min-h-screen bg-teal-600 p-4 pb-16;
+  }
+} 
