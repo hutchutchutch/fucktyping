@@ -70,15 +70,15 @@ export const RetroDesktop = () => { // Export the desktop component
     }>
   >([
     {
-      id: 'form-builder',
-      title: 'Voice Form Agent - Survey Builder',
-      icon: '/form-icon.png',
-      position: { x: Math.random() * 100 + 50, y: Math.random() * 50 + 50 },
+      id: 'form-stats',
+      title: 'Form Fatigue Facts',
+      icon: '/chart-icon.png',
+      position: { x: 100, y: 50 },
       visible: true,
       minimized: false,
       zIndex: 10,
-      width: 400,
-      height: 480
+      width: 380,
+      height: 300
     }
   ]);
 
@@ -296,6 +296,11 @@ export const RetroDesktop = () => { // Export the desktop component
       {/* Desktop Icons */}
       <div className="flex flex-wrap p-4">
         <DesktopIcon 
+          icon="/chart-icon.png"
+          label="Form Facts"
+          onClick={() => openWindow('form-stats', 'Form Fatigue Facts', '/chart-icon.png', 380, 300)}
+        />
+        <DesktopIcon 
           icon="/form-icon.png" 
           label="Form Builder"
           onClick={() => openWindow('form-builder', 'Voice Form Agent - Survey Builder', '/form-icon.png', 400, 480)}
@@ -333,6 +338,28 @@ export const RetroDesktop = () => { // Export the desktop component
                 onMaximize={() => {}} // Maximize function not implemented yet
               >
                 {/* Window Content based on ID */}
+                {window.id === 'form-stats' && (
+                  <div className="space-y-3 text-sm text-black">
+                    <p>
+                      <strong className="text-w95-4">Did you know?</strong> The average online form completion rate hovers around <strong className="text-red-600">only 20-30%</strong>.
+                    </p>
+                    <p>
+                      Lengthy or confusing forms are a major cause of abandonment. Users lose patience quickly!
+                    </p>
+                    <p>
+                      Mobile users struggle even more, often abandoning forms due to poor responsive design.
+                    </p>
+                    <p className="pt-2">
+                      Voice interaction can dramatically improve completion rates by making forms faster and more accessible.
+                    </p>
+                    <div className="pt-4 flex justify-center">
+                      <RetroButton onClick={() => closeWindow('form-stats')}>
+                        Ouch! Close
+                      </RetroButton>
+                    </div>
+                  </div>
+                )}
+                
                 {window.id === 'form-builder' && (
                   <div className="space-y-4">
                     <RetroInput 
