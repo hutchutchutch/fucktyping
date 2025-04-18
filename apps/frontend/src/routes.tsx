@@ -16,11 +16,12 @@ import VoiceAgentTest from "@pages/VoiceAgentTest";
 import WebRTCTest from "@pages/WebRTCTest";
 import WebRTCAudioTest from "@pages/WebRTCAudioTest";
 import TestUI from "@pages/TestUI";
-import Login from "@pages/Login";
+import Login from "@/pages/Login";
 import NotFound from "@pages/not-found";
 import AppLayout from "@components/layout/AppLayout";
+import { ComponentType } from "react";
 
-function PrivateRoute({ component: Component, ...rest }) {
+function PrivateRoute({ component: Component, ...rest }: { component: ComponentType<any>; [key: string]: any }) {
   const { isAuthenticated, isLoading } = useAuthContext();
 
   // If still checking auth state, show nothing or a loading spinner

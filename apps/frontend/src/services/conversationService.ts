@@ -1,14 +1,14 @@
 /**
  * Service for managing conversation state and flow
  */
-import { post, get } from '@services/api';
+import { post, get } from '@/services/api';
 
 /**
  * Initialize a new conversation for a form response
  * @param {number|string} formId - ID of the form
  * @returns {Promise<Object>} Conversation state
  */
-export async function initializeConversation(formId) {
+export async function initializeConversation(formId: number | string) {
   try {
     const response = await post('/api/conversations', { formId });
     return response.json();
@@ -23,7 +23,7 @@ export async function initializeConversation(formId) {
  * @param {number|string} conversationId - ID of the conversation
  * @returns {Promise<Object>} Current conversation state
  */
-export async function getConversationState(conversationId) {
+export async function getConversationState(conversationId: number | string) {
   try {
     const response = await get(`/api/conversations/${conversationId}`);
     return response.json();
@@ -39,7 +39,7 @@ export async function getConversationState(conversationId) {
  * @param {Object} userInput - User's input (text or audio)
  * @returns {Promise<Object>} Updated conversation state and next action
  */
-export async function processConversationInput(conversationId, userInput) {
+export async function processConversationInput(conversationId: number | string, userInput: { text?: string; audio?: Blob }) {
   try {
     const response = await post(`/api/conversations/${conversationId}/input`, userInput);
     return response.json();
@@ -54,7 +54,7 @@ export async function processConversationInput(conversationId, userInput) {
  * @param {number|string} conversationId - ID of the conversation
  * @returns {Promise<Object>} Next question and conversation state
  */
-export async function getNextQuestion(conversationId) {
+export async function getNextQuestion(conversationId: number | string) {
   try {
     const response = await get(`/api/conversations/${conversationId}/next`);
     return response.json();
@@ -70,7 +70,7 @@ export async function getNextQuestion(conversationId) {
  * @param {Object} answer - The answer to save
  * @returns {Promise<Object>} Updated conversation state
  */
-export async function saveAnswer(conversationId, answer) {
+export async function saveAnswer(conversationId: number | string, answer: { text?: string; audio?: Blob }) {
   try {
     const response = await post(`/api/conversations/${conversationId}/answer`, answer);
     return response.json();
@@ -85,7 +85,7 @@ export async function saveAnswer(conversationId, answer) {
  * @param {number|string} conversationId - ID of the conversation
  * @returns {Promise<Object>} Final response data
  */
-export async function completeConversation(conversationId) {
+export async function completeConversation(conversationId: number | string) {
   try {
     const response = await post(`/api/conversations/${conversationId}/complete`);
     return response.json();
@@ -100,7 +100,7 @@ export async function completeConversation(conversationId) {
  * @param {number|string} conversationId - ID of the conversation
  * @returns {Promise<Array>} Array of conversation messages
  */
-export async function getConversationHistory(conversationId) {
+export async function getConversationHistory(conversationId: number | string) {
   try {
     const response = await get(`/api/conversations/${conversationId}/messages`);
     return response.json();
@@ -116,7 +116,7 @@ export async function getConversationHistory(conversationId) {
  * @param {Object} followUpData - Follow-up question and context
  * @returns {Promise<Object>} Updated conversation state
  */
-export async function handleFollowUp(conversationId, followUpData) {
+export async function handleFollowUp(conversationId: number | string, followUpData: { text?: string; audio?: Blob; context?: Record<string, unknown> }) {
   try {
     const response = await post(`/api/conversations/${conversationId}/follow-up`, followUpData);
     return response.json();

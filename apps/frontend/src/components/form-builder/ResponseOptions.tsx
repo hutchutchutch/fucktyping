@@ -21,7 +21,7 @@ const ResponseOptions = () => {
     confirmationMessage: "Thank you for completing the form!",
   });
   
-  const handleSettingChange = (key, value) => {
+  const handleSettingChange = (key: keyof typeof settings, value: boolean | number | string) => {
     setSettings({
       ...settings,
       [key]: value,

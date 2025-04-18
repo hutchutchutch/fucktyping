@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, FC } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuthContext } from '@context/AuthContext';
 import { useForm } from 'react-hook-form';
@@ -24,7 +24,7 @@ const loginSchema = z.object({
   rememberMe: z.boolean().optional(),
 });
 
-export default function Login() {
+const Login: FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuthContext();
   const [, navigate] = useLocation();
@@ -38,11 +38,11 @@ export default function Login() {
     },
   });
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: z.infer<typeof loginSchema>) => {
     try {
       setIsLoading(true);
       const success = await login({ 
-        username: data.email, 
+        email: data.email, 
         password: data.password 
       });
       
@@ -65,7 +65,7 @@ export default function Login() {
     try {
       setIsLoading(true);
       await login({ 
-        username: 'demo@example.com', 
+        email: 'demo@example.com', 
         password: 'password123' 
       });
       navigate('/dashboard');
@@ -202,4 +202,6 @@ export default function Login() {
       </Card>
     </div>
   );
-}
+};
+
+export default Login;

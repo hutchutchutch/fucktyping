@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@services/api';
+import { api } from '@/services/api';
 
 export interface Answer {
   id: string;
@@ -58,4 +58,4 @@ export function useResponses(formId: string, responseId?: string) {
     isPlaying,
     currentAudioId
   };
-} 
+}

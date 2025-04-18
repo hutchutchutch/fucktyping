@@ -1,4 +1,24 @@
-import { apiRequest } from "@lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
+
+const BASE_URL = import.meta.env.VITE_API_URL || '';
+
+export async function get(url: string) {
+  const response = await fetch(`${BASE_URL}${url}`, {
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  return response;
+}
+
+export async function post(url: string, data?: unknown) {
+  const response = await fetch(`${BASE_URL}${url}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: data ? JSON.stringify(data) : undefined
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  return response;
+}
 
 export const api = {
   // Forms

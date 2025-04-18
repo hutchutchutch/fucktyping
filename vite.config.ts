@@ -27,6 +27,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "client", "src"),
       "@shared": path.resolve(__dirname, "shared"),
     },
+    extensions: [".ts", ".tsx", ".js", ".jsx"],
   },
   root: path.resolve(__dirname, "client"),
   build: {
