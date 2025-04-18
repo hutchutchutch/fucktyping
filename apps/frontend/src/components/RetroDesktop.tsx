@@ -353,9 +353,11 @@ export const RetroDesktop = () => { // Export the desktop component
                       Voice interaction can dramatically improve completion rates by making forms faster and more accessible.
                     </p>
                     <div className="pt-4 flex justify-center">
-                      <RetroButton onClick={() => closeWindow('form-stats')}>
-                        Ouch! Close
-                      </RetroButton>
+                      <Link href="/dashboard"> 
+                        <RetroButton variant="primary">
+                          Let's Fix This!
+                        </RetroButton>
+                      </Link>
                     </div>
                   </div>
                 )}
