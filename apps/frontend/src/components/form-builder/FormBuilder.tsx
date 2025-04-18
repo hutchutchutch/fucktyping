@@ -58,9 +58,9 @@ const FormBuilder: React.FC<FormBuilderProps> = ({
   
   // For standalone mode - define necessary state
   const [localQuestions, setLocalQuestions] = useState<FormBuilderQuestion[]>([
-    { id: 'q1', text: 'What is your name?', type: 'text', required: true, order: 1, options: null },
-    { id: 'q2', text: 'How satisfied are you with our service?', type: 'rating', required: true, order: 2, options: null },
-    { id: 'q3', text: 'Any additional comments?', type: 'textarea', required: false, order: 3, options: null }
+    { id: 1, text: 'What is your name?', type: 'text', required: true, order: 1, options: null },
+    { id: 2, text: 'How satisfied are you with our service?', type: 'rating', required: true, order: 2, options: null },
+    { id: 3, text: 'Any additional comments?', type: 'textarea', required: false, order: 3, options: null }
   ]);
   
   // State for modal
@@ -74,9 +74,14 @@ const FormBuilder: React.FC<FormBuilderProps> = ({
   const handleUpdateFormField = (field: string, value: any) => {
     if (propUpdateFormField) {
       propUpdateFormField(field as keyof FormBuilderForm, value);
-    } else if (contextValues?.setCurrentForm) {
-      const updatedForm = { ...currentForm, [field]: value };
-      contextValues.setCurrentForm(updatedForm);
+    } else if (contextValues?.setCurrentForm && contextValues.currentForm) {
+      // Merge the original form data with the specific field update
+      const updatedForm = {
+         ...contextValues.currentForm, // Start with the original Form object from context
+         [field]: value,             // Apply the specific field update
+         updatedAt: new Date()        // Always update the updatedAt timestamp
+      };
+      contextValues.setCurrentForm(updatedForm); // Pass the correctly typed object
     }
   };
   
@@ -112,9 +117,10 @@ const FormBuilder: React.FC<FormBuilderProps> = ({
         ));
       } else {
         // Add new question
+        const newId = Math.max(0, ...localQuestions.map(q => q.id)) + 1;
         const newQuestion = {
           ...question,
-          id: `q${localQuestions.length + 1}`,
+          id: newId, 
           order: localQuestions.length + 1
         };
         setLocalQuestions([...localQuestions, newQuestion]);
@@ -208,7 +214,14 @@ const FormBuilder: React.FC<FormBuilderProps> = ({
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            onClick={() => handleEditQuestion(question)}
+                            onClick={() => {
+                              // Normalize question before passing to handler
+                              const normalizedQuestion = {
+                                ...question,
+                                options: question.options ?? null // Map undefined to null
+                              };
+                              handleEditQuestion(normalizedQuestion as FormBuilderQuestion);
+                            }}
                             className="text-gray-400 hover:text-gray-500"
                           >
                             <Pencil className="h-4 w-4" />
@@ -301,9 +314,9 @@ const FormBuilder: React.FC<FormBuilderProps> = ({
           
           {currentForm?.emailNotification && (
             <EmailTemplateEditor 
-              emailSubject={currentForm.emailSubject}
-              emailRecipients={currentForm.emailRecipients}
-              emailTemplate={currentForm.emailTemplate}
+              emailSubject={currentForm.emailSubject ?? undefined}
+              emailRecipients={currentForm.emailRecipients ?? undefined}
+              emailTemplate={currentForm.emailTemplate ?? undefined}
               onUpdate={(field, value) => handleUpdateFormField(field, value)}
             />
           )}
