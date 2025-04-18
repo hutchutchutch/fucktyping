@@ -9,6 +9,7 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        DEFAULT: "var(--radius-default)",
       },
       colors: {
         background: "hsl(var(--background))",
@@ -24,6 +25,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          contrast: "hsl(var(--color-primary-contrast))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -61,6 +63,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Windows 95 specific
+        "border-light": "hsl(var(--color-border-light) / <alpha-value>)",
+        "border-dark": "hsl(var(--color-border-dark) / <alpha-value>)",
+        bg: "hsl(var(--color-bg) / <alpha-value>)",
+        fg: "hsl(var(--color-fg) / <alpha-value>)",
+      },
+      fontFamily: {
+        sans: "var(--font-sans)",
       },
       keyframes: {
         "accordion-down": {
@@ -79,10 +89,16 @@ export default {
             height: "0",
           },
         },
+        // Add scan line animation
+        scanline: {
+          '0%': { transform: 'translateY(0)' },
+          '100%': { transform: 'translateY(100vh)' }
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "scanline": "scanline 8s linear infinite",
       },
     },
   },

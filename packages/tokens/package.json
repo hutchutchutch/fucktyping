@@ -1,0 +1,13 @@
+{
+  "name": "tokens",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.css",
+  "files": [
+    "index.css",
+    "theme-w95.css",
+    "tailwind.config.mjs"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
+}

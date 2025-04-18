@@ -1,0 +1,12 @@
+/* Win‑95 HSL palette pulled from real screenshots */
+:root[data-theme='w95'] {
+  --color-bg: 180 3% 82%;           /* light gray window background   */
+  --color-fg: 0 0% 0%;              /* black text                     */
+  --color-primary: 201 100% 35%;    /* bright blue title‑bar          */
+  --color-primary-contrast: 0 0% 100%; /* white text in title‑bar   */
+  --color-border-light: 0 0% 100%;  /* 3‑D top/left highlight         */
+  --color-border-dark: 0 0% 40%;    /* 3‑D bottom/right shadow        */
+
+  --radius-default: 0;              /* Win95 is sharp‑cornered        */
+  --font-sans: 'Press Start 2P', 'MS Sans Serif', sans-serif;
+}
