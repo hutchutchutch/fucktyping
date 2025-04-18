@@ -2,11 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { StartMenu } from './StartMenu';
 
 interface TaskbarProps {
-  activeWindows: { id: string; title: string; icon?: string }[];
+  activeWindows: { id: string; title: string; icon?: string; minimized: boolean }[];
+  activeWindowId: string | null;
   onOpenWindow?: (id: string, title: string, icon: string, width?: number, height?: number) => void;
+  onWindowButtonClick: (id: string) => void;
 }
 
-export const Taskbar: React.FC<TaskbarProps> = ({ activeWindows, onOpenWindow }) => {
+export const Taskbar: React.FC<TaskbarProps> = ({ 
+  activeWindows, 
+  activeWindowId,
+  onOpenWindow, 
+  onWindowButtonClick 
+}) => {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [startMenuOpen, setStartMenuOpen] = useState(false);
   
@@ -30,7 +37,7 @@ export const Taskbar: React.FC<TaskbarProps> = ({ activeWindows, onOpenWindow })
   }, []);
   
   return (
-    <div className="fixed bottom-0 left-0 right-0 w-full z-50 bg-[#C0C0C0] border-t-2 border-[#FFFFFF] h-10 flex items-center px-2">
+    <div className="fixed bottom-0 left-0 right-0 w-full z-50 bg-w95-0 h-10 flex items-center px-1 bevel-up shadow-inner">
       {/* Start Button */}
       <button 
         className="w98-button w98-start-button relative"
@@ -104,11 +111,16 @@ export const Taskbar: React.FC<TaskbarProps> = ({ activeWindows, onOpenWindow })
       <div className="w98-taskbar-divider"></div>
       
       {/* Active windows */}
-      <div className="flex-1 flex items-center gap-1 overflow-x-auto">
+      <div className="flex-1 flex items-center gap-1 overflow-x-auto h-full py-1">
         {activeWindows.map((window) => (
-          <button key={window.id} className="w98-button flex items-center gap-1 px-2 py-1 min-w-[120px] max-w-[200px]">
+          <button 
+            key={window.id} 
+            className={`flex items-center gap-1 px-2 h-full min-w-[120px] max-w-[160px] text-sm text-left truncate 
+                        ${window.id === activeWindowId && !window.minimized ? 'bevel-down font-bold' : 'bevel-up'}`}
+            onClick={() => onWindowButtonClick(window.id)}
+          >
             {window.icon && <img src={window.icon} alt="" className="w-4 h-4" />}
-            <span className="font-w98 text-sm truncate">{window.title}</span>
+            <span className="font-w98 truncate">{window.title}</span>
           </button>
         ))}
       </div>

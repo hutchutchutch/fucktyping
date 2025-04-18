@@ -1,7 +1,7 @@
 import { PropsWithChildren } from "react"
 import { WindowControls } from "./WindowControls"
 
-type Props = PropsWithChildren<{
+export type Props = PropsWithChildren<{
   title: string
   icon?: string
   onClose?: () => void
