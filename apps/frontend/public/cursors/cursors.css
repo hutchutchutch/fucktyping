@@ -1,0 +1,24 @@
+/* Windows 98 cursor styles */
+
+.cursor-w98-arrow {
+  cursor: url('/cursors/w95_arrow.cur'), default;
+}
+
+.cursor-w98-hand {
+  cursor: url('/cursors/w95_hand.cur'), pointer;
+}
+
+/* Apply to clickable elements */
+button, a, [role="button"], .clickable {
+  cursor: url('/cursors/w95_hand.cur'), pointer !important;
+}
+
+/* Apply to text inputs */
+input[type="text"], input[type="password"], textarea, [contenteditable="true"] {
+  cursor: text !important;
+}
+
+/* Apply to selectable elements */
+select, option {
+  cursor: default !important;
+}

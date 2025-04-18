@@ -6,14 +6,18 @@ export default {
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      boxShadow: {
+        'bevel-up': 'inset 1px 1px 0px #FFFFFF, inset -1px -1px 0px #808080',
+        'bevel-down': 'inset -1px -1px 0px #FFFFFF, inset 1px 1px 0px #808080',
+      },
       colors: {
         w95: {
-          0: '#cad7cf',   // taskbar bg / button face
-          1: '#f4f7f5',   // window bg (lighter)
-          2: '#26342e',   // dark title-bar green
+          0: '#C0C0C0',   // window face
+          1: '#FFFFFF',   // window bg (lighter)
+          2: '#008080',   // teal title-bar
           3: '#000000',   // text
-          hi: '#ffffff',   // 3-D highlight
-          lo: '#6b7c75',   // 3-D shadow
+          hi: '#FFFFFF',   // 3-D highlight
+          lo: '#404040',   // 3-D shadow
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -51,6 +55,21 @@ export default {
       },
       fontFamily: {
         pixel: ['"Press Start 2P"', 'sans-serif'],
+        w98: ['"MS Sans Serif"', '"Press Start 2P"', 'sans-serif'],
+        system: ['"MS Sans Serif"', 'Arial', 'sans-serif'],
+      },
+      cursor: {
+        w98: 'url("/cursors/w95_arrow.cur"), default',
+        w98hand: 'url("/cursors/w95_hand.cur"), pointer',
+      },
+      animation: {
+        'marquee': 'marquee 25s linear infinite',
+      },
+      keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-100%)' },
+        },
       },
       borderRadius: {
         none: '0',
@@ -71,14 +90,34 @@ export default {
           borderLeft: `1px solid ${hi}`,
           borderBottom: `1px solid ${lo}`,
           borderRight: `1px solid ${lo}`,
+          boxShadow: `inset 1px 1px #DFDFDF, inset -1px -1px #808080`,
         },
         '.bevel-down': {
           borderTop: `1px solid ${lo}`,
           borderLeft: `1px solid ${lo}`,
           borderBottom: `1px solid ${hi}`,
           borderRight: `1px solid ${hi}`,
+          boxShadow: `inset 1px 1px #808080, inset -1px -1px #DFDFDF`,
+        },
+        '.w98-window': {
+          backgroundColor: '#C0C0C0',
+          border: '1px solid',
+          borderTopColor: '#DFDFDF',
+          borderLeftColor: '#DFDFDF',
+          borderBottomColor: '#404040',
+          borderRightColor: '#404040',
+          boxShadow: 'inset 1px 1px #FFFFFF, inset -1px -1px #808080',
+        },
+        '.w98-titlebar': {
+          backgroundColor: '#008080',
+          color: 'white',
+          fontWeight: 'bold',
+          padding: '2px 4px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
         },
       })
     }),
   ],
-} 
+}

@@ -1,12 +1,215 @@
-/* Win‑95 HSL palette pulled from real screenshots */
+/* Win‑98 palette pulled from real screenshots */
 :root[data-theme='w95'] {
-  --color-bg: 180 3% 82%;           /* light gray window background   */
+  --color-bg: 0 0% 75%;             /* #C0C0C0 window face           */
   --color-fg: 0 0% 0%;              /* black text                     */
-  --color-primary: 201 100% 35%;    /* bright blue title‑bar          */
-  --color-primary-contrast: 0 0% 100%; /* white text in title‑bar   */
-  --color-border-light: 0 0% 100%;  /* 3‑D top/left highlight         */
-  --color-border-dark: 0 0% 40%;    /* 3‑D bottom/right shadow        */
+  --color-primary: 180 100% 25%;    /* #008080 teal title‑bar         */
+  --color-primary-contrast: 0 0% 100%; /* white text in title‑bar     */
+  --color-border-light: 0 0% 100%;  /* #FFFFFF 3‑D top/left highlight */
+  --color-border-dark: 0 0% 25%;    /* #404040 3‑D bottom/right shadow*/
 
-  --radius-default: 0;              /* Win95 is sharp‑cornered        */
-  --font-sans: 'Press Start 2P', 'MS Sans Serif', sans-serif;
+  --radius-default: 0;              /* Win98 is sharp‑cornered        */
+  --font-sans: 'MS Sans Serif', 'Press Start 2P', sans-serif;
+  
+  /* Custom cursors */
+  --cursor-default: url('/cursors/w95_arrow.cur'), default;
+  --cursor-pointer: url('/cursors/w95_hand.cur'), pointer;
+}
+
+/* Windows 98 specific utility classes */
+.w98-bevel-up {
+  border-top: 1px solid #FFFFFF;
+  border-left: 1px solid #FFFFFF;
+  border-bottom: 1px solid #404040;
+  border-right: 1px solid #404040;
+  box-shadow: inset 1px 1px #DFDFDF, inset -1px -1px #808080;
+}
+
+.w98-bevel-down {
+  border-top: 1px solid #404040;
+  border-left: 1px solid #404040;
+  border-bottom: 1px solid #FFFFFF;
+  border-right: 1px solid #FFFFFF;
+  box-shadow: inset 1px 1px #808080, inset -1px -1px #DFDFDF;
+}
+
+.w98-window {
+  background-color: #C0C0C0;
+  border: 1px solid;
+  border-top-color: #DFDFDF;
+  border-left-color: #DFDFDF;
+  border-bottom-color: #404040;
+  border-right-color: #404040;
+  box-shadow: inset 1px 1px #FFFFFF, inset -1px -1px #808080;
+}
+
+.w98-titlebar {
+  background-color: #008080;
+  color: white;
+  font-weight: bold;
+  padding: 2px 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.w98-button {
+  background-color: #C0C0C0;
+  border: 1px solid;
+  border-top-color: #FFFFFF;
+  border-left-color: #FFFFFF;
+  border-bottom-color: #404040;
+  border-right-color: #404040;
+  box-shadow: inset 1px 1px #DFDFDF, inset -1px -1px #808080;
+  padding: 4px 8px;
+  cursor: var(--cursor-default);
+}
+
+.w98-button:active {
+  border-top-color: #404040;
+  border-left-color: #404040;
+  border-bottom-color: #FFFFFF;
+  border-right-color: #FFFFFF;
+  box-shadow: inset 1px 1px #808080, inset -1px -1px #DFDFDF;
+}
+
+.w98-input {
+  background-color: white;
+  border: 1px solid;
+  border-top-color: #404040;
+  border-left-color: #404040;
+  border-bottom-color: #DFDFDF;
+  border-right-color: #DFDFDF;
+  box-shadow: inset 1px 1px #808080, inset -1px -1px #FFFFFF;
+  padding: 2px 4px;
+}
+
+.w98-checkbox {
+  appearance: none;
+  background-color: white;
+  border: 1px solid;
+  border-top-color: #404040;
+  border-left-color: #404040;
+  border-bottom-color: #DFDFDF;
+  border-right-color: #DFDFDF;
+  width: 13px;
+  height: 13px;
+  position: relative;
+}
+
+.w98-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: -2px;
+  left: 1px;
+  font-size: 12px;
+}
+
+.w98-desktop {
+  background-color: #008080;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAAA1BMVEUAAACnej3aAAAAPUlEQVR4nO3BAQ0AAADCoPdPbQ8HFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/g0NngABaGDCVwAAAABJRU5ErkJggg==');
+  background-repeat: repeat;
+  min-height: 100vh;
+  padding-bottom: 28px; /* Space for taskbar */
+  cursor: var(--cursor-default);
+}
+
+.w98-taskbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background-color: #C0C0C0;
+  border-top: 1px solid #FFFFFF;
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+  z-index: 9999;
+}
+
+.w98-start-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-weight: bold;
+  margin-right: 6px;
+}
+
+.w98-taskbar-divider {
+  width: 1px;
+  height: 20px;
+  background-color: #808080;
+  margin: 0 6px;
+}
+
+.w98-taskbar-time {
+  padding: 2px 6px;
+  border: 1px solid;
+  border-top-color: #808080;
+  border-left-color: #808080;
+  border-bottom-color: #FFFFFF;
+  border-right-color: #FFFFFF;
+  margin-left: auto;
+}
+
+.w98-desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 64px;
+  margin: 8px;
+  cursor: var(--cursor-default);
+}
+
+.w98-desktop-icon img {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+.w98-desktop-icon-label {
+  color: white;
+  text-shadow: 1px 1px 1px black;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Marquee for Active Desktop */
+.w98-marquee {
+  background-color: white;
+  border: 1px solid #808080;
+  padding: 4px;
+  margin: 8px;
+  overflow: hidden;
+}
+
+/* BSOD */
+.w98-bsod {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0000AA;
+  color: white;
+  font-family: 'Courier New', monospace;
+  padding: 40px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Clippy */
+.w98-clippy {
+  position: fixed;
+  bottom: 40px;
+  right: 20px;
+  background-color: #FFFFCC;
+  border: 1px solid #808080;
+  padding: 10px;
+  width: 200px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  z-index: 9998;
 }

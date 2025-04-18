@@ -1,29 +1,54 @@
 import { PropsWithChildren } from "react"
+import { WindowControls } from "./WindowControls"
 
 type Props = PropsWithChildren<{
   title: string
+  icon?: string
   onClose?: () => void
+  onMinimize?: () => void
+  onMaximize?: () => void
   init: { x: number; y: number }       // starting position
+  width?: number
+  height?: number
 }>
 
-export function RetroWindow({ title, onClose, init, children }: Props) {
+export function RetroWindow({ 
+  title, 
+  icon, 
+  onClose, 
+  onMinimize, 
+  onMaximize, 
+  init, 
+  width = 320, 
+  height = 360, 
+  children 
+}: Props) {
   return (
     <div
-      className="absolute select-none shadow-md bg-w95-1 bevel-up"
-      style={{ top: init.y, left: init.x, width: 320, minHeight: 360 }}
+      className="absolute select-none w98-window shadow-md"
+      style={{ 
+        top: init.y, 
+        left: init.x, 
+        width: width, 
+        minHeight: height,
+        cursor: 'var(--cursor-default)',
+        boxShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)'
+      }}
     >
       {/* title bar */}
-      <div className="h-6 flex items-center justify-between px-2 bg-w95-2 text-white">
-        <span className="truncate">{title}</span>
-        <button
-          onClick={onClose}
-          className="w-5 h-5 flex items-center justify-center bg-w95-0 text-w95-3 bevel-up hover:bevel-down active:bevel-down"
-        >
-          ✕
-        </button>
+      <div className="w98-titlebar">
+        <div className="flex items-center gap-1">
+          {icon && <img src={icon} alt="" className="w-4 h-4" />}
+          <span className="truncate font-w98 text-sm">{title}</span>
+        </div>
+        <WindowControls 
+          onMinimize={onMinimize}
+          onMaximize={onMaximize}
+          onClose={onClose}
+        />
       </div>
 
-      <div className="p-3 text-w95-3">{children}</div>
+      <div className="p-3 text-w95-3 font-w98">{children}</div>
     </div>
   )
 }
