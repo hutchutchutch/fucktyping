@@ -44,15 +44,17 @@ export function RetroWindow({
     >
       {/* title bar */}
       <div 
-        className="w98-titlebar"
+        className="w98-titlebar flex items-center justify-between gap-2"
         ref={dragHandleRef}
         {...dragHandleListeners}
         {...dragHandleAttributes}
       >
-        <div className="flex items-center gap-1">
-          {icon && <img src={icon} alt="" className="w-4 h-4" />}
-          <span className="truncate font-w98 text-sm">{title}</span>
+        {/* Container for icon and title - allows truncation */}
+        <div className="flex items-center gap-1 flex-1 min-w-0 overflow-hidden mr-6">
+          {icon && <img src={icon} alt="" className="w-4 h-4 flex-shrink-0" />}
+          <span className="truncate font-w98 text-sm font-bold text-white select-none">{title}</span>
         </div>
+        {/* Controls are pushed to the right by justify-between */}
         <WindowControls 
           onMinimize={onMinimize}
           onMaximize={onMaximize}
