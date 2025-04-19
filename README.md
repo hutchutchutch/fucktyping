@@ -17,34 +17,132 @@ fucktyping/
 │   │   ├── Dockerfile      # Production Dockerfile
 │   │   ├── Dockerfile.dev  # Dev Dockerfile (hot reload)
 │   │   ├── src/
-│   │   │   ├── pages/      # Application pages (home, form builder, responder)
-│   │   │   ├── components/ # Shared UI components (voice recorder, form elements)
-│   │   │   │   ├── form-builder/  # Form creation interface
-│   │   │   │   ├── form-responder/ # Voice interaction components
-│   │   │   │   └── ...
-│   │   │   ├── hooks/      # React hooks (useMicrophone, useTranscription)
-│   │   │   └── ...
+│   │   │   ├── App.tsx                # Main application component
+│   │   │   ├── components/            # UI components organized by function
+│   │   │   │   ├── ActiveDesktop.tsx  # Win98-style active desktop element
+│   │   │   │   ├── BSOD.tsx           # Windows blue screen of death easter egg
+│   │   │   │   ├── Clippy.tsx         # Windows assistant easter egg
+│   │   │   │   ├── DesktopIcon.tsx    # Windows desktop icon component
+│   │   │   │   ├── RetroButton.tsx    # Win98-style button
+│   │   │   │   ├── RetroInput.tsx     # Win98-style form inputs
+│   │   │   │   ├── RetroWindow.tsx    # Win98-style window component
+│   │   │   │   ├── StartMenu.tsx      # Win98-style start menu
+│   │   │   │   ├── Taskbar.tsx        # Win98-style taskbar with tabs
+│   │   │   │   ├── WindowControls.tsx # Window minimize/maximize/close buttons
+│   │   │   │   ├── ai/                # AI chat interface components
+│   │   │   │   ├── animation/         # Visual animations and effects
+│   │   │   │   ├── common/            # Reusable UI components
+│   │   │   │   ├── dashboard/         # Analytics dashboard components
+│   │   │   │   ├── form-builder/      # Form creation interface components
+│   │   │   │   │   ├── EmailTemplateEditor.tsx # Email notification template editor
+│   │   │   │   │   ├── FormBuilder.tsx         # Main form builder interface
+│   │   │   │   │   ├── QuestionEditor.tsx      # Question creation/editing UI
+│   │   │   │   │   └── ResponseOptions.tsx     # Response options configuration
+│   │   │   │   ├── form-responder/     # Voice form interaction components
+│   │   │   │   │   ├── AudioVisualizer.tsx   # Audio waveform visualization
+│   │   │   │   │   ├── Transcript.tsx        # Speech transcript display
+│   │   │   │   │   ├── VoiceFormResponder.tsx # Main voice interaction component
+│   │   │   │   │   ├── VoiceInterface.tsx    # Voice UI container
+│   │   │   │   │   └── VoiceRecorder.tsx     # Audio recording component
+│   │   │   │   ├── form/               # Form display components
+│   │   │   │   ├── layout/             # Page layout components
+│   │   │   │   ├── onboarding/         # Onboarding and tutorial components
+│   │   │   │   ├── ui/                 # Shadcn UI component library implementations
+│   │   │   │   └── voice-agent/        # Voice agent interaction components
+│   │   │   ├── context/              # React context providers
+│   │   │   │   ├── AuthContext.tsx   # Authentication state management
+│   │   │   │   ├── FormContext.tsx   # Form data and state management
+│   │   │   │   └── ThemeContext.tsx  # Theme switching and management
+│   │   │   ├── hooks/               # Custom React hooks
+│   │   │   │   ├── useAudio.tsx     # Audio recording and processing
+│   │   │   │   ├── useForm.tsx      # Form data and validation
+│   │   │   │   ├── useResponses.ts  # Form response management
+│   │   │   │   └── useSound.tsx     # Sound effect playback
+│   │   │   ├── lib/                 # Utility libraries
+│   │   │   ├── pages/               # Application page components
+│   │   │   │   ├── CreateForm.tsx      # Form creation page
+│   │   │   │   ├── Dashboard.tsx       # User dashboard
+│   │   │   │   ├── FormBuilder.tsx     # Form builder page
+│   │   │   │   ├── FormResponder.tsx   # Form response page
+│   │   │   │   ├── LandingPage.tsx     # Homepage with Win98 UI
+│   │   │   │   ├── Login.tsx           # Authentication page
+│   │   │   │   ├── ResponseViewer.tsx  # View form responses
+│   │   │   │   ├── VoiceAgentPage.tsx  # Voice agent interaction page
+│   │   │   │   └── WebRTCTest.tsx      # WebRTC testing page
+│   │   │   ├── routes.tsx           # Application routing definition
+│   │   │   ├── schemas/             # Data validation schemas
+│   │   │   ├── services/            # API client services
+│   │   │   │   ├── aiService.ts       # AI model interaction service
+│   │   │   │   ├── api.ts             # Base API client
+│   │   │   │   ├── formService.ts     # Form CRUD operations
+│   │   │   │   ├── voiceService.ts    # Voice recording and processing
+│   │   │   │   └── websocketService.ts # Real-time communication
+│   │   │   ├── styles/              # Global and themed styles
+│   │   │   │   ├── globals.css        # Global CSS
+│   │   │   │   └── win95.css          # Windows 95/98 theme styling
+│   │   │   └── utils/               # Utility functions
+│   │   │       ├── audio.js           # Audio processing utilities
+│   │   │       ├── formatters.js      # Data formatting helpers
+│   │   │       └── validators.js      # Data validation functions
 │   │   └── ...
 │   └── backend/            # Express.js + LangGraph + WebRTC
-│       ├── Dockerfile
-│       ├── Dockerfile.dev
+│       ├── Dockerfile      # Production container config
+│       ├── Dockerfile.dev  # Development container with hot reload
 │       ├── src/
-│       │   ├── routes/     # API routes for forms, responses, users
-│       │   ├── controllers/ # Handlers for form data, voice processing
-│       │   ├── services/   # Business logic, e.g. transcription, validation
-│       │   ├── engine/     # LangGraph conversation engine 
-│       │   ├── rtc/        # WebRTC signaling and connection management
-│       │   └── ...
+│       │   ├── controllers/          # API endpoint handlers
+│       │   │   ├── conversationController.js # Manages conversational AI interactions
+│       │   │   ├── emailController.js        # Handles email notifications
+│       │   │   ├── formController.js         # CRUD operations for forms
+│       │   │   ├── responseController.js      # Manages form responses
+│       │   │   └── voiceFormController.js     # Voice-specific form handling
+│       │   ├── db.ts                 # Database connection and config
+│       │   ├── databaseStorage.ts    # Database interaction layer
+│       │   ├── engine/               # LangGraph conversation engine
+│       │   │   ├── graph.js          # Conversation flow definition
+│       │   │   ├── graphBuilder.js   # Dynamic graph construction
+│       │   │   ├── index.js          # Engine exports
+│       │   │   ├── nodes.js          # Graph node definitions
+│       │   │   ├── prompts.js        # AI prompt templates
+│       │   │   ├── schemas.js        # Data validation schemas
+│       │   │   └── state.js          # Conversation state management
+│       │   ├── migrations/           # Database schema migrations
+│       │   ├── routes.ts             # API route definitions
+│       │   ├── rtc/                  # WebRTC functionality
+│       │   │   ├── webrtc-signaling.ts  # WebRTC connection signaling
+│       │   │   └── websocket-handler.ts # WebSocket message handling
+│       │   ├── services/             # Business logic services
+│       │   │   ├── emailService.js      # Email sending service
+│       │   │   ├── groqService.ts       # Groq AI API integration
+│       │   │   └── voiceService.ts      # Voice processing service
+│       │   ├── storage.ts            # File storage service
+│       │   └── utils/                # Utility functions
+│       │       ├── errorHandler.js      # Error handling middleware
+│       │       ├── tokenGenerator.js    # Authentication token management
+│       │       └── validators.js        # Data validation utilities
 │       └── ...
-├── infra/                  # Infrastructure for Docker Compose, deployment configs
-│   ├── docker-compose.yml  # Orchestrates local dev environment
-│   ├── aws/                # AWS deployment resources (ECS, RDS, etc.)
-│   ├── turn-server/        # TURN server configuration for WebRTC
-│   └── ...
+├── infra/                  # Infrastructure configuration
+│   ├── docker-compose.yml  # Local development environment
+│   ├── aws/                # AWS deployment configuration
+│   │   ├── deploy.sh       # Deployment automation script
+│   │   ├── ecs/            # ECS (container service) configuration
+│   │   ├── rds/            # RDS (database) configuration
+│   │   ├── secrets.tf      # Secrets management
+│   │   ├── vpc.tf          # Network configuration
+│   │   └── ...
+│   └── turn-server/        # TURN server for WebRTC NAT traversal
 ├── packages/               # Shared libraries across apps
-│   ├── shared/             # Shared type definitions, constants, utilities
-│   ├── webrtc-client/      # Shared WebRTC client library
-│   └── ...
+│   ├── database/           # Database schema definitions and utilities
+│   ├── shared/             # Shared types and utilities
+│   │   ├── constants.ts    # Shared constant values
+│   │   ├── schemas.ts      # Shared data validation schemas
+│   │   ├── types.ts        # TypeScript type definitions
+│   │   └── utils.ts        # Shared utility functions
+│   ├── tokens/             # Design tokens and theming
+│   │   ├── index.css       # Base design tokens
+│   │   └── theme-w95.css   # Windows 95/98 theme tokens
+│   ├── tsconfig/           # Shared TypeScript configurations
+│   └── webrtc-client/      # WebRTC client implementation
+│       └── client.ts       # WebRTC connection management
 ├── scripts/                # Helper scripts/CLI automation
 │   ├── seed-db.ts          # Initialize database with sample forms
 │   └── ...
@@ -54,56 +152,149 @@ fucktyping/
 └── README.md               # This file
 ```
 
-### Key Directories
+### Key Components and Data Flow
 
 1. **`apps/frontend/`**  
    - **React** with TypeScript and TailwindCSS.
    - **Dockerfiles**:
      - `Dockerfile.dev` for local dev with hot reload.
      - `Dockerfile` for production builds.
-   - Pages include:
-     - **Home page**: Introduction to voice-first form filling and key benefits.
-     - **Form Builder**: Interface for creating sophisticated multi-question forms.
-     - **Form Responder**: Voice-based interface for completing forms through natural speech.
-     - **Analytics Dashboard**: Visualize form completion metrics and response analysis.
-   - Services layer for API communication with the backend.
-   - WebRTC integration for peer-to-peer voice streaming.
-   - Type definitions that mirror backend data models.
+   - **Key Pages and Data Flow**:
+     - **LandingPage.tsx**: 
+       - Provides a Windows 98-inspired UI with desktop, windows, and taskbar
+       - Consumes theme data from ThemeContext
+       - Manages window state locally (visibility, position, z-index)
+       - No external API calls; purely presentational
+     - **FormBuilder.tsx**: 
+       - Receives form templates from formService.getTemplates()
+       - Uses FormContext to manage/persist form data (questions, logic, settings)
+       - Submits completed forms via formService.createForm() which sends to backend /api/forms
+       - Data is validated with zod schemas before submission
+     - **FormResponder.tsx**: 
+       - Fetches form data from formService.getForm(id)
+       - Records voice via useAudio hook, which provides audio stream
+       - Processes audio through voiceService.transcribeAudio() which calls backend /api/voice/transcribe
+       - Conversation state handled by conversationService which connects to /api/conversation
+       - Responses saved through formService.submitResponse() to /api/responses
+     - **Dashboard.tsx**: 
+       - Fetches analytics via api.get('/api/analytics')
+       - Uses useResponses hook to get response data
+       - Displays visualizations of form completion rates, common responses
+   - **Windows 98 UI Components**:
+     - Win95/98 theming implemented through theme-w95.css and RetroWindow/RetroInput components
+     - Desktop environment simulation (windows, icons, taskbar) in RetroDesktop.tsx
+     - Designed for nostalgic user experience while providing modern functionality
+   - **Key Services**:
+     - **voiceService.ts**: 
+       - Handles audio recording via Web Audio API
+       - Sends audio to backend for transcription (POST /api/voice/transcribe)
+       - Receives text responses, sends to AI (POST /api/conversation)
+       - Returns processed responses to UI components
+     - **formService.ts**: 
+       - CRUD operations for forms (GET/POST/PUT/DELETE /api/forms)
+       - Handles form templates (GET /api/forms/templates)
+       - Manages form response submission (POST /api/responses)
+     - **websocketService.ts**:
+       - Establishes real-time connection for live updates
+       - Handles WebRTC signaling for peer-to-peer audio
+       - Routes messages to appropriate handlers
 
 2. **`apps/backend/`**  
    - **Express.js** with TypeScript.  
-   - **Database Integration**:
-     - PostgreSQL database with Drizzle ORM.
-     - Models for forms, questions, responses, and users.
-     - Schema definitions and migrations.
-   - **RESTful API**:
-     - Endpoints for creating and managing forms.
-     - Voice processing and transcription.
-     - Response storage and analysis.
-   - **WebRTC Signaling**:
-     - Manages WebRTC connection establishment.
-     - Handles ICE candidates and offers/answers.
-     - Coordinates peer-to-peer audio streaming.
-   - Integrates **LangGraph** for multi-step conversation flows with validation, follow-up questions, and context-aware responses.  
-   - Connects to:
-     - **Groq** for fast AI inference.
-     - Transcription services for voice-to-text conversion.
-     - Analytics tools for response analysis.
+   - **Database Integration and Data Flow**:
+     - **db.ts**: Establishes PostgreSQL connection via Drizzle ORM
+     - Data flow: Controllers → Services → db/databaseStorage.ts → PostgreSQL
+     - Schema defined in packages/shared/schemas.ts for consistent types across frontend/backend
+     - Migrations in migrations/ folder handle schema updates
+   - **API Controllers and Services**:
+     - **formController.js**: 
+       - Receives form creation/edit requests from frontend
+       - Validates data through validators.js
+       - Persists to database via databaseStorage.ts
+       - Returns created/updated form data to frontend
+     - **voiceFormController.js**:
+       - Receives audio from frontend's voiceService
+       - Passes to voiceService.ts for processing
+       - Sends transcribed text to engine/graph.js for conversation processing
+       - Returns AI responses to frontend
+     - **conversationController.js**:
+       - Handles conversational context and state
+       - Uses LangGraph (engine/) to maintain conversation flow
+       - Stores conversation history in database
+       - Returns appropriate responses based on conversation state
+   - **LangGraph Integration**:
+     - **engine/graph.js**: 
+       - Defines conversation flow as a directed graph
+       - Nodes represent conversation states (greeting, question, validation, etc.)
+       - Receives input from conversationController.js
+       - Processes through appropriate nodes based on state
+       - Returns next response and updated state
+     - **engine/graphBuilder.js**:
+       - Dynamically constructs graphs based on form configuration
+       - Translates form questions into conversation nodes
+       - Builds validation logic for expected responses
+     - **engine/nodes.js**:
+       - Individual conversation processing components
+       - Each node receives input, context, and conversation state
+       - Processes data and returns output for next node
+       - Uses prompts.js templates for AI interactions
+   - **WebRTC Implementation**:
+     - **rtc/webrtc-signaling.ts**:
+       - Handles connection establishment between peers
+       - Exchanges ICE candidates, offers, and answers
+       - Manages session initiation and teardown
+       - Connects to websocket-handler.ts for message routing
+     - **webrtc-server.js**:
+       - Coordinates real-time connections
+       - Handles WebSocket upgrade and connection management
+       - Dispatches messages to appropriate handlers
+   - **External Service Integration**:
+     - **groqService.ts**:
+       - Connects to Groq API for fast AI inference
+       - Transforms conversation state into prompts
+       - Processes responses and extracts relevant information
+       - Returns structured data to conversation engine
+     - **emailService.js**:
+       - Sends form completion notifications
+       - Delivers response summaries to form owners
+       - Handles email templates and personalization
 
 3. **`infra/`**  
-   - **docker-compose.yml**: For local dev, spins up the backend, frontend, and database.
-   - **aws/**: AWS ECS (Fargate) and RDS PostgreSQL deployment configurations.
-   - **turn-server/**: Configuration for TURN server to facilitate WebRTC connections through NATs and firewalls.
-   - Deployment configurations for AWS.  
+   - **docker-compose.yml**: Defines multi-container environment with:
+     - PostgreSQL database (persistent volume mapping)
+     - Backend Express service (with environment variables)
+     - Frontend React service (with hot reloading)
+     - TURN server for WebRTC connectivity
+   - **aws/**: 
+     - **ecs/ecs-setup.tf**: Configures ECS cluster, tasks, and services
+     - **rds/rds-setup.tf**: Sets up PostgreSQL database with backups
+     - **vpc.tf**: Defines network architecture with public/private subnets
+     - **secrets.tf**: Manages secure storage of API keys and credentials
+   - **turn-server/**: TURN server configuration for WebRTC NAT traversal
 
 4. **`packages/`**  
-   - **`shared/`**: Shared type definitions, utilities, and constants used by both frontend and backend.
-   - **`webrtc-client/`**: Reusable WebRTC client library with connection handling, stream management, and reconnection logic.
-   - **pnpm** automatically handles linking across your workspace.
+   - **`database/`**: 
+     - Contains shared database schema definitions
+     - Used by both backend and frontend for type consistency
+     - Exports table structures and relationships
+   - **`shared/`**: 
+     - **constants.ts**: Application-wide constant values
+     - **schemas.ts**: Zod validation schemas used in both frontend/backend
+     - **types.ts**: TypeScript interfaces for data models
+     - **utils.ts**: Shared utility functions for common operations
+   - **`tokens/`**: 
+     - **theme-w95.css**: Windows 95/98 design token definitions
+     - Used by frontend for consistent styling
+   - **`webrtc-client/`**: 
+     - **client.ts**: WebRTC connection handling and stream management
+     - Used by frontend to establish peer connections
 
 5. **`scripts/`**  
-   - **`seed-db.ts`**: Seeds the database with sample forms and questions.  
-   - Other utilities for development and deployment.
+   - **`seed-db.ts`**: 
+     - Creates initial database content
+     - Inserts sample forms with questions and logic
+     - Sets up test user accounts
+   - Deployment and maintenance utilities
 
 ---
 
@@ -141,37 +332,52 @@ Terraform configurations for the AWS infrastructure can be found in the `/infra/
 
 ## Intent & Features
 
-1. **Docker-based Development**  
+1. **Windows 98 Nostalgic UI**
+   - Authentic Windows 98 desktop experience with:
+     - Draggable windows with minimize/maximize/close controls
+     - Working taskbar showing currently open applications
+     - Start menu with program categories
+     - Desktop icons for launching applications
+     - Alt+Tab window switching and Windows key functionality
+     - Classic UI styling (buttons, inputs, window borders)
+   - Complete with easter eggs:
+     - Blue Screen of Death (try typing "crash" in a form title)
+     - Clippy-style assistant for help
+     - Active Desktop elements with scrolling text
+   - Implements the 90s aesthetics while maintaining modern functionality
+   - Defined in `apps/frontend/src/components/` with styles in `packages/tokens/theme-w95.css`
+
+2. **Docker-based Development**  
    - Each app has a dev Dockerfile for immediate reloading.  
    - `infra/docker-compose.yml` can run the entire stack: database, backend, frontend, and TURN server.
 
-2. **Voice Form Responder**  
+3. **Voice Form Responder**  
    - Allow users to complete forms through natural speech.
    - Real-time peer-to-peer voice streaming via WebRTC.
    - Low-latency transcription and validation of responses.
    - Fallback to text input when necessary.
 
-3. **LangGraph AI Engine**  
+4. **LangGraph AI Engine**  
    - The backend orchestrates multi-step conversation flows with validation, follow-up questions, and context-aware responses.  
    - Code in `apps/backend/src/engine/`, managing sophisticated conversational logic.
 
-4. **WebRTC Integration**  
+5. **WebRTC Integration**  
    - Peer-to-peer audio streaming for minimal latency.
    - Secure, encrypted communication channels.
    - Fallback mechanisms for challenging network environments.
    - TURN server support for NAT traversal.
 
-5. **Intuitive Form Builder**  
+6. **Intuitive Form Builder**  
    - Create sophisticated multi-question forms with branching logic.
    - Define validation rules and custom response options.
    - Preview form flow from the user's perspective.
 
-6. **Response Analytics**  
+7. **Response Analytics**  
    - Visualize form completion metrics.
    - Analyze sentiment in voice responses.
    - Extract key insights from conversational data.
 
-7. **Mobile-First Design**  
+8. **Mobile-First Design**  
    - Optimized for the way people actually use their devices.
    - Focus on voice interaction for mobile users.
    - Responsive UI for all screen sizes.
