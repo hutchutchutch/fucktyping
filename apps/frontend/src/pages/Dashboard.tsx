@@ -326,7 +326,7 @@ export default function Dashboard() {
   };
   
   return (
-    <div className="max-w-[1200px] mx-auto w-full px-4">
+    <div className="mx-auto max-w-[900px] w-full px-4">
       {renderRouteContent()}
     </div>
   );

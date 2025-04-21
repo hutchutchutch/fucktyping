@@ -27,7 +27,7 @@ export default function Header() {
             variant="outline" 
             size="sm" 
             className="hidden md:flex items-center" 
-            onClick={() => navigate("/create")}
+            onClick={() => navigate("/forms/new")}
           >
             <Wand2 className="mr-1.5 h-4 w-4" />
             Create Your Own

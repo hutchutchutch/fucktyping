@@ -126,7 +126,7 @@ export default function CreateForm() {
   };
   
   return (
-    <div className="container mx-auto py-6 max-w-5xl">
+    <div className="mx-auto py-6 max-w-[900px] w-full">
       <div className="mb-8">
         <div className="flex justify-between items-start mb-1">
           <Input
