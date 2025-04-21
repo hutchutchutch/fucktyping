@@ -295,24 +295,29 @@ export const RetroDesktop = () => { // Export the desktop component
       {/* Desktop Icons */}
       <div className="flex flex-wrap p-4">
         <DesktopIcon 
-          icon="/chart-icon.png"
+          icon="/public/folder.png"
           label="Form Facts"
           onClick={() => openWindow('form-stats', 'Form Fatigue Facts', '/chart-icon.png', 380, 300)}
         />
         <DesktopIcon 
-          icon="/form-icon.png" 
+          icon="/public/folder.png" 
           label="Form Builder"
           onClick={() => openWindow('form-builder', 'Voice Form Agent - Survey Builder', '/form-icon.png', 400, 480)}
         />
         <DesktopIcon 
-          icon="/settings-icon.png" 
+          icon="/public/folder.png" 
           label="Settings"
           onClick={() => openWindow('settings', 'Settings', '/settings-icon.png', 350, 300)}
         />
         <DesktopIcon 
-          icon="/start-icon.png" 
+          icon="/public/folder.png" 
           label="Help"
           onClick={() => setShowClippy(true)}
+        />
+        <DesktopIcon 
+          icon="/public/paint.png"
+          label="Paint"
+          onClick={() => openWindow('paint', 'Paint', '/public/paint.png', 400, 400)}
         />
       </div>
       

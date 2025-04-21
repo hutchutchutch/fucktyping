@@ -16,7 +16,7 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({ icon, label, onClick }
       <img 
         src={icon} 
         alt={label} 
-        className="w-8 h-8"
+        className="w-16 h-16"
         style={{ imageRendering: 'pixelated' }}
       />
       <div className="text-white text-center text-xs mt-1 px-1 py-0.5 bg-[#008080] shadow-sm" style={{ 
