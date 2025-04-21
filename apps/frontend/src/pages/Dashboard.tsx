@@ -11,7 +11,7 @@ import { useAuthContext } from '@context/AuthContext';
 export default function Dashboard() {
   const { user } = useAuthContext();
   const [location, navigate] = useLocation();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'forms' | 'analytics'>('overview');
 
   // Sample statistics data for Analytics component
   const statsData = {
