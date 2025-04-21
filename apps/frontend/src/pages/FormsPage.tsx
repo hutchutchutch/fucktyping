@@ -274,12 +274,12 @@ const FormsPage = () => {
             <div className="flex items-center gap-2 text-sm">
               <Percent className="h-4 w-4 text-blue-500" />
               <span className="font-medium">Response Rate:</span>
-              <span>{formatPercentage(category.responseRate)}</span>
+              <span>{formatPercentage(category.responseRate ?? 0)}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <ClipboardCheck className="h-4 w-4 text-green-500" />
               <span className="font-medium">Completion Rate:</span>
-              <span>{formatPercentage(category.completionRate)}</span>
+              <span>{formatPercentage(category.completionRate ?? 0)}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <ThumbsUp className="h-4 w-4 text-purple-500" />
@@ -385,7 +385,7 @@ const FormsPage = () => {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="mx-auto max-w-[900px] w-full px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="retro-heading mb-2">My Forms</h1>
