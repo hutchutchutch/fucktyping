@@ -4,7 +4,9 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "node",
-    "lib": ["ESNext"],
+    "lib": [
+      "ESNext"
+    ],
     "outDir": "dist",
     "strict": true,
     "noImplicitAny": true,
@@ -14,10 +16,19 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "database": ["../../packages/database"],
-      "shared": ["../../packages/shared"]
+      "database": [
+        "../../packages/database"
+      ],
+      "@shared/*": [
+        "../../packages/shared/*"
+      ]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

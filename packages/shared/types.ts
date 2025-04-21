@@ -8,9 +8,9 @@ export type ApiResponse<T> = {
 };
 
 // Form-related types
-export type FormWithQuestions = Form & {
-  questions: Question[];
-};
+// export type FormWithQuestions = Form & {
+//   questions: Question[];
+// };
 
 export type FormWithStats = Form & {
   responseCount: number;
@@ -19,10 +19,10 @@ export type FormWithStats = Form & {
 };
 
 // Response-related types
-export type ResponseWithAnswers = Response & {
-  answers: Answer[];
-  form: Form;
-};
+// export type ResponseWithAnswers = Response & {
+//   answers: Answer[];
+//   form: Form;
+// };
 
 export type ResponseSummary = {
   completionRate: number;
