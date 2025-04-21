@@ -250,7 +250,7 @@ export default function Dashboard() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg shadow p-5">
+                <div className="bg-white rounded-lg shadow p-5 max-w-[400px] w-full mx-auto md:mx-0">
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <h3 className="font-medium">Customer Feedback Survey</h3>
@@ -280,7 +280,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-lg shadow p-5">
+                <div className="bg-white rounded-lg shadow p-5 max-w-[400px] w-full mx-auto md:mx-0">
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <h3 className="font-medium">Job Application</h3>
@@ -326,8 +326,8 @@ export default function Dashboard() {
   };
   
   return (
-    <>
+    <div className="max-w-[1200px] mx-auto w-full px-4">
       {renderRouteContent()}
-    </>
+    </div>
   );
 }

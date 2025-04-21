@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'wouter';
+import { Link, RouteComponentProps } from 'wouter';
+import { motion } from 'framer-motion';
+import { slideVariants, bounceTransition } from './animation/transitions';
 import { RetroWindow, Props as RetroWindowProps } from '@/components/RetroWindow';
 import { RetroButton } from '@/components/RetroButton';
 import { RetroInput, RetroTextarea, RetroSelect, RetroCheckbox } from '@/components/RetroInput';
@@ -53,7 +55,22 @@ const DraggableWindow = ({ id, children, zIndex }: DraggableWindowProps) => {
   );
 };
 
-export const RetroDesktop = () => { // Export the desktop component
+export const RetroDesktop: React.FC<RouteComponentProps> = ({ params }) => {
+  // Listen for transition events
+  React.useEffect(() => {
+    const handleTransitionToModern = () => {
+      window.dispatchEvent(new CustomEvent('transitionToModern'));
+    };
+    
+    window.addEventListener('transitionToRetro', () => {
+      // This event is dispatched from ModernDesktop
+    });
+    
+    return () => {
+      window.removeEventListener('transitionToRetro', () => {});
+    };
+  }, []);
+  
   // Window management
   const [windows, setWindows] = useState<
     Array<{
@@ -67,19 +84,33 @@ export const RetroDesktop = () => { // Export the desktop component
       width?: number;
       height?: number;
     }>
-  >([
-    {
-      id: 'form-stats',
-      title: 'Form Fatigue Facts',
-      icon: '/chart-icon.png',
-      position: { x: 100, y: 50 },
-      visible: true,
-      minimized: false,
-      zIndex: 10,
-      width: 380,
-      height: 300
-    }
-  ]);
+  >(() => {
+    const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    return [
+      {
+        id: 'form-stats',
+        title: 'Form Fatigue Facts',
+        icon: '/chart-icon.png',
+        position: { x: Math.max(40, w / 8), y: 120 }, // left third
+        visible: true,
+        minimized: false,
+        zIndex: 11,
+        width: 380,
+        height: 300
+      },
+      {
+        id: 'form-builder',
+        title: 'Voice Form Agent - Survey Builder',
+        icon: '/form-icon.png',
+        position: { x: Math.max(40, w * 5 / 8), y: 120 }, // right third
+        visible: true,
+        minimized: false,
+        zIndex: 12,
+        width: 400,
+        height: 600
+      }
+    ];
+  });
 
   // Taskbar and Start Menu
   const [startMenuOpen, setStartMenuOpen] = useState(false);
@@ -291,7 +322,19 @@ export const RetroDesktop = () => { // Export the desktop component
   }, [windows]);
   
   return (
-    <div className="w98-desktop h-screen overflow-hidden relative bg-[#008080] cursor-w98-arrow">
+    <motion.div
+      variants={slideVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={bounceTransition}
+      className="w98-desktop h-screen overflow-hidden relative bg-[#008080] cursor-w98-arrow"
+    >
+      {/* Top Centered H1 */}
+      <h1 className="absolute left-1/2 top-8 -translate-x-1/2 text-4xl font-bold text-white drop-shadow-lg z-50 pointer-events-none select-none">
+        It's time to move forward
+      </h1>
+      
       {/* Desktop Icons */}
       <div className="flex flex-wrap p-4">
         <DesktopIcon 
@@ -318,6 +361,13 @@ export const RetroDesktop = () => { // Export the desktop component
           icon="/public/paint.png"
           label="Paint"
           onClick={() => openWindow('paint', 'Paint', '/public/paint.png', 400, 400)}
+        />
+        
+        {/* Modern Desktop Button */}
+        <DesktopIcon 
+          icon="/public/folder.png"
+          label="Modern Desktop"
+          onClick={() => window.dispatchEvent(new CustomEvent('transitionToModern'))}
         />
       </div>
       
@@ -362,60 +412,54 @@ export const RetroDesktop = () => { // Export the desktop component
                 )}
                 
                 {window.id === 'form-builder' && (
-                  <div className="space-y-4">
-                    <RetroInput 
-                      label="Form Title" 
-                      placeholder="Enter form title..." 
-                      onChange={handleFormTitleChange}
-                    />
-                    
-                    <RetroTextarea 
-                      label="Description" 
-                      placeholder="Enter form description..." 
-                      rows={4}
-                    />
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <RetroSelect label="Category">
-                        <option>Customer Feedback</option>
-                        <option>Employee Survey</option>
-                        <option>Market Research</option>
-                      </RetroSelect>
-                      
-                      <RetroSelect label="Response Type">
-                        <option>Text & Voice</option>
-                        <option>Text Only</option>
-                        <option>Voice Only</option>
-                      </RetroSelect>
-                    </div>
-                    
-                    <div>
-                      <div className="mb-1 font-w98 text-sm">Settings</div>
-                      <RetroCheckbox 
-                        id="anonymous" 
-                        label="Allow anonymous responses" 
+                  <form className="space-y-4 h-[600px] flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <RetroInput 
+                        label="First Name" 
+                        placeholder="Enter first name..." 
+                        name="firstName"
+                        required
                       />
-                      <RetroCheckbox 
-                        id="voice-commands" 
-                        label="Enable voice commands" 
+                      <RetroInput 
+                        label="Last Name" 
+                        placeholder="Enter last name..." 
+                        name="lastName"
+                        required
                       />
-                      <RetroCheckbox 
-                        id="collect-email" 
-                        label="Collect email addresses" 
+                      <RetroInput 
+                        label="Email" 
+                        placeholder="Enter email..." 
+                        name="email"
+                        type="email"
+                        required
+                      />
+                      <RetroInput 
+                        label="Phone Number" 
+                        placeholder="Enter phone number..." 
+                        name="phone"
+                        type="tel"
+                      />
+                      <RetroInput 
+                        label="Address" 
+                        placeholder="Enter address..." 
+                        name="address"
+                      />
+                      <RetroTextarea 
+                        label="Description" 
+                        placeholder="Enter description..." 
+                        name="description"
+                        rows={4}
                       />
                     </div>
-                    
                     <div className="pt-4 flex justify-end gap-2">
-                      <RetroButton onClick={() => closeWindow('form-builder')}>
+                      <RetroButton onClick={() => closeWindow('form-builder')} type="button">
                         Cancel
                       </RetroButton>
-                      <Link href="/signup">
-                        <RetroButton variant="primary">
-                          Create Form
-                        </RetroButton>
-                      </Link>
+                      <RetroButton variant="primary" type="submit">
+                        Submit
+                      </RetroButton>
                     </div>
-                  </div>
+                  </form>
                 )}
                 
                 {window.id === 'settings' && (
@@ -515,6 +559,6 @@ export const RetroDesktop = () => { // Export the desktop component
         onClose={() => setShowClippy(false)}
         message="It looks like you're trying to create a form. Would you like help with voice commands?"
       />
-    </div>
+    </motion.div>
   );
-}; 
+};

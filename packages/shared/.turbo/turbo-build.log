@@ -2,10 +2,6 @@
 > shared@0.1.0 build /Users/hutch/Documents/projects/yakyak/case_study/fucktyping/packages/shared
 > tsc
 
-index.ts(2,1): error TS2308: Module './types' has already exported a member named 'FormWithQuestions'. Consider explicitly re-exporting to resolve the ambiguity.
-index.ts(2,1): error TS2308: Module './types' has already exported a member named 'ResponseWithAnswers'. Consider explicitly re-exporting to resolve the ambiguity.
-src/index.ts(8,1): error TS2308: Module '../types' has already exported a member named 'FormWithQuestions'. Consider explicitly re-exporting to resolve the ambiguity.
-src/index.ts(8,1): error TS2308: Module '../types' has already exported a member named 'ResponseWithAnswers'. Consider explicitly re-exporting to resolve the ambiguity.
 utils.ts(59,20): error TS2339: Property 'sentimentScore' does not exist on type '{ id: number; createdAt: Date | null; responseId: number; questionId: number; answerText: string | null; answerValue: number | null; originalTranscript: string | null; confidence: number | null; audioUrl: string | null; processingDetails: unknown; }'.
 utils.ts(60,37): error TS2339: Property 'sentimentScore' does not exist on type '{ id: number; createdAt: Date | null; responseId: number; questionId: number; answerText: string | null; answerValue: number | null; originalTranscript: string | null; confidence: number | null; audioUrl: string | null; processingDetails: unknown; }'.
  ELIFECYCLE  Command failed with exit code 2.
