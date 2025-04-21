@@ -81,7 +81,7 @@ export default function Dashboard() {
           
           <div>
             <h2 className="text-base font-medium text-gray-700 mb-6">Recent Responses</h2>
-            <ResponseViewer />
+            <ResponseViewer formId="someFormId" responseId="someResponseId" />
           </div>
         </>
       );

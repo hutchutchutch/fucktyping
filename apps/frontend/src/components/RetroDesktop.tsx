@@ -5,7 +5,6 @@ import { RetroButton } from '@/components/RetroButton';
 import { RetroInput, RetroTextarea, RetroSelect, RetroCheckbox } from '@/components/RetroInput';
 import { Taskbar } from '@/components/Taskbar';
 import { DesktopIcon } from '@/components/DesktopIcon';
-import { ActiveDesktop } from '@/components/ActiveDesktop';
 import { BSOD } from '@/components/BSOD';
 import { Clippy } from '@/components/Clippy';
 // import { useSounds } from '@/hooks/useSound';
@@ -315,11 +314,6 @@ export const RetroDesktop = () => { // Export the desktop component
           label="Help"
           onClick={() => setShowClippy(true)}
         />
-      </div>
-      
-      {/* Active Desktop Element */}
-      <div className="absolute top-4 right-4 w-72 z-10">
-        <ActiveDesktop text="Welcome to Voice Form Agent! Click 'Start' to begin your journey to a better form experience!" />
       </div>
       
       {/* Windows */}
