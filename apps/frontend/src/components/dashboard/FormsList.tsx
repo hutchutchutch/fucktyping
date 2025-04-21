@@ -41,6 +41,12 @@ type FormContextValue = {
   isLoading: boolean;
 }
 
+const defaultValue: FormContextValue = {
+  forms: [],
+  deleteForm: async () => {},
+  isLoading: false,
+};
+
 function FormsList() {
   const context = useFormContext() as unknown as FormContextValue;
   const { forms, deleteForm, isLoading } = context;
@@ -123,7 +129,7 @@ function FormsList() {
       </div>
 
       <Card>
-        {forms.length === 0 ? (
+        {Array.isArray(forms) && forms.length === 0 ? (
           <Card.Content>
             <div className="text-center py-8">
               <p className="text-gray-500 mb-4">You haven't created any forms yet</p>
@@ -146,7 +152,7 @@ function FormsList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {forms.map((form) => (
+              {(forms ?? []).map((form) => (
                 <TableRow key={form.id}>
                   <TableCell className="font-medium">{form.title}</TableCell>
                   <TableCell>{formatDate(form.createdAt)}</TableCell>
