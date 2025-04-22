@@ -4,248 +4,55 @@ import { Star, Users, Calendar, Megaphone, Inbox } from 'lucide-react';
 // Simulate data from Supabase
 export const mockForms: FormWithQuestions[] = [
   {
-    id: 1,
-    title: "Customer Satisfaction",
-    description: "Survey to collect feedback about our customer service",
-    userId: 1,
-    categoryId: 1, // Customer Feedback
-    status: 'active', // active, draft, archived
-    isActive: true,
-    emailNotificationEnabled: true,
-    emailRecipients: "support@example.com",
-    emailSubject: "New Customer Satisfaction Response",
-    emailTemplate: "Thank you for your feedback on our customer service. We appreciate your input!",
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    id: 101,
+    title: "Job Application Form",
+    description: "Apply for open positions at our company.",
+    status: "active",
+    createdAt: "2024-05-01T10:00:00Z",
+    updatedAt: "2024-05-01T10:00:00Z",
+    categoryId: 1,
     questions: [
-      {
-        id: 101,
-        formId: 1,
-        text: "How would you rate our customer service?",
-        type: "rating", 
-        order: 1,
-        required: true,
-        options: ["1", "2", "3", "4", "5"],
-        createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-      },
-      {
-        id: 102,
-        formId: 1,
-        text: "What aspects of our service could be improved?",
-        type: "text",
-        order: 2,
-        required: false,
-        options: null,
-        createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-      },
-      {
-        id: 103,
-        formId: 1,
-        text: "How likely are you to recommend our service to others?",
-        type: "multiple_choice",
-        order: 3,
-        required: true,
-        options: ["Very likely", "Somewhat likely", "Not sure", "Unlikely", "Very unlikely"],
-        createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-      }
+      { id: 1, formId: 101, text: "Full Name", type: "text", required: true, order: 1 },
+      { id: 2, formId: 101, text: "Email Address", type: "email", required: true, order: 2 },
+      { id: 3, formId: 101, text: "Resume (paste link)", type: "text", required: false, order: 3 },
+      { id: 4, formId: 101, text: "Why do you want to work here?", type: "text", required: false, order: 4 },
     ],
-    responseCount: 24,
+    responseCount: 12,
+    userId: 1,
   },
   {
-    id: 2,
-    title: "Job Application",
-    description: "Application form for software developer position",
-    userId: 1,
-    categoryId: 2, // Human Resources
-    status: 'active',
-    isActive: true,
-    emailNotificationEnabled: true,
-    emailRecipients: "hr@example.com",
-    emailSubject: "New Job Application Received",
-    emailTemplate: "Thank you for applying to the software developer position. We'll review your application and get back to you soon.",
-    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    id: 102,
+    title: "Customer Survey",
+    description: "Tell us about your experience with our product.",
+    status: "active",
+    createdAt: "2024-05-02T11:00:00Z",
+    updatedAt: "2024-05-02T11:00:00Z",
+    categoryId: 2,
     questions: [
-      {
-        id: 201,
-        formId: 2,
-        text: "Full Name",
-        type: "text",
-        order: 1,
-        required: true,
-        options: null,
-      },
-      {
-        id: 202,
-        formId: 2,
-        text: "Email Address",
-        type: "text",
-        order: 2,
-        required: true,
-        options: null,
-      },
-      {
-        id: 203,
-        formId: 2,
-        text: "Years of Experience",
-        type: "multiple_choice",
-        order: 3,
-        required: true,
-        options: ["0-1 years", "1-3 years", "3-5 years", "5+ years"],
-      },
-      {
-        id: 204,
-        formId: 2,
-        text: "Tell us about yourself",
-        type: "text",
-        order: 4,
-        required: true,
-        options: null,
-      }
+      { id: 1, formId: 102, text: "How satisfied are you?", type: "rating", required: true, order: 1 },
+      { id: 2, formId: 102, text: "What can we improve?", type: "text", required: false, order: 2 },
+      { id: 3, formId: 102, text: "Would you recommend us?", type: "yes_no", required: true, order: 3 },
     ],
-    responseCount: 67,
+    responseCount: 34,
+    userId: 1,
   },
   {
-    id: 3,
-    title: "Event Feedback",
-    description: "Feedback form for our annual conference",
-    userId: 1,
-    categoryId: 3, // Events
-    status: 'active',
-    isActive: true,
-    emailNotificationEnabled: true,
-    emailRecipients: "events@example.com",
-    emailSubject: "Event Feedback Received",
-    emailTemplate: "Thank you for providing feedback on our annual conference. Your input helps us improve future events.",
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+    id: 103,
+    title: "Retreat Application",
+    description: "Sign up for our annual company retreat.",
+    status: "active",
+    createdAt: "2024-05-03T12:00:00Z",
+    updatedAt: "2024-05-03T12:00:00Z",
+    categoryId: 3,
     questions: [
-      {
-        id: 301,
-        formId: 3,
-        text: "How would you rate the overall event?",
-        type: "rating",
-        order: 1,
-        required: true,
-        options: ["1", "2", "3", "4", "5"],
-      },
-      {
-        id: 302,
-        formId: 3,
-        text: "Which sessions did you find most valuable?",
-        type: "text",
-        order: 2,
-        required: true,
-        options: null,
-      },
-      {
-        id: 303,
-        formId: 3,
-        text: "Would you attend this event next year?",
-        type: "multiple_choice",
-        order: 3,
-        required: true,
-        options: ["Yes", "Maybe", "No"],
-      }
+      { id: 1, formId: 103, text: "Name", type: "text", required: true, order: 1 },
+      { id: 2, formId: 103, text: "Department", type: "text", required: false, order: 2 },
+      { id: 3, formId: 103, text: "Dietary Restrictions", type: "text", required: false, order: 3 },
+      { id: 4, formId: 103, text: "Will you need accommodation?", type: "yes_no", required: false, order: 4 },
     ],
-    responseCount: 18,
+    responseCount: 20,
+    userId: 1,
   },
-  {
-    id: 4,
-    title: "Customer Feedback",
-    description: "Please provide feedback about your recent experience with our customer service team.",
-    userId: 1,
-    status: 'draft',
-    isActive: false,
-    emailNotificationEnabled: false,
-    emailRecipients: null,
-    emailSubject: null,
-    emailTemplate: null,
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    questions: [
-      {
-        id: 401,
-        formId: 4,
-        text: "How would you rate your overall experience?",
-        type: "rating",
-        order: 1,
-        required: true,
-        options: ["1", "2", "3", "4", "5"],
-      },
-      {
-        id: 402,
-        formId: 4,
-        text: "What aspects of our service did you find most helpful?",
-        type: "text",
-        order: 2,
-        required: true,
-        options: null,
-      }
-    ],
-    responseCount: 0,
-  },
-  {
-    id: 5,
-    title: "Product Feedback",
-    description: "Help us improve our products by sharing your experience",
-    userId: 1,
-    status: 'archived',
-    isActive: false,
-    emailNotificationEnabled: false,
-    emailRecipients: "product@example.com",
-    emailSubject: "Product Feedback Received",
-    emailTemplate: "Thank you for your feedback on our product. We value your input!",
-    createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
-    questions: [
-      {
-        id: 501,
-        formId: 5,
-        text: "Which product are you providing feedback for?",
-        type: "multiple_choice",
-        order: 1,
-        required: true,
-        options: ["Product A", "Product B", "Product C"],
-      },
-      {
-        id: 502,
-        formId: 5,
-        text: "How would you rate this product?",
-        type: "rating",
-        order: 2,
-        required: true,
-        options: ["1", "2", "3", "4", "5"],
-      }
-    ],
-    responseCount: 125,
-  },
-  {
-    id: 6,
-    title: "Website Usability Survey",
-    description: "Help us improve our website experience",
-    userId: 1,
-    status: 'draft',
-    isActive: false,
-    emailNotificationEnabled: false,
-    emailRecipients: null,
-    emailSubject: null,
-    emailTemplate: null,
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    questions: [
-      {
-        id: 601,
-        formId: 6,
-        text: "How easy was it to find what you were looking for?",
-        type: "rating",
-        order: 1,
-        required: true,
-        options: ["1", "2", "3", "4", "5"],
-      }
-    ],
-    responseCount: 0,
-  }
 ];
 
 // Generate mock responses
@@ -256,6 +63,8 @@ for (let i = 1; i <= 24; i++) {
   mockResponses.push({
     id: i,
     formId: 1,
+    questionId: 1,
+    text: '',
     respondentName: `Respondent ${i}`,
     respondentEmail: `respondent${i}@example.com`,
     completedAt: i <= 22 ? new Date(Date.now() - Math.floor(Math.random() * 10) * 24 * 60 * 60 * 1000) : null,
@@ -268,6 +77,8 @@ for (let i = 25; i <= 91; i++) {
   mockResponses.push({
     id: i,
     formId: 2,
+    questionId: 1,
+    text: '',
     respondentName: `Applicant ${i}`,
     respondentEmail: `applicant${i}@example.com`,
     completedAt: i <= 85 ? new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000) : null,
@@ -280,6 +91,8 @@ for (let i = 92; i <= 109; i++) {
   mockResponses.push({
     id: i,
     formId: 3,
+    questionId: 1,
+    text: '',
     respondentName: `Attendee ${i}`,
     respondentEmail: `attendee${i}@example.com`,
     completedAt: i <= 104 ? new Date(Date.now() - Math.floor(Math.random() * 14) * 24 * 60 * 60 * 1000) : null,
@@ -362,10 +175,12 @@ export const getFormWithResponses = (formId: number): FormWithResponseCount | nu
   let lastResponse: Date | null = null;
   if (responses.length > 0) {
     const sorted = [...responses].sort((a, b) => {
-      if (!a.createdAt || !b.createdAt) return 0;
-      return b.createdAt.getTime() - a.createdAt.getTime();
+      const aDate = typeof a.createdAt === 'string' ? new Date(a.createdAt) : a.createdAt;
+      const bDate = typeof b.createdAt === 'string' ? new Date(b.createdAt) : b.createdAt;
+      return bDate.getTime() - aDate.getTime();
     });
-    lastResponse = sorted[0].createdAt;
+    const last = sorted[0].createdAt;
+    lastResponse = typeof last === 'string' ? new Date(last) : last;
   }
   
   return {
@@ -461,13 +276,13 @@ export const mockCategoriesWithStats: CategoryWithStats[] = [
   {
     id: 1,
     userId: 1,
-    name: "Customer Feedback",
-    description: "Forms for gathering customer input and feedback",
-    color: "#3B82F6", // blue
-    icon: "star",
+    name: "Recruitment",
+    description: "Forms for job applications and candidate screening.",
+    color: "#3b82f6",
+    icon: "users",
     createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    forms: [],
-    formCount: 2,
+    forms: mockForms.filter(f => f.categoryId === 1),
+    formCount: mockForms.filter(f => f.categoryId === 1).length,
     responseRate: 0.75,
     completionRate: 0.92,
     averageSentiment: 0.85
@@ -475,13 +290,13 @@ export const mockCategoriesWithStats: CategoryWithStats[] = [
   {
     id: 2,
     userId: 1,
-    name: "Human Resources",
-    description: "Forms related to HR processes and recruiting",
-    color: "#8B5CF6", // purple
-    icon: "users",
+    name: "Customer Feedback",
+    description: "Surveys for customer satisfaction and product feedback.",
+    color: "#f59e42",
+    icon: "star",
     createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
-    forms: [],
-    formCount: 1,
+    forms: mockForms.filter(f => f.categoryId === 2),
+    formCount: mockForms.filter(f => f.categoryId === 2).length,
     responseRate: 0.64,
     completionRate: 0.78,
     averageSentiment: 0.70
@@ -489,30 +304,16 @@ export const mockCategoriesWithStats: CategoryWithStats[] = [
   {
     id: 3,
     userId: 1,
-    name: "Events",
-    description: "Forms for event planning, feedback, and management",
-    color: "#EC4899", // pink
+    name: "Event Registration",
+    description: "Forms for event signups and retreat applications.",
+    color: "#10b981",
     icon: "calendar",
     createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
-    forms: [],
-    formCount: 1,
+    forms: mockForms.filter(f => f.categoryId === 3),
+    formCount: mockForms.filter(f => f.categoryId === 3).length,
     responseRate: 0.55,
     completionRate: 0.68,
     averageSentiment: 0.75
-  },
-  {
-    id: 4,
-    userId: 1,
-    name: "Marketing",
-    description: "Forms for marketing surveys and campaigns",
-    color: "#10B981", // green
-    icon: "megaphone",
-    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-    forms: [],
-    formCount: 1,
-    responseRate: 0.82,
-    completionRate: 0.95,
-    averageSentiment: 0.80
   }
 ];
 

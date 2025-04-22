@@ -5,40 +5,25 @@ import { mockForms } from '@services/mockData';
 export const mockCategories: Category[] = [
   {
     id: 1,
-    userId: 1,
-    name: "Customer Feedback",
-    description: "Forms for gathering customer input and feedback",
-    color: "#3B82F6", // blue
-    icon: "star",
-    createdAt: new Date("2023-02-15T09:00:00Z")
+    name: "Recruitment",
+    description: "Forms for job applications and candidate screening.",
+    icon: "users",
+    color: "#3b82f6",
   },
   {
     id: 2,
-    userId: 1,
-    name: "Human Resources",
-    description: "Forms related to HR processes and recruiting",
-    color: "#8B5CF6", // purple
-    icon: "users",
-    createdAt: new Date("2023-02-17T10:30:00Z")
+    name: "Customer Feedback",
+    description: "Surveys for customer satisfaction and product feedback.",
+    icon: "star",
+    color: "#f59e42",
   },
   {
     id: 3,
-    userId: 1,
-    name: "Events",
-    description: "Forms for event planning, feedback, and management",
-    color: "#EC4899", // pink
+    name: "Event Registration",
+    description: "Forms for event signups and retreat applications.",
     icon: "calendar",
-    createdAt: new Date("2023-03-01T14:45:00Z")
+    color: "#10b981",
   },
-  {
-    id: 4,
-    userId: 1,
-    name: "Marketing",
-    description: "Forms for marketing surveys and campaigns",
-    color: "#10B981", // green
-    icon: "megaphone",
-    createdAt: new Date("2023-03-10T11:20:00Z")
-  }
 ];
 
 // Assign categories to existing forms
@@ -54,7 +39,7 @@ const categoryAssignments = {
 // Update mock forms with category information
 export const updateFormsWithCategories = () => {
   mockForms.forEach(form => {
-    form.categoryId = categoryAssignments[form.id as keyof typeof categoryAssignments] || null;
+    form.categoryId = categoryAssignments[form.id as keyof typeof categoryAssignments] || undefined;
   });
 };
 
