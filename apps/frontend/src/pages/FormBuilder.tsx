@@ -18,7 +18,6 @@ import { Skeleton } from '@ui/skeleton';
 import { FormBuilderForm, FormBuilderQuestion } from "@schemas/schema";
 import type { ExtendedFormBuilderQuestion, FormBuilderQuestion as HookFormBuilderQuestion } from "@hooks/useForm";
 import Link from "next/link";
-import { RetroButton } from "@/components/RetroButton";
 
 export default function FormBuilder() {
   const { id } = useParams<{ id: string }>();

@@ -8,7 +8,6 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import Routes from "@/routes";
 
 // Import styles
-import "./styles/win95.css";
 
 // Import the Windows 95 font
 import "@fontsource/press-start-2p";
