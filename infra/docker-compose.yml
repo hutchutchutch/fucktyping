@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fucktyping
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  turn:
+    image: coturn/coturn
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+      - "5349:5349"
+      - "5349:5349/udp"
+    environment:
+      TURN_USERNAME: user
+      TURN_PASSWORD: password
+    command: ["--no-cli", "--no-tls", "--no-dtls", "--realm=fucktyping", "--use-auth-secret", "--rest-api-separator=:"]
+
+  backend:
+    build:
+      context: ..
+      dockerfile: apps/backend/Dockerfile
+      target: dev # or production
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://postgres:postgres@db:5432/fucktyping
+      GROQ_API_KEY: ${GROQ_API_KEY:-sk-demo-key}
+      TURN_SERVER: turn:turn:3478
+      TURN_USERNAME: user
+      TURN_PASSWORD: password
+    depends_on:
+      - db
+      - turn
+    volumes:
+      - ../apps/backend/src:/app/apps/backend/src # Dev hot reload
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: apps/frontend/Dockerfile
+      target: dev # or production
+    ports:
+      - "5173:5173"
+    environment:
+      GROQ_API_KEY: ${GROQ_API_KEY:-sk-demo-key}
+    depends_on:
+      - backend
+    volumes:
+      - ../apps/frontend/src:/app/apps/frontend/src # Dev hot reload
+
+volumes:
+  postgres_data:

@@ -1,0 +1,23 @@
+---
+description: JSX and React component standards
+globs: ["**/*.tsx", "**/*.jsx"]
+alwaysApply: true
+---
+
+# JSX and React Component Practices
+
+- Use TypeScript for all new React components (.tsx extension)
+- Use proper component destructuring for props
+- Implement proper prop validation with TypeScript interfaces
+- Use functional components with hooks
+- Properly manage component state with useState and useReducer
+- Use context API for global state management when appropriate
+- Implement proper error boundaries for component error handling
+- Use proper key props for list rendering
+- Avoid inline anonymous functions in render methods when possible
+- Use proper memoization (useMemo, useCallback) for expensive operations
+- Keep components focused on a single responsibility
+- Extract complex rendering logic into smaller components
+- Use proper React event handling
+- Follow consistent naming conventions for components and props
+- Implement proper loading and error states for async operations

@@ -1,0 +1,30 @@
+---
+description: Import and module standards
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+alwaysApply: true
+---
+
+# Import and Module Standards
+
+- Use absolute imports with path aliases defined in tsconfig.json
+- Follow the import order: external modules, internal modules, relative imports
+- Use named imports for specific functionality from modules
+- Use default imports only when the module provides a primary export
+- Prefer destructuring imports where appropriate
+- Use consistent import names across the codebase
+- Group related imports together
+- Avoid circular dependencies
+- For frontend components:
+  - Use `@components/` path alias for component imports
+  - Use `@ui/` path alias for shadcn UI component imports
+  - Use `@hooks/` path alias for custom hook imports
+  - Use `@services/` path alias for service imports
+  - Use `@context/` path alias for context imports
+  - Use `@lib/` path alias for utility functions
+- For backend components:
+  - Maintain consistent import patterns
+  - Use relative imports only when necessary
+  - Prefer absolute imports with path aliases where available
+- For shared modules:
+  - Use `@shared/` path alias for shared types and utilities
+  - Use `@webrtc/` path alias for WebRTC client library

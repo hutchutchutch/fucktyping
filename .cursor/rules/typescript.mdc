@@ -1,0 +1,25 @@
+---
+description: TypeScript standards for the project
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+alwaysApply: true
+---
+
+# TypeScript Standards
+
+- Always use TypeScript for all new code across the entire application
+- Follow strict TypeScript practices with proper type definitions
+- Avoid using `any` type - use appropriate types or `unknown` if necessary
+- Use TypeScript's built-in types (e.g., `Record<K, V>`, `Partial<T>`, etc.) when appropriate
+- Create proper interface and type definitions for all data structures
+- Use union types instead of enums when possible
+- Maintain type safety across module boundaries
+- Use type assertions (`as`) only when necessary and with caution
+- Define proper return types for all functions
+- Use function overloads when a function can return different types
+- Prefer interfaces for object definitions that will be extended
+- Use index signatures only when the structure is truly dynamic
+- Always use explicit return types for functions with complex logic
+- Use string literal types for specific string values
+- Ensure all callback functions are properly typed
+- Use type narrowing when necessary to avoid unsafe typecasting
+- Export and import types correctly between frontend and backend

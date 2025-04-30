@@ -1,0 +1,23 @@
+---
+description: Docker and containerization standards
+globs: ["**/Dockerfile", "**/Dockerfile.dev", "**/docker-compose.yml"]
+alwaysApply: false
+---
+
+# Docker and Containerization Standards
+
+- Follow Docker best practices for image building
+- Use multi-stage builds to minimize image size
+- Use specific base image versions rather than 'latest'
+- Include only necessary files in Docker context
+- Properly handle permissions in containers
+- Implement proper health checks for services
+- Use environment variables for configuration
+- Implement proper logging from containers
+- Ensure proper error handling in entrypoint scripts
+- Optimize Docker layer caching
+- Implement proper cleanup of temporary files
+- Set appropriate resource limits for containers
+- Use Docker Compose for local development orchestration
+- Follow consistent naming conventions for services
+- Implement proper security practices for containers

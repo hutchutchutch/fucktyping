@@ -1,0 +1,44 @@
+---
+description: Backend architecture and API standards
+globs: ["**/backend/src/**/*.ts", "**/backend/src/**/*.js"]
+alwaysApply: true
+---
+
+# Backend Standards
+
+## Express.js API
+
+- Follow RESTful API design principles
+- Implement proper error handling middleware
+- Use consistent response formats across all endpoints
+- Implement proper input validation using zod schemas
+- Structure controllers with consistent patterns
+- Separate business logic into service layers
+- Use TypeScript for all new backend code
+- Implement proper logging for API requests and errors
+
+## Database Access
+
+- Use Drizzle ORM for database access
+- Implement proper database migrations
+- Follow SQL best practices
+- Maintain consistent schema definitions
+- Implement proper data validation
+- Use appropriate indexes for query performance
+- Implement proper error handling for database operations
+
+## LangGraph Integration
+
+- Structure conversation flows using LangGraph patterns
+- Implement proper state management for conversations
+- Maintain consistent prompt engineering practices
+- Implement proper error handling for AI services
+- Ensure proper integration with Groq API
+
+## WebRTC Signaling
+
+- Implement proper WebRTC signaling for peer connections
+- Handle ICE candidates and offers/answers correctly
+- Implement proper error handling for connection failures
+- Ensure secure connections with proper encryption
+- Implement reconnection logic for dropped connections

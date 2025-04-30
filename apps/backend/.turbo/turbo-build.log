@@ -1,0 +1,42 @@
+
+> backend@0.1.0 build /Users/hutch/Documents/projects/yakyak/case_study/fucktyping/apps/backend
+> esbuild src/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+✘ [ERROR] No matching export in "src/engine/graphBuilder.js" for import "default"
+
+    src/controllers/conversationController.js:2:7:
+      2 │ import graphBuilder from '../engine/graphBuilder';
+        ╵        ~~~~~~~~~~~~
+
+✘ [ERROR] No matching export in "src/services/groqService.ts" for import "default"
+
+    src/controllers/conversationController.js:3:7:
+      3 │ import groqService from '../services/groqService';
+        ╵        ~~~~~~~~~~~
+
+✘ [ERROR] No matching export in "src/services/voiceService.ts" for import "default"
+
+    src/controllers/conversationController.js:4:7:
+      4 │ import voiceService from '../services/voiceService';
+        ╵        ~~~~~~~~~~~~
+
+▲ [WARNING] Import "getForms" will always be undefined because there is no matching export in "src/controllers/formController.js" [import-is-undefined]
+
+    src/routes.ts:33:39:
+      33 │   app.get("/api/forms", formController.getForms);
+         ╵                                        ~~~~~~~~
+
+▲ [WARNING] Import "getFormById" will always be undefined because there is no matching export in "src/controllers/formController.js" [import-is-undefined]
+
+    src/routes.ts:34:43:
+      34 │   app.get("/api/forms/:id", formController.getFormById);
+         ╵                                            ~~~~~~~~~~~
+
+▲ [WARNING] Import "createForm" will always be undefined because there is no matching export in "src/controllers/formController.js" [import-is-undefined]
+
+    src/routes.ts:35:40:
+      35 │   app.post("/api/forms", formController.createForm);
+         ╵                                         ~~~~~~~~~~
+
+3 of 27 warnings and all 3 errors shown (disable the message limit with --log-limit=0)
+ ELIFECYCLE  Command failed with exit code 1.

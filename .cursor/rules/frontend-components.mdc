@@ -1,0 +1,36 @@
+---
+description: Frontend component standards with shadcn and Tailwind
+globs: ["**/frontend/src/components/**/*.tsx", "**/frontend/src/pages/**/*.tsx"]
+alwaysApply: true
+---
+
+# Frontend Component Standards
+
+## Tailwind CSS Usage
+
+- Use Tailwind CSS for all styling across the frontend
+- Refer to design tokens defined in tailwind.config.ts for consistent styling
+- Use the HSL color variables for theming (e.g., `text-primary`, `bg-background`)
+- Follow mobile-first responsive design principles
+- Use Tailwind's utility classes over custom CSS when possible
+- Maintain consistent spacing using Tailwind's spacing scale
+- Implement dark mode support using the `dark:` variant
+
+## shadcn/ui Components
+
+- Use shadcn/ui components from the `components/ui` directory
+- Maintain consistency with the shadcn/ui component patterns
+- Extend shadcn components rather than creating duplicative ones
+- Use the theme variables provided by the shadcn system
+- Ensure proper accessibility for all components
+- Style shadcn components using the design system tokens
+
+## Component Structure
+
+- Use function components with named exports
+- Define component props using TypeScript interfaces
+- Follow a consistent naming convention for components
+- Keep components small and focused on a single responsibility
+- Extract reusable logic into custom hooks
+- Use proper semantic HTML elements
+- Structure components with consistent patterns

@@ -1,0 +1,23 @@
+/* Global CRT look */
+html[data-theme='w95'] body {
+  cursor: url('/cursors/w95_arrow.cur'), auto;
+  background: #000;                        /* pitch‑black CRT bezel      */
+  color: rgb(var(--color-fg));
+  font-family: var(--font-sans);
+  image-rendering: pixelated;              /* crispy pixel edges         */
+}
+
+/* Subtle scan‑lines overlay */
+html[data-theme='w95'] body::after {
+  pointer-events: none;
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: 
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0 1px,
+      rgba(0,0,0,0.08) 1px 2px
+    );
+  mix-blend-mode: multiply;
+}
