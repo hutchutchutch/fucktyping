@@ -174,6 +174,7 @@ export const answers = pgTable("answers", {
   audioUrl: text("audio_url"), // URL to stored audio response
   processingDetails: jsonb("processing_details"), // Additional processing metadata
   createdAt: timestamp("created_at").defaultNow(),
+  sentimentScore: integer("sentiment_score"), // Sentiment score for this answer
 });
 
 export const insertAnswerSchema = createInsertSchema(answers).pick({
@@ -307,7 +308,7 @@ export type FormAnalytics = {
   totalResponses: number;
   completionRate: number;
   averageCompletionTime: number; // in seconds
-  sentimentScore: number; 
+  sentimentScore?: number; 
   questionBreakdown: QuestionAnalytics[];
 };
 
@@ -456,3 +457,5 @@ export type VoiceAgentWithNodes = VoiceAgent & {
   edges: VoiceAgentEdge[];
   form?: Form;
 };
+
+type AnswerWithSentiment = Answer & { sentimentScore?: number };
