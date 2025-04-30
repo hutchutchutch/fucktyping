@@ -310,9 +310,6 @@ export default function CreateForm() {
           {!isCollapsed.questions && (
             <CardContent className="space-y-4">
               <div className="border rounded-md p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-medium">Questions</h3>
-                </div>
                 
                 <div className="space-y-4">
                   {questions.map((question, index) => {
