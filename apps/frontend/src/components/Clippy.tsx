@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RetroButton } from './RetroButton';
+import { Button } from '@ui/button';
 
 interface ClippyProps {
   visible: boolean;
@@ -32,48 +32,49 @@ export const Clippy: React.FC<ClippyProps> = ({
   
   return (
     <div 
-      className={`fixed bottom-12 right-4 w-64 bg-[#FFFFCC] border border-[#808080] shadow-md p-3 z-50 ${animation}`}
-      style={{ boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)' }}
+      className={`fixed bottom-12 right-4 w-64 bg-white rounded-lg border border-slate-200 shadow-md p-3 z-50 ${animation}`}
     >
       <div className="flex items-start">
         <div className="mr-3">
           <div 
-            className="w-10 h-10 bg-yellow-300 border border-black flex items-center justify-center text-2xl"
-            style={{ fontFamily: 'sans-serif' }}
+            className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-2xl"
           >
-            📎
+            💡
           </div>
         </div>
         <div className="flex-1">
-          <div className="font-w98 text-sm mb-3">{message}</div>
+          <div className="text-sm mb-3">{message}</div>
           <div className="flex justify-end gap-1">
-            <RetroButton 
+            <Button 
               onClick={(e) => {
                 e.stopPropagation();
                 onClose();
               }} 
-              className="mt-0 py-0 px-2 text-xs"
+              size="sm"
+              variant="ghost"
             >
               Yes
-            </RetroButton>
-            <RetroButton 
+            </Button>
+            <Button 
               onClick={(e) => {
                 e.stopPropagation();
                 onClose();
               }} 
-              className="mt-0 py-0 px-2 text-xs"
+              size="sm"
+              variant="ghost"
             >
               No
-            </RetroButton>
-            <RetroButton 
+            </Button>
+            <Button 
               onClick={(e) => {
                 e.stopPropagation();
                 onClose();
               }} 
-              className="mt-0 py-0 px-2 text-xs"
+              size="sm"
+              variant="secondary"
             >
               × Close
-            </RetroButton>
+            </Button>
           </div>
         </div>
       </div>

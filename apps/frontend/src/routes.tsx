@@ -1,9 +1,6 @@
 import { Switch, Route, Redirect, useLocation } from "wouter";
 import { useAuthContext } from "@context/AuthContext";
 import LandingPage from "@pages/LandingPage";
-import { DesktopSwitcher } from "@/components/animation/DesktopSwitcher";
-import { RetroDesktop } from "@/components/RetroDesktop";
-import { ModernDesktop } from "@/components/ModernDesktop";
 import Dashboard from "@pages/Dashboard";
 import FormBuilder from "@pages/FormBuilder";
 import CreateForm from "@pages/CreateForm";
@@ -150,9 +147,7 @@ export default function Routes() {
   return (
     <Switch>
       {/* Public pages */}
-      <Route path="/" component={DesktopSwitcher} />
-      <Route path="/retro" component={RetroDesktop} />
-      <Route path="/modern" component={ModernDesktop} />
+      <Route path="/" component={LandingPage} />
       <Route path="/landing" component={LandingPage} />
       <Route path="/login" component={Login} />
       <Route path="/voice-test" component={VoiceTest} />

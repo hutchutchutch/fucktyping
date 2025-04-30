@@ -108,6 +108,7 @@ export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
   formId: integer("form_id").notNull().references(() => forms.id, { onDelete: "cascade" }),
   text: text("text").notNull(),
+  context: text("context").notNull(),
   type: text("type").notNull(), // 'multiple_choice', 'text', 'rating', 'date'
   order: integer("order").notNull(),
   options: jsonb("options"), // For multiple choice questions
@@ -121,6 +122,7 @@ export const questions = pgTable("questions", {
 export const insertQuestionSchema = createInsertSchema(questions).pick({
   formId: true,
   text: true,
+  context: true,
   type: true,
   order: true,
   options: true,

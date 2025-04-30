@@ -379,6 +379,7 @@ export default function CreateForm() {
                                   setQuestions(newQuestions);
                                   toggleEditing()
                                 }}
+                                showContextField={true}
                                 onRemove={() => {
                                   // Remove from editing state and filter questions
                                   const newEditingQuestions = {...editingQuestions};

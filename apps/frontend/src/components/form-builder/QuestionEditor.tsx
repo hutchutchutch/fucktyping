@@ -24,7 +24,9 @@ interface QuestionEditorProps {
       min: number;
       max: number;
     };
+    context?: string;
   };
+  showContextField?: boolean;
   index?: number;
   onChange: (question: any) => void;
   onRemove?: () => void;
@@ -32,25 +34,35 @@ interface QuestionEditorProps {
 }
 
 export default function QuestionEditor({ 
-  question, 
-  index = 0, 
-  onChange, 
+  question,
+  index = 0,
+  onChange,
   onRemove,
-  onCancel 
+  onCancel,
+  showContextField
 }: QuestionEditorProps) {
   // Initialize with default values or from question prop
-  const [localQuestion, setLocalQuestion] = useState({
-    id: question?.id || `q${Date.now()}`,
-    text: question?.text || "",
-    description: question?.description || "",
-    type: question?.type || "text",
-    required: question?.required !== undefined ? question?.required : false,
-    options: question?.options || ["Option 1"],
-    order: question?.order || index + 1,
-    validation: question?.validation || {
-      min: 1,
-      max: 5,
-    },
+  const [localQuestion, setLocalQuestion] = useState(() => {
+    const baseState = {
+      id: question?.id || `q${Date.now()}`,
+      text: question?.text || "",
+      description: question?.description || "",
+      type: question?.type || "text",
+      required: question?.required !== undefined ? question?.required : false,
+      options: question?.options || ["Option 1"],
+      order: question?.order || index + 1,
+      validation: question?.validation || {
+        min: 1,
+        max: 5,
+      },
+    }
+    if (showContextField) {
+      return {
+        ...baseState,
+        context: question?.context || "",
+      };
+    }
+    return baseState;  
   });
   
   // Update local state when parent component passes new question
@@ -65,6 +77,7 @@ export default function QuestionEditor({
         options: question.options || localQuestion.options,
         order: question.order || index + 1,
         validation: question.validation || localQuestion.validation,
+        ...(showContextField && { context: question.context || "" }),
       });
     }
   }, [question, index]);
@@ -77,7 +90,7 @@ export default function QuestionEditor({
     setLocalQuestion(updatedQuestion);
     
     // Notify parent component about the changes
-    if (onChange) {
+    if (onChange && !showContextField) {
       onChange(updatedQuestion);
     }
   };
@@ -94,7 +107,7 @@ export default function QuestionEditor({
     setLocalQuestion(updatedQuestion);
     
     // Notify parent component about the changes
-    if (onChange) {
+    if (onChange && !showContextField) {
       onChange(updatedQuestion);
     }
   };
@@ -110,7 +123,7 @@ export default function QuestionEditor({
     setLocalQuestion(updatedQuestion);
     
     // Notify parent component about the changes
-    if (onChange) {
+    if (onChange && !showContextField) {
       onChange(updatedQuestion);
     }
   };
@@ -127,7 +140,7 @@ export default function QuestionEditor({
     setLocalQuestion(updatedQuestion);
     
     // Notify parent component about the changes
-    if (onChange) {
+    if (onChange && !showContextField) {
       onChange(updatedQuestion);
     }
   };
@@ -143,7 +156,7 @@ export default function QuestionEditor({
     setLocalQuestion(updatedQuestion);
     
     // Notify parent component about the changes
-    if (onChange) {
+    if (onChange && !showContextField) {
       onChange(updatedQuestion);
     }
   };
@@ -194,6 +207,22 @@ export default function QuestionEditor({
               className="border-slate-300"
             />
           </div>
+          {showContextField && (
+            <div className="space-y-2">
+              <Label htmlFor="question-context" className="text-sm font-medium">
+                Context
+              </Label>
+              { "context" in localQuestion ? (
+                <Input
+                  id="question-context"
+                  value={localQuestion.context}
+                  onChange={(e) => handleQuestionChange("context", e.target.value)}
+                  placeholder="Provide additional context for the question"
+                  className="border-slate-300"
+                />
+              ) : null }
+            </div>
+          )}
           
           <div className="space-y-2">
             <div className="flex items-center justify-between">
