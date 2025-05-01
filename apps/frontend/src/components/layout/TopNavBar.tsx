@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, MouseEvent } from "react";
 import { Link } from "wouter";
 import { useAuthContext } from "@context/AuthContext";
+import { User } from "@context/AuthContext";
 import { Button } from "@ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@ui/avatar";
 import {
@@ -23,7 +24,11 @@ import {
 } from "lucide-react";
 import SimpleTour from "@components/onboarding/SimpleTour";
 
-function TopNavBar({ onToggleSidebar }) {
+interface TopNavBarProps {
+  onToggleSidebar: () => void;
+}
+
+function TopNavBar({ onToggleSidebar }: TopNavBarProps) {
   const { user, logout } = useAuthContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [showTour, setShowTour] = useState(false);
@@ -33,7 +38,7 @@ function TopNavBar({ onToggleSidebar }) {
     localStorage.setItem('hasSeenTour', 'true');
   };
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Implement search functionality
     console.log("Searching for:", searchQuery);

@@ -1,11 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useLocation } from "wouter";
 import { useAuthContext } from "@context/AuthContext";
 import Sidebar from "@components/layout/Sidebar";
 import TopNavBar from "@components/layout/TopNavBar";
 import MobileNav from "@components/layout/MobileNav";
 
-function Layout({ children }) {
+interface LayoutProps {
+  children: ReactNode;
+}
+
+function Layout({ children }: LayoutProps) {
   const [showSidebar, setShowSidebar] = useState(false);
   const { isAuthenticated } = useAuthContext();
   const [location] = useLocation();
@@ -21,11 +25,11 @@ function Layout({ children }) {
 
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
-    const handleOutsideClick = (e) => {
+    const handleOutsideClick = (e: MouseEvent) => {
       if (
         showSidebar &&
-        !e.target.closest('aside') &&
-        !e.target.closest('button[data-sidebar-toggle]')
+        !(e.target as Element).closest('aside') &&
+        !(e.target as Element).closest('button[data-sidebar-toggle]')
       ) {
         setShowSidebar(false);
       }
