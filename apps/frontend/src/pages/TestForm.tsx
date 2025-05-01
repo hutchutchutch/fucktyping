@@ -335,7 +335,7 @@ Key Metrics: NPS Score, Feature Satisfaction`;
       let questionContext = "";
       let currentQuestionType = "";
       
-      if (form.questions && currentQuestionIndex < form.questions.length) {
+      if (form.questions && form.questions.length > 0 && currentQuestionIndex < form.questions.length) {
         const currentQuestion = form.questions[currentQuestionIndex];
         questionContext = `Question: "${currentQuestion.text}"\nType: ${currentQuestion.type}\nRequired: ${currentQuestion.required ? 'Yes' : 'No'}\nOrder: ${currentQuestion.order}`;
         currentQuestionType = currentQuestion.type;

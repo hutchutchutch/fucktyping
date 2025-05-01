@@ -1,7 +1,6 @@
 import { useState, MouseEvent } from "react";
 import { Link } from "wouter";
 import { useAuthContext } from "@context/AuthContext";
-import { User } from "@context/AuthContext";
 import { Button } from "@ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@ui/avatar";
 import {
@@ -11,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./components/ui/dropdown-menu";
+} from "@ui/dropdown-menu";
 import { Input } from "@ui/input";
 import { 
   Bell, 

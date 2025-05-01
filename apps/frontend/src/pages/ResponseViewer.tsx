@@ -2,7 +2,7 @@ import { useParams } from "wouter";
 import ResponseViewerComponent from "@/components/dashboard/ResponseViewer";
 
 export default function ResponseViewer() {
-  const { id } = useParams<{ id: string }>();
+  const { id, formId } = useParams<{ id: string; formId: string }>();
   
   return (
     <div>
@@ -13,7 +13,7 @@ export default function ResponseViewer() {
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <ResponseViewerComponent />
+        <ResponseViewerComponent formId={formId || "1"} responseId={id || "1"} />
       </div>
     </div>
   );

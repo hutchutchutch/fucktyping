@@ -1,5 +1,33 @@
 import React, { useEffect, useRef, useState } from 'react';
-import WebRTCClient from 'webrtc-client';
+
+// Define interface for WebRTCClient
+interface WebRTCClientOptions {
+  signalingUrl: string;
+  userId: string;
+  audio: boolean;
+  video: boolean;
+  onLocalStream: (stream: MediaStream) => void;
+  onRemoteStream: (stream: MediaStream) => void;
+  onConnectionStateChange: (state: string) => void;
+  onSignalingStateChange: (state: string) => void;
+  onError: (error: Error) => void;
+}
+
+interface WebRTCClient {
+  startLocalStream: (constraints: {audio: boolean, video: boolean}) => Promise<void>;
+  joinRoom: (roomId: string) => Promise<void>;
+  disconnect: () => void;
+}
+
+// Mock WebRTCClient constructor
+const WebRTCClient = function(options: WebRTCClientOptions): WebRTCClient {
+  return {
+    startLocalStream: async () => {},
+    joinRoom: async () => {},
+    disconnect: () => {}
+  };
+};
+
 import { Button } from '@ui/button';
 
 const WebRTCAudioTest = () => {

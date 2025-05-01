@@ -22,7 +22,7 @@ const fetchForm = async (id: string): Promise<Form & { questions: Question[] }> 
       resolve({
         id: parseInt(id),
         userId: 1,
-        categoryId: null,
+        categoryId: 1,
         title: "Customer Feedback Survey",
         description: "Get feedback from customers about our service",
         status: "draft",
