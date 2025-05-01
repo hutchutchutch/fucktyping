@@ -5,7 +5,15 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import * as groqService from './groqService';
+import groqService from './groqService';
+
+// Export as default for module compatibility
+export default {
+  transcribeAudio,
+  textToSpeech,
+  processVoiceAnswer,
+  analyzeVoiceSentiment
+};
 
 // Define TypeScript interfaces for better type safety
 interface TranscriptionResult {
@@ -52,7 +60,7 @@ interface SentimentAnalysisResult {
   confidence: number;
 }
 
-export const transcribeAudio = async function(audioBase64: string): Promise<TranscriptionResult> {
+const transcribeAudio = async function(audioBase64: string): Promise<TranscriptionResult> {
   try {
     const startTime = Date.now();
     
@@ -217,7 +225,7 @@ export const transcribeAudio = async function(audioBase64: string): Promise<Tran
  * @param options - TTS options
  * @returns Promise with speech synthesis result
  */
-export const textToSpeech = async function(text: string, options: SpeechSynthesisOptions = {}): Promise<SpeechSynthesisResult> {
+const textToSpeech = async function(text: string, options: SpeechSynthesisOptions = {}): Promise<SpeechSynthesisResult> {
   try {
     // Track processing time
     const startTime = Date.now();
@@ -258,7 +266,7 @@ export const textToSpeech = async function(text: string, options: SpeechSynthesi
  * @param {Object} options - Processing options
  * @returns {Promise<Object>} - Processed answer
  */
-export const processVoiceAnswer = async function(
+const processVoiceAnswer = async function(
   audioBase64: string, 
   questionType: string, 
   options: ProcessVoiceAnswerOptions = {}
@@ -287,7 +295,7 @@ export const processVoiceAnswer = async function(
  * @param {string} audioBase64 - Base64 encoded audio data
  * @returns {Promise<Object>} - Sentiment analysis result
  */
-export const analyzeVoiceSentiment = async function(audioBase64: string): Promise<SentimentAnalysisResult> {
+const analyzeVoiceSentiment = async function(audioBase64: string): Promise<SentimentAnalysisResult> {
   try {
     // First, transcribe the audio
     const transcription = await transcribeAudio(audioBase64);

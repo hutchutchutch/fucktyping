@@ -1,6 +1,6 @@
 import { storage } from '../storage';
 import emailController from './emailController';
-import * as groqService from '../services/groqService';
+import groqService from '../services/groqService';
 import errorHandler from '../utils/errorHandler';
 
 /**

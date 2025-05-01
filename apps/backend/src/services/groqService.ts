@@ -13,13 +13,20 @@ const groqChat = new ChatGroq({
   modelName: "grok-2-1212" // Using Grok 2 as our default model
 });
 
+// Export as default for module compatibility
+export default {
+  generateResponse,
+  processAnswer,
+  analyzeSentiment
+};
+
 /**
  * Generate a response using a Groq model via LangChain
  * @param {string} prompt - The input prompt
  * @param {Object} options - Generation options
  * @returns {Promise<Object>} - Generated response
  */
-export const generateResponse = async function(prompt: string, options: {
+const generateResponse = async function(prompt: string, options: {
   temperature?: number;
   maxTokens?: number;
   model?: string;
@@ -83,7 +90,7 @@ export const generateResponse = async function(prompt: string, options: {
  * @param {Array} options - Options for multiple choice questions
  * @returns {Promise<any>} - Processed answer
  */
-export const processAnswer = async function(
+const processAnswer = async function(
   text: string, 
   questionType: string, 
   questionText: string, 
@@ -207,7 +214,7 @@ export const processAnswer = async function(
  * @param {string} text - Text to analyze
  * @returns {Promise<Object>} - Sentiment analysis result
  */
-export const analyzeSentiment = async function(text: string) {
+const analyzeSentiment = async function(text: string) {
   try {
     // For development we use a simple keyword-based approach
     // In production, we would use LangChain with Groq for sentiment analysis
