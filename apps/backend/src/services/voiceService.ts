@@ -52,7 +52,7 @@ interface SentimentAnalysisResult {
   confidence: number;
 }
 
-export async function transcribeAudio(audioBase64: string): Promise<TranscriptionResult> {
+export const transcribeAudio = async function(audioBase64: string): Promise<TranscriptionResult> {
   try {
     const startTime = Date.now();
     
@@ -217,7 +217,7 @@ export async function transcribeAudio(audioBase64: string): Promise<Transcriptio
  * @param options - TTS options
  * @returns Promise with speech synthesis result
  */
-export async function textToSpeech(text: string, options: SpeechSynthesisOptions = {}): Promise<SpeechSynthesisResult> {
+export const textToSpeech = async function(text: string, options: SpeechSynthesisOptions = {}): Promise<SpeechSynthesisResult> {
   try {
     // Track processing time
     const startTime = Date.now();
@@ -258,7 +258,7 @@ export async function textToSpeech(text: string, options: SpeechSynthesisOptions
  * @param {Object} options - Processing options
  * @returns {Promise<Object>} - Processed answer
  */
-export async function processVoiceAnswer(
+export const processVoiceAnswer = async function(
   audioBase64: string, 
   questionType: string, 
   options: ProcessVoiceAnswerOptions = {}
@@ -287,7 +287,7 @@ export async function processVoiceAnswer(
  * @param {string} audioBase64 - Base64 encoded audio data
  * @returns {Promise<Object>} - Sentiment analysis result
  */
-export async function analyzeVoiceSentiment(audioBase64: string): Promise<SentimentAnalysisResult> {
+export const analyzeVoiceSentiment = async function(audioBase64: string): Promise<SentimentAnalysisResult> {
   try {
     // First, transcribe the audio
     const transcription = await transcribeAudio(audioBase64);

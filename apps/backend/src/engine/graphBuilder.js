@@ -17,7 +17,7 @@ import { StateSchema } from './state.js';
  * @param {Object} initialState - Initial state for the graph
  * @returns {StateGraph} The constructed graph
  */
-export function buildGraph(formConfig) {
+export const buildGraph = function(formConfig) {
   // Create an instance of the LLM
   const llm = new ChatGroq({
     modelName: "llama3-70b-8192",
