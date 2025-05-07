@@ -86,7 +86,7 @@ const WebRTCAudioTest = () => {
   const handleConnect = async () => {
     try {
       // Create WebRTC client instance
-      webrtcClientRef.current = new WebRTCClient({
+      webrtcClientRef.current = WebRTCClient({
         signalingUrl: 'http://localhost:3000',
         userId,
         audio: true,
@@ -123,11 +123,19 @@ const WebRTCAudioTest = () => {
       });
 
       // Start local stream
-      await webrtcClientRef.current.startLocalStream({ audio: true, video: false });
+      if (webrtcClientRef.current) {
+        await webrtcClientRef.current.startLocalStream({ audio: true, video: false });
+      } else {
+        throw new Error("WebRTC client not initialized before starting local stream.");
+      }
       addMessage('Local audio stream started');
 
       // Join room
-      await webrtcClientRef.current.joinRoom(roomId);
+      if (webrtcClientRef.current) {
+        await webrtcClientRef.current.joinRoom(roomId);
+      } else {
+        throw new Error("WebRTC client not initialized before joining room.");
+      }
       addMessage(`Joined room: ${roomId}`);
       
     } catch (error) {

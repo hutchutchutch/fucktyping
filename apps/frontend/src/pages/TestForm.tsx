@@ -66,7 +66,7 @@ interface Message {
   id: string;
   sender: 'agent' | 'user';
   text: string;
-  type: 'opening' | 'question' | 'closing' | 'response';
+  type: 'opening' | 'question' | 'closing' | 'response' | 'error';
   timestamp: Date;
   stats?: {
     latency: number;
@@ -396,32 +396,48 @@ Key Metrics: NPS Score, Feature Satisfaction`;
         
         // Wait briefly before showing the next question
         setTimeout(() => {
-          const nextQuestion = form.questions[nextIndex];
-          
-          // Add next question message
-          const questionMessage: Message = {
-            id: `question-${nextQuestion.id}`,
-            sender: 'agent',
-            text: nextQuestion.text,
-            type: 'question',
-            timestamp: new Date(),
-            stats: {
-              latency: 50, // Simple latency as we're just displaying text
-              processingTime: 100,
-              tokens: Math.floor(nextQuestion.text.length / 4)
-            },
-            promptSettings: {
-              temperature: agentSettings.temperature,
-              maxTokens: agentSettings.maxTokens,
-              voice: agentSettings.voice,
-              speed: agentSettings.speed
-            },
-            originalPrompt: `Ask the user the following question: "${nextQuestion.text}". Wait for their response before proceeding.`,
-            context: agentSettings.includeFormContext ? `Question Type: ${nextQuestion.type}\nRequired: ${nextQuestion.required ? 'Yes' : 'No'}\nOrder: ${nextQuestion.order}` : undefined
-          };
-          
-          setMessages(prev => [...prev, questionMessage]);
-          setCurrentQuestionIndex(nextIndex);
+          if (form && form.questions && form.questions[nextIndex]) {
+            const nextQuestion = form.questions[nextIndex];
+            
+            // Add next question message
+            const questionMessage: Message = {
+              id: `question-${nextQuestion.id}`,
+              sender: 'agent',
+              text: nextQuestion.text,
+              type: 'question',
+              timestamp: new Date(),
+              stats: {
+                latency: 50, // Simple latency as we're just displaying text
+                processingTime: 100,
+                tokens: Math.floor(nextQuestion.text.length / 4)
+              },
+              promptSettings: {
+                temperature: agentSettings.temperature,
+                maxTokens: agentSettings.maxTokens,
+                voice: agentSettings.voice,
+                speed: agentSettings.speed
+              },
+              originalPrompt: `Ask the user the following question: "${nextQuestion.text}". Wait for their response before proceeding.`,
+              context: agentSettings.includeFormContext ? `Question Type: ${nextQuestion.type}\nRequired: ${nextQuestion.required ? 'Yes' : 'No'}\nOrder: ${nextQuestion.order}` : undefined
+            };
+            
+            setMessages(prev => [...prev, questionMessage]);
+            setCurrentQuestionIndex(nextIndex);
+          } else {
+            // Handle case where form or next question is not available
+            // This might indicate the end of the form or an error
+            console.warn("Attempted to access next question, but form or questions are undefined, or nextIndex is out of bounds.");
+            // Potentially show a generic closing message or error
+            const errorMessage: Message = {
+              id: 'error-no-next-question',
+              sender: 'agent',
+              text: "It seems there was an issue proceeding to the next question. Let's conclude here.",
+              type: 'error',
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, errorMessage]);
+            setFormCompleted(true);
+          }
         }, 1500);
       } else {
         // Form is completed
@@ -447,7 +463,7 @@ Key Metrics: NPS Score, Feature Satisfaction`;
           const closingMessage: Message = {
             id: 'closing',
             sender: 'agent',
-            text: `Thank you for completing the "${form.title}" form. Your responses have been recorded.`,
+            text: `Thank you for completing the "${form?.title || 'current'}" form. Your responses have been recorded.`,
             type: 'closing',
             timestamp: new Date(),
             stats: {
@@ -462,7 +478,7 @@ Key Metrics: NPS Score, Feature Satisfaction`;
               speed: agentSettings.speed
             },
             originalPrompt: `Thank the user for completing the survey, inform them that their responses have been recorded, and end the conversation politely.`,
-            context: agentSettings.includeFormContext ? `Form completion statistics:\nCompletion Time: ${Math.floor(Math.random() * 5) + 1} minutes\nQuestions Answered: ${form.questions.length}` : undefined
+            context: agentSettings.includeFormContext ? `Form completion statistics:\nCompletion Time: ${Math.floor(Math.random() * 5) + 1} minutes\nQuestions Answered: ${form?.questions?.length || 0}` : undefined
           };
           
           setMessages(prev => [...prev, closingMessage]);

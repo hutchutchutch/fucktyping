@@ -11,8 +11,6 @@ import { Separator } from "@ui/separator";
 import { ChevronDown, ChevronUp, Upload, Mic, Edit, Plus, Save, TestTube, Wand2 } from "lucide-react";
 import AppLayout from "@components/layout/AppLayout";
 import { useForm } from '@hooks/useForm';
-// Import FormBuilder component dynamically to avoid missing module error
-const FormBuilderComponent = () => null;
 import QuestionEditor from '@components/form-builder/QuestionEditor';
 import Modal from '@/components/common/Modal';
 import { Skeleton } from '@ui/skeleton';
@@ -150,34 +148,10 @@ export default function FormBuilder() {
     );
   }
 
-  // If form hooks are available and the FormBuilderComponent exists, use that
-  if (form && typeof FormBuilderComponent !== 'undefined' && handleSaveQuestion) {
-    return (
-      <div>
-        <FormBuilderComponent
-          currentForm={form}
-          questions={questions}
-          updateFormField={updateFormField}
-          addQuestion={addQuestion}
-          saveForm={handleSaveForm}
-        />
-        
-        <Modal
-          open={showQuestionModal}
-          onOpenChange={setShowQuestionModal}
-          title={currentQuestion ? "Edit Question" : "Add Question"}
-        >
-          <QuestionEditor
-            question={currentQuestion || undefined}
-            onChange={handleSaveQuestion}
-            onCancel={() => setShowQuestionModal(false)}
-          />
-        </Modal>
-      </div>
-    );
-  }
+  // The FormBuilderComponent was a placeholder, defaulting to the main implementation below.
+  // If a separate FormBuilderComponent is to be used, it needs to be properly imported and defined.
 
-  // Fallback to the original implementation
+  // Original implementation:
   return (
     <AppLayout>
       <div className="container mx-auto py-6 max-w-5xl">
