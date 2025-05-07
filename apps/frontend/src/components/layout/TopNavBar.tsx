@@ -55,10 +55,8 @@ function TopNavBar({ onToggleSidebar }: TopNavBarProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <Link href="/dashboard">
-            <a className="ml-3 text-xl font-bold font-sans text-primary-500">
-              Voice Form Agent
-            </a>
+          <Link href="/dashboard" className="ml-3 text-xl font-bold font-sans text-primary-500">
+            Voice Form Agent
           </Link>
         </div>
 
@@ -110,7 +108,7 @@ function TopNavBar({ onToggleSidebar }: TopNavBarProps) {
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
                   <AvatarImage 
-                    src={user?.avatarUrl} 
+                    src={user?.avatar ?? undefined}
                     alt={user?.firstName || 'User'} 
                   />
                   <AvatarFallback>
@@ -134,19 +132,15 @@ function TopNavBar({ onToggleSidebar }: TopNavBarProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/profile">
-                  <a className="w-full flex cursor-pointer items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </a>
+                <Link href="/profile" className="w-full flex cursor-pointer items-center">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/settings">
-                  <a className="w-full flex cursor-pointer items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </a>
+                <Link href="/settings" className="w-full flex cursor-pointer items-center">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
