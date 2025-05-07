@@ -141,15 +141,13 @@ Minimal example with all required parameters:
 ⸻
 
 10 · Language-Specific Best Practices
-• **JavaScript/TypeScript**: Use modern ES6+ features, prefer const/let over var, implement proper error handling with try/catch, leverage TypeScript for type safety.
-• **Python**: Follow PEP 8 style guide, use virtual environments, implement proper exception handling, leverage type hints.
-• **Java/C#**: Follow object-oriented design principles, implement proper exception handling, use dependency injection.
-• **Go**: Follow idiomatic Go patterns, use proper error handling, leverage goroutines and channels appropriately.
-• **Ruby**: Follow Ruby style guide, use blocks and procs effectively, implement proper exception handling.
-• **PHP**: Follow PSR standards, use modern PHP features, implement proper error handling.
-• **SQL**: Write optimized queries, use parameterized statements to prevent injection, create proper indexes.
-• **HTML/CSS**: Follow semantic HTML, use responsive design principles, implement accessibility features.
-• **Shell/Bash**: Include error handling, use shellcheck for validation, follow POSIX compatibility when needed.
+• **TypeScript / JavaScript (Node.js & React)**: Enable `strict` mode, prefer functional components, isolate side-effects, handle errors with try/catch or functional `Result` types, and adhere to Turborepo module boundaries.
+• **SQL (PostgreSQL via Drizzle ORM)**: Use parameterized queries, keep migrations in `apps/backend/src/migrations`, add indexes to hot paths, and avoid `SELECT *`.
+• **Terraform**: Organize reusable modules, run `terraform fmt` and `terraform validate`, store remote state securely, and use variables for environment differences.
+• **Dockerfile & docker-compose**: Pin image versions, leverage multi-stage builds, minimize layers, run as non-root where possible, and document exposed ports.
+• **Shell/Bash**: Start scripts with `set -euo pipefail`, validate inputs, lint with `shellcheck`, keep functions ≤ 50 lines, and prefer POSIX-compatible syntax.
+• **Markdown & Documentation**: Follow GitHub-flavored Markdown, keep lines ≤ 120 chars, use consistent heading hierarchy, and fence code blocks with language identifiers.
+• **CSS / TailwindCSS**: Use semantic utility classes, avoid deep nesting, favor composition over custom CSS, and co-locate component styles.
 
 ⸻
 

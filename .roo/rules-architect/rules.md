@@ -174,3 +174,14 @@ Step | Action
 </access_mcp_resource>
 
 </details>
+
+### Repository-Specific Architectural Guidelines (FuckTyping)  
+  
+- **Monorepo Boundaries**: Turborepo splits code into `apps/*`, `packages/*`, and `infra/*`.  Architectures must respect these boundaries, expose APIs via shared types in `packages/shared`, and avoid circular dependencies.  
+- **API Contracts**: Frontend (React + Vite) and backend (Express + LangGraph) interact through REST and WebSocket routes under `/api/*`. Any new contract **must** be added to `packages/shared/schemas.ts` and versioned.  
+- **Data Layer**: Persist data with Drizzle ORM on PostgreSQL. The schema in `packages/shared/schemas.ts` is the single source of truth; migrations live in `apps/backend/src/migrations`.  
+- **Conversation Engine**: Extend AI functionality by adding isolated nodes in `apps/backend/src/engine`. Graphs are composed dynamically—new nodes must declare inputs/outputs clearly and remain stateless.  
+- **WebRTC Path**: Signaling occurs via `apps/backend/src/rtc`; media streams stay peer-to-peer to minimize latency. Architectural changes must not route audio through the server.  
+- **Design Tokens**: UI color, spacing, and typography come from `packages/tokens`. Components may not hard-code style values—consume tokens or Tailwind utilities only.  
+- **Scalability**: Design for horizontal scaling of backend stateless services behind an ALB; stateful services (PostgreSQL, S3) must run in managed AWS offerings.  
+- **Observability Hooks**: All new services/components must emit structured logs (JSON) and expose Prometheus metrics; tracing context must propagate via OpenTelemetry.
