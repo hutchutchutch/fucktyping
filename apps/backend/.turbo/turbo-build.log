@@ -3,6 +3,6 @@
 > esbuild src/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
 
 
-  [37mdist/[0m[1mindex.js[0m  [36m96.9kb[0m
+  dist/index.js  96.9kb
 
-⚡ [32mDone in 17ms[0m
+⚡ Done in 16ms

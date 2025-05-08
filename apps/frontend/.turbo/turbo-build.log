@@ -2,22 +2,25 @@
 > frontend@0.1.0 build /Users/hutch/Documents/projects/yakyak/case_study/fucktyping/apps/frontend
 > tsc && vite build
 
-[36mvite v5.4.17 [32mbuilding for production...[36m[39m
-[2K[1Gtransforming (1) [2mindex.html[22m[2K[1Gtransforming (4) [2msrc/main.tsx[22m[2K[1Gtransforming (7) [2m../../node_modules/.pnpm/@tanstack+react-query@5.71.10_react@18.3.1/[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1Gtransforming (33) [2m../../node_modules/.pnpm/@tanstack+react-query@5.71.10_react@18.3.1[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1Gtransforming (76) [2m../../node_modules/.pnpm/react-dom@18.3.1_react@18.3.1/node_modules[2K[1Gtransforming (78) [2msrc/pages/EditForm.tsx[22m[2K[1Gtransforming (95) [2msrc/pages/CreateForm.tsx[22m[2K[1G[2K[1Gtransforming (294) [2m../../node_modules/.pnpm/@tanstack+query-core@5.71.10/node_modules[2K[1Gtransforming (580) [2m../../node_modules/.pnpm/lucide-react@0.453.0_react@18.3.1/node_mo[2K[1Gtransforming (885) [2m../../node_modules/.pnpm/lucide-react@0.453.0_react@18.3.1/node_mo[2K[1Gtransforming (1227) [2m../../node_modules/.pnpm/lucide-react@0.453.0_react@18.3.1/node_m[2K[1Gtransforming (1468) [2m../../node_modules/.pnpm/lucide-react@0.453.0_react@18.3.1/node_m[2K[1Gtransforming (1706) [2m../../node_modules/.pnpm/@heroicons+react@2.2.0_react@18.3.1/node[2K[1Gtransforming (1984) [2msrc/components/ui/table.tsx[22m[2K[1G[2K[1G[2K[1G[2K[1G[2K[1Gtransforming (2086) [2m../../node_modules/.pnpm/date-fns@3.6.0/node_modules/date-fns/get[2K[1Gtransforming (2265) [2m../../node_modules/.pnpm/date-fns@3.6.0/node_modules/date-fns/tra[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1Gtransforming (2320) [2m../../node_modules/.pnpm/recharts@2.15.2_react-dom@18.3.1_react@1[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1Gtransforming (2377) [2m../../node_modules/.pnpm/recharts@2.15.2_react-dom@18.3.1_react@1[2K[1G[2K[1G[2K[1G[2K[1G[2K[1Gtransforming (2446) [2m../../node_modules/.pnpm/socket.io-client@4.8.1_bufferutil@4.0.9/[2K[1G[2K[1Gtransforming (2520) [2m../../node_modules/.pnpm/d3-shape@3.2.0/node_modules/d3-shape/src[2K[1Gtransforming (2604) [2m../../node_modules/.pnpm/lodash@4.17.21/node_modules/lodash/_shor[2K[1Gtransforming (2703) [2m../../node_modules/.pnpm/lodash@4.17.21/node_modules/lodash/_getR[2K[1Gtransforming (2915) [2m../../node_modules/.pnpm/lodash@4.17.21/node_modules/lodash/_getV[2K[1G[2K[1G[2K[1G[2K[1G[32m✓[39m 3239 modules transformed.
-[2K[1Grendering chunks (1)...[2K[1G[2K[1Gcomputing gzip size (0)...[2K[1Gcomputing gzip size (1)...[2K[1Gcomputing gzip size (2)...[2K[1Gcomputing gzip size (3)...[2K[1G[2mdist/[22m[2massets/[22m[32mfavicon-D4Wz9h6B.png                                   [39m[1m[2m    0.63 kB[22m[1m[22m
-[2mdist/[22m[32mindex.html                                                    [39m[1m[2m    3.15 kB[22m[1m[22m[2m │ gzip:   0.99 kB[22m
-[2mdist/[22m[2massets/[22m[32mpress-start-2p-latin-ext-400-normal-B18ub5-k.woff      [39m[1m[2m    4.76 kB[22m[1m[22m
-[2mdist/[22m[2massets/[22m[32mpress-start-2p-latin-400-normal-BKfmdmKK.woff          [39m[1m[2m    6.35 kB[22m[1m[22m
-[2mdist/[22m[2massets/[22m[32mpress-start-2p-greek-400-normal-DUIT0YPZ.woff2         [39m[1m[2m    6.59 kB[22m[1m[22m
-[2mdist/[22m[2massets/[22m[32mpress-start-2p-cyrillic-ext-400-normal-COIQET2s.woff2  [39m[1m[2m    6.72 kB[22m[1m[22m
-[2mdist/[22m[2massets/[22m[32mpress-start-2p-cyrillic-400-normal-oElOGqNf.woff2      [39m[1m[2m    6.86 kB[22m[1m[22m
-[2mdist/[22m[2massets/[22m[32mpress-start-2p-latin-ext-400-normal-DDIa4im3.woff2     [39m[1m[2m    9.65 kB[22m[1m[22m
-[2mdist/[22m[2massets/[22m[32mpress-start-2p-latin-400-normal-xj9lRvVs.woff2         [39m[1m[2m   12.48 kB[22m[1m[22m
-[2mdist/[22m[2massets/[22m[35mindex-Bht2BsEJ.css                                     [39m[1m[2m   86.93 kB[22m[1m[22m[2m │ gzip:  22.79 kB[22m
-[2mdist/[22m[2massets/[22m[36mindex-CAQsDOr6.js                                      [39m[1m[33m1,133.23 kB[39m[22m[2m │ gzip: 324.68 kB[22m
-[33m[33m
+vite v5.4.17 building for production...
+transforming...
+✓ 3239 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/assets/favicon-D4Wz9h6B.png                                       0.63 kB
+dist/index.html                                                        3.15 kB │ gzip:   0.99 kB
+dist/assets/press-start-2p-latin-ext-400-normal-B18ub5-k.woff          4.76 kB
+dist/assets/press-start-2p-latin-400-normal-BKfmdmKK.woff              6.35 kB
+dist/assets/press-start-2p-greek-400-normal-DUIT0YPZ.woff2             6.59 kB
+dist/assets/press-start-2p-cyrillic-ext-400-normal-COIQET2s.woff2      6.72 kB
+dist/assets/press-start-2p-cyrillic-400-normal-oElOGqNf.woff2          6.86 kB
+dist/assets/press-start-2p-latin-ext-400-normal-DDIa4im3.woff2         9.65 kB
+dist/assets/press-start-2p-latin-400-normal-xj9lRvVs.woff2            12.48 kB
+dist/assets/index-Bht2BsEJ.css                                        86.93 kB │ gzip:  22.79 kB
+dist/assets/index-CAQsDOr6.js                                      1,133.23 kB │ gzip: 324.68 kB
+
 (!) Some chunks are larger than 500 kB after minification. Consider:
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
-- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m[39m
-[32m✓ built in 5.49s[39m
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 5.43s

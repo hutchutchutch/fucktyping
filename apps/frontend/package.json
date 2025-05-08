@@ -15,7 +15,7 @@
     "final-import-updates": "node scripts/final-import-updates.js"
   },
   "dependencies": {
-    "@fontsource/press-start-2p": "^5.0.18",
+    "@fontsource/press-start-2p": "^5.2.5",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-dialog": "^1.1.2",
