@@ -42,29 +42,39 @@ export async function registerRoutes(app: Express, io: SocketIOServer) {
   app.post("/api/forms/:id/reorder-questions", formController.reorderQuestions);
 
   // Response routes
-  app.get("/api/forms/:formId/responses", responseController.getFormResponses);
-  app.get("/api/responses/:id", responseController.getResponseById);
-  app.post("/api/forms/:formId/responses", responseController.createResponse);
-  app.put("/api/responses/:id", responseController.updateResponse);
-  app.delete("/api/responses/:id", responseController.deleteResponse);
-  app.get("/api/forms/:formId/analytics", responseController.getFormAnalytics);
+  app.get("/api/forms/:formId/responses", responseController.default.getFormResponses);
+  app.get("/api/responses/:id", responseController.default.getResponseById);
+  app.post("/api/forms/:formId/responses", responseController.default.submitResponse);
+  // TODO: Implement updateResponse in responseController
+  // app.put("/api/responses/:id", responseController.default.updateResponse);
+  // TODO: Implement deleteResponse in responseController
+  // app.delete("/api/responses/:id", responseController.default.deleteResponse);
+  // TODO: Implement getFormAnalytics in responseController
+  // app.get("/api/forms/:formId/analytics", responseController.default.getFormAnalytics);
 
   // Conversation routes
-  app.get("/api/conversations/:id", conversationController.getConversationById);
-  app.post("/api/forms/:formId/conversations", conversationController.startConversation);
-  app.post("/api/conversations/:id/messages", conversationController.addMessage);
-  app.get("/api/conversations/:id/transcript", conversationController.getTranscript);
+  app.get("/api/conversations/:id", conversationController.default.getConversationState);
+  app.post("/api/forms/:formId/conversations", conversationController.default.initializeConversation);
+  // TODO: Implement addMessage or clarify which conversationController method to use
+  // app.post("/api/conversations/:id/messages", conversationController.default.addMessage);
+  // TODO: Implement getTranscript or clarify which conversationController method to use (getConversationState returns messages)
+  // app.get("/api/conversations/:id/transcript", conversationController.default.getTranscript);
 
   // Voice form routes
-  app.post("/api/voice/forms/:formId/start", voiceFormController.startVoiceForm);
-  app.post("/api/voice/forms/:formId/continue", voiceFormController.continueVoiceForm);
-  app.post("/api/voice/transcribe", voiceFormController.transcribeAudio);
-  app.post("/api/voice/synthesize", voiceFormController.synthesizeSpeech);
+  app.post("/api/voice/forms/:formId/start", voiceFormController.startConversation);
+  app.post("/api/voice/forms/:formId/continue", voiceFormController.continueConversation);
+  // TODO: Implement transcribeAudio in voiceFormController
+  // app.post("/api/voice/transcribe", voiceFormController.transcribeAudio);
+  // TODO: Implement synthesizeSpeech in voiceFormController
+  // app.post("/api/voice/synthesize", voiceFormController.synthesizeSpeech);
 
   // Email routes
-  app.post("/api/email/send-notification", emailController.sendFormNotification);
-  app.post("/api/email/templates/:formId", emailController.updateEmailTemplate);
-  app.get("/api/email/templates/:formId", emailController.getEmailTemplate);
+  // TODO: Clarify which emailController method should handle this route. sendResponseNotification is not an Express handler.
+  // app.post("/api/email/send-notification", emailController.default.sendResponseNotification);
+  // TODO: Implement updateEmailTemplate in emailController
+  // app.post("/api/email/templates/:formId", emailController.default.updateEmailTemplate);
+  // TODO: Implement getEmailTemplate in emailController
+  // app.get("/api/email/templates/:formId", emailController.default.getEmailTemplate);
 
   return app;
 }

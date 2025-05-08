@@ -2,6 +2,3 @@
 > shared@0.1.0 build /Users/hutch/Documents/projects/yakyak/case_study/fucktyping/packages/shared
 > tsc
 
-utils.ts(59,20): error TS2339: Property 'sentimentScore' does not exist on type '{ id: number; createdAt: Date | null; responseId: number; questionId: number; answerText: string | null; answerValue: number | null; originalTranscript: string | null; confidence: number | null; audioUrl: string | null; processingDetails: unknown; }'.
-utils.ts(60,37): error TS2339: Property 'sentimentScore' does not exist on type '{ id: number; createdAt: Date | null; responseId: number; questionId: number; answerText: string | null; answerValue: number | null; originalTranscript: string | null; confidence: number | null; audioUrl: string | null; processingDetails: unknown; }'.
- ELIFECYCLE  Command failed with exit code 2.
