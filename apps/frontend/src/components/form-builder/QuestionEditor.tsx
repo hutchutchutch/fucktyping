@@ -10,79 +10,71 @@ import { Separator } from "@ui/separator";
 import { X, Plus, Trash, Shuffle, HelpCircle, ArrowUpDown, Grip } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@ui/tooltip";
 import { Badge } from "@ui/badge";
+// Assuming ExtendedFormBuilderQuestion will be the standard type for questions in the builder context
+import type { ExtendedFormBuilderQuestion } from "@hooks/useForm";
 
 interface QuestionEditorProps {
-  question?: {
-    id: string | number;
-    text: string;
-    type: string;
-    order: number;
-    options: string[] | null;
-    required: boolean;
-    description?: string;
-    validation?: {
-      min: number;
-      max: number;
-    };
-    context?: string;
-  };
-  showContextField?: boolean;
-  index?: number;
-  onChange: (question: any) => void;
+  question?: ExtendedFormBuilderQuestion; // Use the standardized type
+  showContextField?: boolean; // This seems specific, ensure it's handled or removed if not used
+  index?: number; // order is part of ExtendedFormBuilderQuestion
+  onChange: (question: ExtendedFormBuilderQuestion) => void; // Expect standardized type
   onRemove?: () => void;
   onCancel?: () => void;
 }
 
-export default function QuestionEditor({ 
+export default function QuestionEditor({
   question,
-  index = 0,
+  index = 0, // Default index, but question.order should be the source of truth if question exists
   onChange,
   onRemove,
   onCancel,
-  showContextField
+  showContextField // Propagated, ensure its usage is intended
 }: QuestionEditorProps) {
+  
+  const getDefaultQuestionState = (): ExtendedFormBuilderQuestion => ({
+    id: Date.now(), // Temporary ID for new questions
+    text: "",
+    type: "text",
+    required: false,
+    order: index + 1, // Fallback if question.order is not available
+    options: [], // Default to empty array for consistency with string[] | null
+    description: "",
+    helpText: "",
+    validation: { min: 1, max: 5 }, // Default validation
+    // context: showContextField ? "" : undefined, // Handle context if showContextField is true
+  });
+
   // Initialize with default values or from question prop
-  const [localQuestion, setLocalQuestion] = useState(() => {
-    const baseState = {
-      id: question?.id || `q${Date.now()}`,
-      text: question?.text || "",
-      description: question?.description || "",
-      type: question?.type || "text",
-      required: question?.required !== undefined ? question?.required : false,
-      options: question?.options || ["Option 1"],
-      order: question?.order || index + 1,
-      validation: question?.validation || {
-        min: 1,
-        max: 5,
-      },
-    }
-    if (showContextField) {
+  const [localQuestion, setLocalQuestion] = useState<ExtendedFormBuilderQuestion>(() => {
+    if (question) {
+      // Ensure all fields of ExtendedFormBuilderQuestion are present
       return {
-        ...baseState,
-        context: question?.context || "",
+        ...getDefaultQuestionState(), // Start with defaults
+        ...question, // Override with passed question props
+        options: question.options || [], // Ensure options is an array
+        order: question.order || index + 1,
       };
     }
-    return baseState;  
+    return getDefaultQuestionState();
   });
   
   // Update local state when parent component passes new question
   useEffect(() => {
     if (question) {
-      setLocalQuestion({
-        id: question.id || localQuestion.id,
-        text: question.text || "",
-        description: question.description || "",
-        type: question.type || "text",
-        required: question.required !== undefined ? question.required : localQuestion.required,
-        options: question.options || localQuestion.options,
+      setLocalQuestion(prevLocal => ({
+        ...getDefaultQuestionState(), // Start with defaults
+        ...question, // Override with new question props
+        id: question.id || prevLocal.id, // Retain existing local ID if new question has no ID (e.g. reset)
+        options: question.options || [],
         order: question.order || index + 1,
-        validation: question.validation || localQuestion.validation,
-        ...(showContextField && { context: question.context || "" }),
-      });
+      }));
+    } else {
+      // If question prop becomes undefined (e.g. modal closes and reopens for new), reset to default
+      setLocalQuestion(getDefaultQuestionState());
     }
-  }, [question, index]);
+  }, [question, index, showContextField]); // Added showContextField to dependencies if context logic is tied to it
   
-  const handleQuestionChange = (key: string, value: any) => {
+  const handleQuestionChange = (key: keyof ExtendedFormBuilderQuestion, value: any) => {
     const updatedQuestion = {
       ...localQuestion,
       [key]: value,
@@ -90,13 +82,13 @@ export default function QuestionEditor({
     setLocalQuestion(updatedQuestion);
     
     // Notify parent component about the changes
-    if (onChange && !showContextField) {
-      onChange(updatedQuestion);
-    }
+    // The `onChange` in FormBuilder.tsx (handleSaveQuestion) expects ExtendedFormBuilderQuestion
+    // No need for showContextField check here if onChange always expects the full object
+    onChange(updatedQuestion);
   };
   
-  const handleOptionChange = (index: number, value: string) => {
-    const updatedOptions = [...localQuestion.options];
+  const handleOptionChange = (optionIndex: number, value: string) => {
+    const updatedOptions = [...(localQuestion.options || [])];
     updatedOptions[index] = value;
     
     const updatedQuestion = {
@@ -113,7 +105,7 @@ export default function QuestionEditor({
   };
   
   const addOption = () => {
-    const updatedOptions = [...localQuestion.options, `Option ${localQuestion.options.length + 1}`];
+    const updatedOptions = [...(localQuestion.options || []), `Option ${(localQuestion.options || []).length + 1}`];
     
     const updatedQuestion = {
       ...localQuestion,
@@ -121,16 +113,12 @@ export default function QuestionEditor({
     };
     
     setLocalQuestion(updatedQuestion);
-    
-    // Notify parent component about the changes
-    if (onChange && !showContextField) {
-      onChange(updatedQuestion);
-    }
+    onChange(updatedQuestion);
   };
   
-  const removeOption = (index: number) => {
-    const updatedOptions = [...localQuestion.options];
-    updatedOptions.splice(index, 1);
+  const removeOption = (optionIndex: number) => {
+    const updatedOptions = [...(localQuestion.options || [])];
+    updatedOptions.splice(optionIndex, 1);
     
     const updatedQuestion = {
       ...localQuestion,
@@ -138,15 +126,11 @@ export default function QuestionEditor({
     };
     
     setLocalQuestion(updatedQuestion);
-    
-    // Notify parent component about the changes
-    if (onChange && !showContextField) {
-      onChange(updatedQuestion);
-    }
+    onChange(updatedQuestion);
   };
   
   const shuffleOptions = () => {
-    const shuffled = [...localQuestion.options].sort(() => Math.random() - 0.5);
+    const shuffled = [...(localQuestion.options || [])].sort(() => Math.random() - 0.5);
     
     const updatedQuestion = {
       ...localQuestion,
@@ -154,11 +138,7 @@ export default function QuestionEditor({
     };
     
     setLocalQuestion(updatedQuestion);
-    
-    // Notify parent component about the changes
-    if (onChange && !showContextField) {
-      onChange(updatedQuestion);
-    }
+    onChange(updatedQuestion);
   };
 
   // Get display name for question type
@@ -212,15 +192,16 @@ export default function QuestionEditor({
               <Label htmlFor="question-context" className="text-sm font-medium">
                 Context
               </Label>
-              { "context" in localQuestion ? (
+              { /* Context field handling - ensure 'context' is part of ExtendedFormBuilderQuestion if used */ }
+              {showContextField && "context" in localQuestion && (
                 <Input
                   id="question-context"
-                  value={localQuestion.context}
-                  onChange={(e) => handleQuestionChange("context", e.target.value)}
+                  value={(localQuestion as any).context || ""}
+                  onChange={(e) => handleQuestionChange("context" as keyof ExtendedFormBuilderQuestion, e.target.value)}
                   placeholder="Provide additional context for the question"
                   className="border-slate-300"
                 />
-              ) : null }
+              )}
             </div>
           )}
           
@@ -300,22 +281,22 @@ export default function QuestionEditor({
             </div>
             
             <div className="space-y-2 mt-1">
-              {localQuestion.options.map((option, index) => (
-                <div key={index} className="flex items-center space-x-2">
+              {(localQuestion.options || []).map((option, optionIndex) => (
+                <div key={optionIndex} className="flex items-center space-x-2">
                   {localQuestion.type === "multiple_choice" && (
                     <div className="h-5 w-5 rounded-full border border-slate-300 flex-shrink-0"></div>
                   )}
                   <Input
                     value={option}
-                    onChange={(e) => handleOptionChange(index, e.target.value)}
-                    placeholder={`Option ${index + 1}`}
+                    onChange={(e) => handleOptionChange(optionIndex, e.target.value)}
+                    placeholder={`Option ${optionIndex + 1}`}
                     className="border-slate-300"
                   />
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => removeOption(index)}
-                    disabled={localQuestion.options.length <= 1}
+                    onClick={() => removeOption(optionIndex)}
+                    disabled={(localQuestion.options || []).length <= 1}
                     className="h-9 w-9 shrink-0 text-slate-500 hover:text-red-500"
                   >
                     <Trash size={14} />
@@ -336,10 +317,10 @@ export default function QuestionEditor({
                 <Label htmlFor="min-rating" className="text-xs text-slate-500">Min Value</Label>
                 <Select
                   value={localQuestion.validation?.min?.toString() || "1"}
-                  onValueChange={(value) => 
+                  onValueChange={(value) =>
                     handleQuestionChange("validation", {
-                      ...localQuestion.validation,
                       min: parseInt(value),
+                      max: localQuestion.validation?.max || 5, // Ensure max is preserved
                     })
                   }
                 >
@@ -356,9 +337,9 @@ export default function QuestionEditor({
                 <Label htmlFor="max-rating" className="text-xs text-slate-500">Max Value</Label>
                 <Select
                   value={localQuestion.validation?.max?.toString() || "5"}
-                  onValueChange={(value) => 
+                  onValueChange={(value) =>
                     handleQuestionChange("validation", {
-                      ...localQuestion.validation,
+                      min: localQuestion.validation?.min || 1, // Ensure min is preserved
                       max: parseInt(value),
                     })
                   }
@@ -378,7 +359,7 @@ export default function QuestionEditor({
               <div className="flex items-center gap-1">
                 {Array.from({ length: localQuestion.validation?.max || 5 }).map((_, i) => (
                   <div key={i} className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-sm">
-                    {i + 1}
+                    {(localQuestion.validation?.min || 1) + i}
                   </div>
                 ))}
               </div>
@@ -388,9 +369,9 @@ export default function QuestionEditor({
       </CardContent>
       
       <CardFooter className="border-t p-4 flex justify-end space-x-2 bg-slate-50">
-        {onRemove && <Button variant="outline" size="sm" onClick={onRemove}>Delete</Button>}
         {onCancel && <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>}
-        <Button size="sm" onClick={() => onChange && onChange(localQuestion)}>Apply Changes</Button>
+        {/* The onRemove for the whole question is handled in FormBuilder.tsx, not directly by this component's footer */}
+        <Button size="sm" onClick={() => onChange(localQuestion)}>Apply Changes</Button>
       </CardFooter>
     </Card>
   );

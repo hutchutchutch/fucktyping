@@ -10,12 +10,13 @@ import { Label } from "@ui/label";
 import { ChevronDown, ChevronUp, Upload, Mic, Edit, Plus, Save, TestTube, Wand2 } from "lucide-react";
 import AppLayout from "@components/layout/AppLayout";
 import QuestionEditor from "@components/form-builder/QuestionEditor";
-import {  Form, Question  } from "@schemas/schema";
+import { Form, Question as SchemaQuestion } from "@schemas/schema"; // Rename imported Question
 import { useToast } from "@hooks/use-toast";
+import type { ExtendedFormBuilderQuestion } from "@hooks/useForm"; // Import the standardized type
 
 // This simulates fetching the form data
 // In a real app, this would be a call to an API endpoint
-const fetchForm = async (id: string): Promise<Form & { questions: Question[] }> => {
+const fetchForm = async (id: string): Promise<Form & { questions: SchemaQuestion[] }> => { // Use renamed SchemaQuestion
   // Placeholder for API call
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -94,16 +95,8 @@ export default function EditForm() {
     closing: true
   });
   
-  type QuestionType = {
-    id: string | number;
-    text: string;
-    type: string;
-    required: boolean;
-    order: number;
-    options: string[] | null;
-  };
-  
-  const [questions, setQuestions] = useState<QuestionType[]>([]);
+  // Remove local QuestionType, use ExtendedFormBuilderQuestion from the hook
+  const [questions, setQuestions] = useState<ExtendedFormBuilderQuestion[]>([]);
   const [voiceType, setVoiceType] = useState<string>("male");
   
   // Fetch form data when component mounts
@@ -116,19 +109,22 @@ export default function EditForm() {
           
           setFormName(formData.title);
           setFormDescription(formData.description || "");
-          setCollectEmail(formData.emailNotificationEnabled || false);
+          setCollectEmail(formData.emailNotificationEnabled || false); // Assuming this maps to requireAuth or similar
           
-          // Convert API questions to the format expected by the component
-          const formattedQuestions = formData.questions.map((q: Question) => ({
-            id: q.id,
+          // Convert API SchemaQuestion[] to ExtendedFormBuilderQuestion[]
+          const formattedQuestions = formData.questions.map((q: SchemaQuestion): ExtendedFormBuilderQuestion => ({
+            id: q.id, // SchemaQuestion id is number
             text: q.text,
-            type: q.type,
-            required: q.required === null ? false : q.required,
+            type: q.type, // Ensure type values align or map them
+            required: q.required ?? false, // Use nullish coalescing
             order: q.order,
-            options: Array.isArray(q.options) ? q.options : null
-          } as QuestionType));
+            options: q.options || [], // Default to empty array
+            description: q.settings?.description || "", // Map from settings if available
+            helpText: q.helpText || "", // Map from SchemaQuestion
+            validation: q.settings?.validation || { min: 1, max: 5 }, // Map from settings or use default
+          }));
           
-          setQuestions(formattedQuestions as QuestionType[]);
+          setQuestions(formattedQuestions); // State now uses ExtendedFormBuilderQuestion[]
         } catch (error) {
           console.error("Error loading form data:", error);
           toast({
@@ -153,13 +149,17 @@ export default function EditForm() {
   };
   
   const addQuestion = () => {
-    const newQuestion: QuestionType = {
-      id: `q${questions.length + 1}`,
+    // Create a question conforming to ExtendedFormBuilderQuestion
+    const newQuestion: ExtendedFormBuilderQuestion = {
+      id: Date.now(), // Temporary numeric ID
       text: 'New Question',
       type: 'text',
       required: false,
       order: questions.length + 1,
-      options: null
+      options: [],
+      description: "",
+      helpText: "",
+      validation: { min: 1, max: 5 }
     };
     setQuestions([...questions, newQuestion]);
   };
@@ -385,11 +385,11 @@ export default function EditForm() {
                       <h4 className="font-medium mb-2">Question {index + 1}</h4>
                       <div className="space-y-2">
                         <QuestionEditor 
-                          question={question} 
+                          question={question} // Pass ExtendedFormBuilderQuestion
                           index={index}
-                          onChange={(updatedQuestion) => {
+                          onChange={(updatedQuestion: ExtendedFormBuilderQuestion) => { // Receive ExtendedFormBuilderQuestion
                             const newQuestions = [...questions];
-                            newQuestions[index] = updatedQuestion;
+                            newQuestions[index] = updatedQuestion; // Update state with correct type
                             setQuestions(newQuestions);
                           }}
                           onRemove={() => {
@@ -398,15 +398,7 @@ export default function EditForm() {
                         />
                       </div>
                       
-                      <div className="mt-4 pt-4 border-t">
-                        <div className="flex justify-between items-center">
-                          <h5 className="text-sm font-medium">Conversation Repair</h5>
-                          <Button size="sm" variant="ghost" className="h-8 text-xs">Configure</Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Define how the voice agent should handle unclear or invalid responses
-                        </p>
-                      </div>
+                      {/* TODO: Add back Conversation Repair section if needed */}
                     </div>
                   ))}
                 </div>
@@ -417,8 +409,8 @@ export default function EditForm() {
         
         {/* Closing Activity */}
         <Card>
-          <CardHeader 
-            className="cursor-pointer flex flex-row items-center justify-between" 
+          <CardHeader
+            className="cursor-pointer flex flex-row items-center justify-between"
             onClick={() => toggleSection('closing')}
           >
             <div>
@@ -476,16 +468,16 @@ export default function EditForm() {
               </div>
             </CardContent>
           )}
-        </Card>
+        </Card> {/* Closing Card for Closing Activity (line 419) */}
         
-        <div className="flex justify-end gap-3 mt-8">
+        <div className="flex justify-end gap-3 mt-8"> {/* (line 482) */}
           <Button variant="outline" onClick={handleCancel}>Cancel</Button>
           <Button className="flex items-center gap-2" onClick={handleSave}>
             <Save size={16} />
             Save Form
           </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
+        </div> {/* Closing div for buttons (line 482) */}
+      </div> {/* Closing div for space-y-6 (line 215) */}
+    </div> // Closing div for main container (line 191)
+  ); // Closing parenthesis for return (line 190)
+} // Closing brace for EditForm component (line 74)

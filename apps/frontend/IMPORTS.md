@@ -76,34 +76,18 @@ The following scripts have been created to help with the import migration:
 - `update-imports.js`: Automatically updates relative imports to absolute imports
 - `fix-schema-imports-local.js`: Fixes imports from shared/schema to use the local schema file
 
-### Running with TypeScript Issues
+## Known Issues (Updated)
 
-While the migration is in progress and TypeScript errors are being resolved, you can use these scripts to run and build the application without TypeScript checks:
+The major type compatibility issues related to form components (`FormBuilder`, `CreateForm`, `EditForm`) and schema standardization have been resolved. The standard `tsc` build now passes.
 
-```bash
-# Development server without TypeScript checking
-pnpm dev-no-types
+Remaining potential issues (monitor during development):
+1.  Missing TypeScript definitions for specific UI or third-party components (if encountered).
+2.  Subtle Nullable vs undefined type issues (if encountered).
 
-# Build without TypeScript checking
-pnpm build-no-types
-```
+## Next Steps (Updated)
 
-These scripts use:
-- `dev-without-types.js`: Runs the development server without TypeScript validation
-- `build-without-types.js`: Builds the application without TypeScript validation
-
-## Known Issues
-
-The migration is ongoing, and some TypeScript errors remain. These will need to be addressed before the project can be built with full type checking. The specific issues include:
-
-1. Type compatibility issues in form components
-2. Missing TypeScript definitions for some components
-3. Nullable vs undefined type issues
-
-## Next Steps
-
-1. Fix remaining TypeScript errors in `src/components/form-builder/FormBuilder.tsx` and related files
-2. Add proper type definitions for JSX components
-3. Standardize the schema interfaces to ensure consistency across the codebase
-4. Add type declarations for third-party libraries
-5. Remove the temporary `build-without-types.js` script once all type errors are fixed
+1.  ~~Fix remaining TypeScript errors in `src/components/form-builder/FormBuilder.tsx` and related files~~ (Resolved by standardizing types in `useForm`, `FormBuilder`, `CreateForm`, `EditForm`).
+2.  ~~Add proper type definitions for JSX components~~ (Layout components checked and seem okay. Address specific components if errors arise).
+3.  ~~Standardize the schema interfaces to ensure consistency across the codebase~~ (Resolved by updating `useForm` hook).
+4.  Add type declarations (`@types/*`) for third-party libraries if missing-type errors occur.
+5.  Remove the temporary `build-without-types.js` script as the standard build (`tsc && vite build`) is now working.

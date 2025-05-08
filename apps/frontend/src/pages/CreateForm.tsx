@@ -11,7 +11,8 @@ import { ChevronDown, ChevronUp, Upload, Mic, Edit, Plus, Save, TestTube, Wand2,
 import QuestionEditor from "../components/form-builder/QuestionEditor";
 import { Badge } from "../components/ui/badge";
 import {downloadGraphFile} from '../services/generateGraphFileContent'
-import { api } from "../services/api.ts";
+import { api } from "../services/api"; // Assuming .ts is resolved automatically
+import type { ExtendedFormBuilderQuestion } from "@hooks/useForm"; // Import the standardized type
 
 export default function CreateForm() {
   const [, setLocation] = useLocation();
@@ -35,17 +36,8 @@ export default function CreateForm() {
     closing: false
   });
   
-  type QuestionType = {
-    id: string;
-    text: string;
-    type: string;
-    required: boolean;
-    order: number;
-    options: string[] | null;
-    context: string;
-  };
-  
-  const [questions, setQuestions] = useState<QuestionType[]>([]);
+  // Use the standardized question type from the hook
+  const [questions, setQuestions] = useState<ExtendedFormBuilderQuestion[]>([]);
   
   // Track which questions are being edited
   const [editingQuestions, setEditingQuestions] = useState<Record<string, boolean>>({});
@@ -59,14 +51,18 @@ export default function CreateForm() {
   };
   
   const addQuestion = () => {
-    const newQuestion: QuestionType = {
-      id: `q${questions.length + 1}`,
+    // Create a question conforming to ExtendedFormBuilderQuestion
+    const newQuestion: ExtendedFormBuilderQuestion = {
+      id: Date.now(), // Use timestamp for temporary numeric ID
       text: 'New Question',
-      context: "Context",
       type: 'text',
       required: false,
       order: questions.length + 1,
-      options: null
+      options: [], // Default to empty array
+      description: "", // Add default empty string
+      helpText: "", // Add default empty string
+      validation: { min: 1, max: 5 } // Add default validation
+      // context field removed as it's not in ExtendedFormBuilderQuestion
     };
     setQuestions([...questions, newQuestion]);
     return newQuestion; // Return the new question for reference
@@ -87,15 +83,26 @@ export default function CreateForm() {
         voiceType: voiceType,
       }
       const res = await api.createForm(obj);
-      questions.map(async (question) => {
-        let obj = {
-          ...question,
-          options: question.options ? question.options : [],
-          formId: res?.id,
+      // Map questions using ExtendedFormBuilderQuestion type
+      questions.map(async (question: ExtendedFormBuilderQuestion) => {
+        // Construct payload for API, potentially omitting temporary ID
+        // Assuming api.createQuestion expects fields matching SchemaFormBuilderQuestion + formId
+        let questionPayload = {
+          text: question.text,
+          type: question.type,
+          required: question.required,
+          order: question.order,
+          options: question.options || [], // Ensure it's an array
+          description: question.description,
+          // Map helpText or validation if API expects them (e.g., in a 'settings' object)
+          // settings: { helpText: question.helpText, validation: question.validation }
+          formId: res?.id, // Assuming res.id is the correct form ID
         };
-        await api.createQuestion(obj);
+        // Do not send the temporary client-side ID
+        await api.createQuestion(questionPayload);
       });
-      downloadGraphFile(formName, formDescription, variables, questions, voiceType, res?.openingMessage,res?.closingMessage);
+      // Pass ExtendedFormBuilderQuestion[] to download function - it might need adjustment
+      downloadGraphFile(formName, formDescription, variables, questions as any, voiceType, res?.openingMessage,res?.closingMessage); // Cast questions for now
       setLocation("/forms/draft/test");
     } catch (e) {
       console.error("Error saving form:", e);
@@ -370,13 +377,16 @@ export default function CreateForm() {
                               <QuestionEditor 
                                 question={question} 
                                 index={index}
-                                onChange={(updatedQuestion) => {
+                                // onChange now receives ExtendedFormBuilderQuestion
+                                onChange={(updatedQuestion: ExtendedFormBuilderQuestion) => {
                                   const newQuestions = [...questions];
+                                  // Ensure the updated question matches the state type
                                   newQuestions[index] = updatedQuestion;
                                   setQuestions(newQuestions);
-                                  toggleEditing()
+                                  toggleEditing() // Close editor on apply/change
                                 }}
-                                showContextField={true}
+                                // showContextField prop removed as context is removed from QuestionType
+                                // showContextField={true}
                                 onRemove={() => {
                                   // Remove from editing state and filter questions
                                   const newEditingQuestions = {...editingQuestions};
