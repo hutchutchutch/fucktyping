@@ -1,3 +1,4 @@
+import '@fontsource/press-start-2p'; // Import the font
 import { createRoot } from "react-dom/client";
 import App from "@app/App";
 import "@app/index.css";
