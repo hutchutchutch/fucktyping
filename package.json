@@ -8,7 +8,9 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "prepare": "pnpm run build"
+    "prepare": "pnpm run build",
+    "typecheck": "npm --prefix apps/edge run typecheck && npm --prefix apps/studio run typecheck",
+    "test": "npm --prefix apps/edge test && npm --prefix apps/studio test"
   },
   "dependencies": {
     "@copilotkit/react-core": "^1.8.6",

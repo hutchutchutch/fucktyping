@@ -1,0 +1,6 @@
+# Eval manifest: one JSON object per line. Lines starting with # are ignored.
+# "audio" is resolved relative to this file, then to the project root.
+# Replace these with your own recordings + exact reference transcripts.
+{"audio": "wav/q1.wav", "text": "yes that is correct"}
+{"audio": "wav/q2.wav", "text": "i would rate my experience a four out of five"}
+{"audio": "wav/q3.wav", "text": "the interface is intuitive and easy to use"}

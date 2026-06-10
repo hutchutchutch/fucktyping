@@ -1,0 +1,46 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fucktyping-edge",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Durable Objects: per-session runtime "brain" + per-session authoring agent.
+  "durable_objects": {
+    "bindings": [
+      { "name": "FORM_SESSION", "class_name": "FormSessionDO" },
+      { "name": "FORM_AUTHORING", "class_name": "FormAuthoringDO" }
+    ]
+  },
+  // SQLite-backed DO storage (required on the free plan; recommended everywhere).
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["FormSessionDO"] },
+    { "tag": "v2", "new_sqlite_classes": ["FormAuthoringDO"] }
+  ],
+
+  // Workers AI: Whisper STT for form-creation push-to-talk.
+  "ai": { "binding": "AI" },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "fucktyping",
+      // Run `wrangler d1 create fucktyping` and paste the id here.
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  "vars": {
+    // AI Gateway: https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/<provider>/...
+    "AI_GATEWAY_ACCOUNT_ID": "",
+    "AI_GATEWAY_ID": "fucktyping",
+    "LLM_PROVIDER": "groq",
+    "LLM_MODEL": "llama-3.3-70b-versatile",
+    "AUTHORING_PROVIDER": "openai",
+    "AUTHORING_MODEL": "gpt-4o"
+  }
+  // Secrets (do NOT commit): `wrangler secret put LLM_API_KEY`
+  //                          `wrangler secret put AUTHORING_API_KEY`
+  //                          `wrangler secret put SESSION_SECRET`   (optional; enables WS auth)
+}
