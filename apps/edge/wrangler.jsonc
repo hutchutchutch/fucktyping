@@ -34,9 +34,9 @@
     // OpenAI-compatible LLM endpoints. Default = local Ollama (Gemma 4 31B MLX).
     // NOTE: localhost is reachable only under `wrangler dev` (local mode); a deployed
     // worker needs a Cloudflare Tunnel to the Mac, or a hosted endpoint here.
-    "LLM_BASE_URL": "http://localhost:11434/v1",
+    "LLM_BASE_URL": "https://qwen.hutchgpt.com/v1",
     "LLM_MODEL": "gemma4:31b-mlx",
-    "AUTHORING_BASE_URL": "http://localhost:11434/v1",
+    "AUTHORING_BASE_URL": "https://qwen.hutchgpt.com/v1",
     "AUTHORING_MODEL": "gemma4:31b-mlx"
   }
   // Optional secrets (do NOT commit):

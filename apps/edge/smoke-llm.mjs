@@ -1,7 +1,7 @@
 // Live test of the local-Ollama LLM paths against `wrangler dev` (local mode, so the
 // worker can reach http://localhost:11434). Drives the authoring WS with a real
 // message; if Gemma's tool-calls populate the draft form, the loop works end-to-end.
-const BASE = "ws://127.0.0.1:8787";
+const BASE = process.env.WS_BASE || "ws://127.0.0.1:8787";
 
 function collect(url, steps, tailMs) {
   return new Promise((resolve) => {
