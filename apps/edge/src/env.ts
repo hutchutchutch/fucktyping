@@ -31,4 +31,7 @@ export interface Env {
   CREATE_TOKEN?: string;
   /** Base URL of the studio responder UI (for the returned responder link). */
   STUDIO_BASE_URL?: string;
+  /** HMAC secret for signing completion callbacks (X-Hub-Signature-256), matching the
+   *  Hermes webhook subscription's secret. */
+  WEBHOOK_SIGNING_SECRET?: string;
 }

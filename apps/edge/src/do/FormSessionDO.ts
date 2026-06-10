@@ -14,6 +14,24 @@ interface PersistedSession {
   meta?: unknown;
 }
 
+function formatAnswer(v: unknown): string {
+  if (v == null || v === "") return "(skipped)";
+  return String(v);
+}
+
+/** Hex HMAC-SHA256 (for X-Hub-Signature-256). */
+async function hmacHex(secret: string, message: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
+  return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 /** One instance per voice-form response session. Holds conversation state, runs the
  *  interpreter, validates via AI Gateway, and persists collected output to D1.
  *  Uses the WebSocket Hibernation API so idle sessions don't bill compute. */
@@ -97,7 +115,8 @@ export class FormSessionDO extends DurableObject<Env> {
   }
 
   /** POST the collected structured output to the form's callback (e.g. a Hermes webhook
-   *  that delivers it to Discord). The callback URL carries its own auth. */
+   *  that delivers it to Discord). Signs the body with X-Hub-Signature-256 when a signing
+   *  secret is configured, and sets a User-Agent (some WAFs block UA-less requests). */
   private async fireCallback(
     url: string,
     config: FormConfig,
@@ -105,17 +124,25 @@ export class FormSessionDO extends DurableObject<Env> {
     meta: unknown,
   ): Promise<void> {
     try {
-      await fetch(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          formId: config.id,
-          formName: config.name,
-          responses,
-          meta,
-          completedAt: new Date().toISOString(),
-        }),
+      const summary = config.questions
+        .map((q) => `• ${q.prompt} → ${formatAnswer(responses[q.id])}`)
+        .join("\n");
+      const body = JSON.stringify({
+        formId: config.id,
+        formName: config.name,
+        responses,
+        summary,
+        meta,
+        completedAt: new Date().toISOString(),
       });
+      const headers: Record<string, string> = {
+        "content-type": "application/json",
+        "user-agent": "fucktyping-voice-callback/1.0",
+      };
+      if (this.env.WEBHOOK_SIGNING_SECRET) {
+        headers["X-Hub-Signature-256"] = "sha256=" + (await hmacHex(this.env.WEBHOOK_SIGNING_SECRET, body));
+      }
+      await fetch(url, { method: "POST", headers, body });
     } catch (err) {
       console.error("fireCallback failed", err);
     }
