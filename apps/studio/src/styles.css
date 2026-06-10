@@ -95,6 +95,21 @@ body {
 .node-editor-save:disabled { opacity: .4; cursor: not-allowed; }
 .node-editor-remove { background: transparent; color: #f85149; border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
 
+/* responder (voice form-filling) page */
+.responder { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.responder-card { width: 100%; max-width: 520px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 18px; }
+.responder-status { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.responder-status.done { color: var(--ok); }
+.responder-question { font-size: 22px; line-height: 1.4; }
+.responder-mic { align-self: flex-start; background: var(--accent); color: #fff; border: 0; border-radius: 12px; padding: 14px 22px; font-size: 16px; cursor: pointer; }
+.responder-mic:disabled { opacity: .45; cursor: not-allowed; }
+.responder-mic.recording { background: #f85149; }
+.responder-done h2 { color: var(--ok); margin: 0 0 6px; }
+.responder-transcript { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; max-height: 300px; overflow-y: auto; }
+.rt { padding: 8px 12px; border-radius: 10px; font-size: 14px; }
+.rt.assistant { background: var(--assistant); align-self: flex-start; }
+.rt.user { background: var(--user); align-self: flex-end; }
+
 /* "My forms" list in the sidebar */
 .my-forms { display: flex; flex-direction: column; gap: 4px; }
 .my-forms-title { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); padding: 0 10px; }

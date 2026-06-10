@@ -19,11 +19,16 @@ interface PersistedSession {
  *  Uses the WebSocket Hibernation API so idle sessions don't bill compute. */
 export class FormSessionDO extends DurableObject<Env> {
   private session?: PersistedSession;
+  private urlFormId?: string;
 
   override async fetch(req: Request): Promise<Response> {
     if (req.headers.get("Upgrade") !== "websocket") {
       return new Response("expected websocket", { status: 426 });
     }
+    // The worker forwards the original request, so the path carries the formId — use it
+    // as the authoritative source even if the client's start message omits form_id.
+    const m = new URL(req.url).pathname.match(/\/forms\/([^/]+)\/session/);
+    if (m) this.urlFormId = decodeURIComponent(m[1]);
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server); // hibernatable
@@ -58,7 +63,9 @@ export class FormSessionDO extends DurableObject<Env> {
   }
 
   private async onStart(ws: WebSocket, formId?: string): Promise<void> {
-    const { config, callbackUrl, meta } = await new FormRepository(this.env).getForm(formId ?? "sample");
+    const { config, callbackUrl, meta } = await new FormRepository(this.env).getForm(
+      formId ?? this.urlFormId ?? "sample",
+    );
     const { state, reply } = this.interpreterFor(config).begin();
     this.session = { config, state, callbackUrl, meta };
     await this.ctx.storage.put("session", this.session);
