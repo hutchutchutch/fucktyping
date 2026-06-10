@@ -19,3 +19,17 @@ export function getOrCreateSessionId(storage: StorageLike): string {
   storage.setItem(SESSION_KEY, id);
   return id;
 }
+
+/** Decode the `sub` claim from a session token (no verification — that's the server's
+ *  job). When the worker enforces auth, the sessionId must equal the token's sub, so a
+ *  deployed studio derives its sessionId from the baked token. */
+export function subFromToken(token: string): string | null {
+  try {
+    const payload = token.split(".")[0];
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    const sub = JSON.parse(json)?.sub;
+    return typeof sub === "string" ? sub : null;
+  } catch {
+    return null;
+  }
+}

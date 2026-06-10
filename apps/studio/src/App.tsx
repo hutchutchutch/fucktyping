@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { getOrCreateSessionId } from "./authoring/sessionStore";
+import { getOrCreateSessionId, subFromToken } from "./authoring/sessionStore";
 import { useAuthoringSession } from "./authoring/useAuthoringSession";
 import { useForms } from "./authoring/useForms";
 import { ChatPane } from "./components/ChatPane";
@@ -13,8 +13,12 @@ const EDGE_URL = (import.meta as any).env?.VITE_EDGE_URL ?? "http://localhost:87
 const SESSION_TOKEN = (import.meta as any).env?.VITE_SESSION_TOKEN as string | undefined;
 
 export function App() {
-  // Stable across reloads → resumes the same draft (the authoring DO is keyed by this id).
-  const sessionId = useMemo(() => getOrCreateSessionId(window.localStorage), []);
+  // When the worker enforces auth, the sessionId must equal the token's sub; otherwise
+  // use a stable per-browser id that resumes the same draft across reloads.
+  const sessionId = useMemo(
+    () => (SESSION_TOKEN && subFromToken(SESSION_TOKEN)) || getOrCreateSessionId(window.localStorage),
+    [],
+  );
   const session = useAuthoringSession(EDGE_URL, sessionId, SESSION_TOKEN);
   const { forms } = useForms(EDGE_URL);
 
