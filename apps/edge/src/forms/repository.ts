@@ -23,13 +23,40 @@ export class FormRepository {
     return results ?? [];
   }
 
-  /** Upsert a published form so the runtime DO can serve it by id. */
-  async saveForm(form: FormConfig): Promise<void> {
+  /** Upsert a published form so the runtime DO can serve it by id. Optionally records a
+   *  completion callback URL + opaque metadata (e.g. the Discord target to return to). */
+  async saveForm(
+    form: FormConfig,
+    opts: { callbackUrl?: string; meta?: unknown } = {},
+  ): Promise<void> {
     await this.env.DB.prepare(
-      "INSERT OR REPLACE INTO forms (id, name, config, created_at) VALUES (?, ?, ?, ?)",
+      "INSERT OR REPLACE INTO forms (id, name, config, callback_url, meta, created_at) VALUES (?, ?, ?, ?, ?, ?)",
     )
-      .bind(form.id, form.name, JSON.stringify(form), new Date().toISOString())
+      .bind(
+        form.id,
+        form.name,
+        JSON.stringify(form),
+        opts.callbackUrl ?? null,
+        opts.meta != null ? JSON.stringify(opts.meta) : null,
+        new Date().toISOString(),
+      )
       .run();
+  }
+
+  /** Load a form's config plus its completion hook (callback URL + meta). */
+  async getForm(formId: string): Promise<{ config: FormConfig; callbackUrl?: string; meta?: unknown }> {
+    if (formId === "sample") return { config: SAMPLE_FORM };
+    const row = await this.env.DB.prepare(
+      "SELECT config, callback_url, meta FROM forms WHERE id = ?",
+    )
+      .bind(formId)
+      .first<{ config: string; callback_url: string | null; meta: string | null }>();
+    if (!row) return { config: SAMPLE_FORM };
+    return {
+      config: FormConfigSchema.parse(JSON.parse(row.config)),
+      callbackUrl: row.callback_url ?? undefined,
+      meta: row.meta ? JSON.parse(row.meta) : undefined,
+    };
   }
 
   async saveResponse(formId: string, answers: Record<string, unknown>): Promise<void> {

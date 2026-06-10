@@ -26,4 +26,9 @@ export interface Env {
   /** HMAC secret for signing/verifying session tokens. When unset, WS auth is
    *  skipped (local dev). Secret: `wrangler secret put SESSION_SECRET`. */
   SESSION_SECRET: string;
+
+  /** Bearer token required to POST /forms (programmatic form creation by Hermes). */
+  CREATE_TOKEN?: string;
+  /** Base URL of the studio responder UI (for the returned responder link). */
+  STUDIO_BASE_URL?: string;
 }

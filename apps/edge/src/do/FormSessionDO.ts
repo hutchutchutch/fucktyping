@@ -10,6 +10,8 @@ import { Validator } from "./validator";
 interface PersistedSession {
   config: FormConfig;
   state: ConversationState;
+  callbackUrl?: string;
+  meta?: unknown;
 }
 
 /** One instance per voice-form response session. Holds conversation state, runs the
@@ -56,9 +58,9 @@ export class FormSessionDO extends DurableObject<Env> {
   }
 
   private async onStart(ws: WebSocket, formId?: string): Promise<void> {
-    const config = await new FormRepository(this.env).getFormConfig(formId ?? "sample");
+    const { config, callbackUrl, meta } = await new FormRepository(this.env).getForm(formId ?? "sample");
     const { state, reply } = this.interpreterFor(config).begin();
-    this.session = { config, state };
+    this.session = { config, state, callbackUrl, meta };
     await this.ctx.storage.put("session", this.session);
     this.send(ws, reply);
   }
@@ -78,8 +80,38 @@ export class FormSessionDO extends DurableObject<Env> {
     await this.ctx.storage.put("session", this.session);
     if (reply.done) {
       await new FormRepository(this.env).saveResponse(this.session.config.id, state.responses);
+      if (this.session.callbackUrl) {
+        this.ctx.waitUntil(
+          this.fireCallback(this.session.callbackUrl, this.session.config, state.responses, this.session.meta),
+        );
+      }
     }
     this.send(ws, reply);
+  }
+
+  /** POST the collected structured output to the form's callback (e.g. a Hermes webhook
+   *  that delivers it to Discord). The callback URL carries its own auth. */
+  private async fireCallback(
+    url: string,
+    config: FormConfig,
+    responses: Record<string, unknown>,
+    meta: unknown,
+  ): Promise<void> {
+    try {
+      await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          formId: config.id,
+          formName: config.name,
+          responses,
+          meta,
+          completedAt: new Date().toISOString(),
+        }),
+      });
+    } catch (err) {
+      console.error("fireCallback failed", err);
+    }
   }
 
   private send(ws: WebSocket, msg: ServerMessage): void {
