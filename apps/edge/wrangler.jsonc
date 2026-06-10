@@ -42,4 +42,10 @@
   // Optional secrets (do NOT commit):
   //   `wrangler secret put SESSION_SECRET`   (enables WS auth)
   //   `wrangler secret put LLM_API_KEY` / `AUTHORING_API_KEY`  (only for hosted LLM providers)
+  //
+  // To DEPLOY against the Access-gated Ollama tunnel: set the BASE_URLs above to
+  // https://qwen.hutchgpt.com/v1 and add the reused hutchgpt service token as secrets:
+  //   `wrangler secret put LLM_CF_ACCESS_CLIENT_ID` / `LLM_CF_ACCESS_CLIENT_SECRET`
+  //   `wrangler secret put AUTHORING_CF_ACCESS_CLIENT_ID` / `AUTHORING_CF_ACCESS_CLIENT_SECRET`
+  // (local dev needs none of this — it hits localhost:11434 directly.)
 }

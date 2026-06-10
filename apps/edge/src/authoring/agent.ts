@@ -1,4 +1,5 @@
 import type { Env } from "../env";
+import { llmHeaders } from "../llm-headers";
 import type { ChatMessage, DraftFormConfig } from "./draft";
 import { AUTHORING_TOOLS, toolCallsToMutations, type Mutation } from "./tools";
 
@@ -58,8 +59,11 @@ export class LLMAuthoringBrain implements AuthoringBrain {
   }
 
   async respond(messages: ChatMessage[], form: DraftFormConfig): Promise<AuthoringTurn> {
-    const headers: Record<string, string> = { "content-type": "application/json" };
-    if (this.env.AUTHORING_API_KEY) headers.authorization = `Bearer ${this.env.AUTHORING_API_KEY}`;
+    const headers = llmHeaders({
+      apiKey: this.env.AUTHORING_API_KEY,
+      cfAccessClientId: this.env.AUTHORING_CF_ACCESS_CLIENT_ID,
+      cfAccessClientSecret: this.env.AUTHORING_CF_ACCESS_CLIENT_SECRET,
+    });
     const res = await fetch(this.endpoint(), {
       method: "POST",
       headers,

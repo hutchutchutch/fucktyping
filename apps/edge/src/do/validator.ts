@@ -1,4 +1,5 @@
 import type { Env } from "../env";
+import { llmHeaders } from "../llm-headers";
 import type { Question } from "../forms/types";
 
 export interface ValidationResult {
@@ -57,8 +58,11 @@ export class Validator implements AnswerValidator {
       return heuristicValidate(q, userResponse);
     }
     try {
-      const headers: Record<string, string> = { "content-type": "application/json" };
-      if (this.env.LLM_API_KEY) headers.authorization = `Bearer ${this.env.LLM_API_KEY}`;
+      const headers = llmHeaders({
+        apiKey: this.env.LLM_API_KEY,
+        cfAccessClientId: this.env.LLM_CF_ACCESS_CLIENT_ID,
+        cfAccessClientSecret: this.env.LLM_CF_ACCESS_CLIENT_SECRET,
+      });
       const res = await fetch(this.endpoint(), {
         method: "POST",
         headers,

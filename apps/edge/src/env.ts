@@ -11,12 +11,17 @@ export interface Env {
   LLM_BASE_URL: string; // e.g. "http://localhost:11434/v1"
   LLM_MODEL: string;    // e.g. "gemma4:31b-mlx"
   LLM_API_KEY?: string; // optional; unused for Ollama
+  // Cloudflare Access service token, to reach an Access-gated tunnel (qwen.hutchgpt.com).
+  LLM_CF_ACCESS_CLIENT_ID?: string;
+  LLM_CF_ACCESS_CLIENT_SECRET?: string;
 
   // Authoring agent (tool-calling LLM; OpenAI-compatible).
   FORM_AUTHORING: DurableObjectNamespace;
   AUTHORING_BASE_URL: string; // e.g. "http://localhost:11434/v1"
   AUTHORING_MODEL: string;    // e.g. "gemma4:31b-mlx"
   AUTHORING_API_KEY?: string; // optional
+  AUTHORING_CF_ACCESS_CLIENT_ID?: string;
+  AUTHORING_CF_ACCESS_CLIENT_SECRET?: string;
 
   /** HMAC secret for signing/verifying session tokens. When unset, WS auth is
    *  skipped (local dev). Secret: `wrangler secret put SESSION_SECRET`. */
