@@ -127,11 +127,15 @@ export class FormSessionDO extends DurableObject<Env> {
       const summary = config.questions
         .map((q) => `• ${q.prompt} → ${formatAnswer(responses[q.id])}`)
         .join("\n");
+      // Surface the target Discord channel id at top level so one Hermes webhook route
+      // can template `--deliver-chat-id "{discordChatId}"` and route per channel.
+      const discordChatId = (meta as { discordChatId?: string } | null)?.discordChatId;
       const body = JSON.stringify({
         formId: config.id,
         formName: config.name,
         responses,
         summary,
+        discordChatId,
         meta,
         completedAt: new Date().toISOString(),
       });

@@ -9,21 +9,27 @@
 # Env (set in ~/.hermes/.env):
 #   VOICE_CREATE_TOKEN  (required)  Bearer token for the worker's POST /forms
 #   VOICE_WORKER_URL    (optional)  default https://fucktyping-edge.hutchenbach.workers.dev
-#   VOICE_CALLBACK_URL  (optional)  default https://ig-webhooks.hutchgpt.com/webhooks/voice-answers
+#   VOICE_CALLBACK_URL  (optional)  default .../webhooks/voice-answers-dyn (routes per channel)
 set -euo pipefail
 
 BRIEF="${1:?usage: voice-ask \"<brief>\" [discord:#channel]}"
 TARGET="${2:-discord:#gtky}"
 WORKER="${VOICE_WORKER_URL:-https://fucktyping-edge.hutchenbach.workers.dev}"
-CALLBACK="${VOICE_CALLBACK_URL:-https://ig-webhooks.hutchgpt.com/webhooks/voice-answers}"
+CALLBACK="${VOICE_CALLBACK_URL:-https://ig-webhooks.hutchgpt.com/webhooks/voice-answers-dyn}"
 : "${VOICE_CREATE_TOKEN:?set VOICE_CREATE_TOKEN in ~/.hermes/.env}"
 
-body=$(BRIEF="$BRIEF" TARGET="$TARGET" CALLBACK="$CALLBACK" python3 -c '
+# Resolve "discord:#health" -> numeric channel id so the webhook routes the answer back
+# to that channel via --deliver-chat-id "{discordChatId}".
+chan="${TARGET#discord:}"; chan="${chan#\#}"
+chid=$(hermes send --list discord 2>/dev/null | grep -E "discord:${chan}[[:space:]]" | grep -oE '\[[0-9]+\]' | tr -d '[]' | head -1 || true)
+[ -z "$chid" ] && printf 'voice-ask: warning — could not resolve channel id for %s\n' "$TARGET" >&2
+
+body=$(BRIEF="$BRIEF" TARGET="$TARGET" CALLBACK="$CALLBACK" CHID="$chid" python3 -c '
 import json, os
 print(json.dumps({
   "brief": os.environ["BRIEF"],
   "callbackUrl": os.environ["CALLBACK"],
-  "meta": {"discord": os.environ["TARGET"]},
+  "meta": {"discord": os.environ["TARGET"], "discordChatId": os.environ["CHID"]},
 }))')
 
 resp=$(curl -fsS --max-time 120 -X POST "$WORKER/forms" \
