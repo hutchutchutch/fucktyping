@@ -25,8 +25,7 @@
     {
       "binding": "DB",
       "database_name": "fucktyping",
-      // Run `wrangler d1 create fucktyping` and paste the id here.
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "8e652f6b-6712-4b48-9450-ba7651bb8fa4",
       "migrations_dir": "migrations"
     }
   ],
