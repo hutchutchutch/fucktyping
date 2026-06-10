@@ -13,6 +13,16 @@ export interface AnswerValidator {
   validate(question: Question, userResponse: string): Promise<ValidationResult>;
 }
 
+/** Local models often wrap JSON in ```json fences or surrounding prose. Pull out the
+ *  JSON object so JSON.parse succeeds. */
+export function extractJson(s: string): string {
+  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const body = fence ? fence[1] : s;
+  const start = body.indexOf("{");
+  const end = body.lastIndexOf("}");
+  return start >= 0 && end > start ? body.slice(start, end + 1) : body.trim();
+}
+
 /** Ported from the legacy engine/prompts.js generateValidationPrompt. */
 function buildValidationPrompt(q: Question, userResponse: string): string {
   return [
@@ -38,23 +48,20 @@ function buildValidationPrompt(q: Question, userResponse: string): string {
 export class Validator implements AnswerValidator {
   constructor(private env: Env) {}
 
-  private gatewayUrl(): string {
-    const { AI_GATEWAY_ACCOUNT_ID, AI_GATEWAY_ID, LLM_PROVIDER } = this.env;
-    // Groq (and most providers) are OpenAI-compatible under AI Gateway.
-    return `https://gateway.ai.cloudflare.com/v1/${AI_GATEWAY_ACCOUNT_ID}/${AI_GATEWAY_ID}/${LLM_PROVIDER}/openai/v1/chat/completions`;
+  private endpoint(): string {
+    return `${this.env.LLM_BASE_URL.replace(/\/$/, "")}/chat/completions`;
   }
 
   async validate(q: Question, userResponse: string): Promise<ValidationResult> {
-    if (!this.env.AI_GATEWAY_ACCOUNT_ID || !this.env.LLM_API_KEY) {
+    if (!this.env.LLM_BASE_URL) {
       return heuristicValidate(q, userResponse);
     }
     try {
-      const res = await fetch(this.gatewayUrl(), {
+      const headers: Record<string, string> = { "content-type": "application/json" };
+      if (this.env.LLM_API_KEY) headers.authorization = `Bearer ${this.env.LLM_API_KEY}`;
+      const res = await fetch(this.endpoint(), {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${this.env.LLM_API_KEY}`,
-        },
+        headers,
         body: JSON.stringify({
           model: this.env.LLM_MODEL,
           temperature: 0,
@@ -62,12 +69,12 @@ export class Validator implements AnswerValidator {
           messages: [{ role: "system", content: buildValidationPrompt(q, userResponse) }],
         }),
       });
-      if (!res.ok) throw new Error(`AI Gateway ${res.status}`);
+      if (!res.ok) throw new Error(`LLM ${res.status}`);
       const data = (await res.json()) as {
         choices?: { message?: { content?: string } }[];
       };
       const content = data.choices?.[0]?.message?.content ?? "{}";
-      const parsed = JSON.parse(content) as Partial<ValidationResult>;
+      const parsed = JSON.parse(extractJson(content)) as Partial<ValidationResult>;
       return {
         isValid: Boolean(parsed.isValid),
         extractedValue: parsed.extractedValue ?? null,

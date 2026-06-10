@@ -31,15 +31,15 @@
   ],
 
   "vars": {
-    // AI Gateway: https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/<provider>/...
-    "AI_GATEWAY_ACCOUNT_ID": "",
-    "AI_GATEWAY_ID": "fucktyping",
-    "LLM_PROVIDER": "groq",
-    "LLM_MODEL": "llama-3.3-70b-versatile",
-    "AUTHORING_PROVIDER": "openai",
-    "AUTHORING_MODEL": "gpt-4o"
+    // OpenAI-compatible LLM endpoints. Default = local Ollama (Gemma 4 31B MLX).
+    // NOTE: localhost is reachable only under `wrangler dev` (local mode); a deployed
+    // worker needs a Cloudflare Tunnel to the Mac, or a hosted endpoint here.
+    "LLM_BASE_URL": "http://localhost:11434/v1",
+    "LLM_MODEL": "gemma4:31b-mlx",
+    "AUTHORING_BASE_URL": "http://localhost:11434/v1",
+    "AUTHORING_MODEL": "gemma4:31b-mlx"
   }
-  // Secrets (do NOT commit): `wrangler secret put LLM_API_KEY`
-  //                          `wrangler secret put AUTHORING_API_KEY`
-  //                          `wrangler secret put SESSION_SECRET`   (optional; enables WS auth)
+  // Optional secrets (do NOT commit):
+  //   `wrangler secret put SESSION_SECRET`   (enables WS auth)
+  //   `wrangler secret put LLM_API_KEY` / `AUTHORING_API_KEY`  (only for hosted LLM providers)
 }

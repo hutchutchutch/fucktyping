@@ -53,18 +53,16 @@ export function summarizeMutations(mutations: Mutation[]): string {
 export class LLMAuthoringBrain implements AuthoringBrain {
   constructor(private env: Env) {}
 
-  private url(): string {
-    const { AI_GATEWAY_ACCOUNT_ID, AI_GATEWAY_ID, AUTHORING_PROVIDER } = this.env;
-    return `https://gateway.ai.cloudflare.com/v1/${AI_GATEWAY_ACCOUNT_ID}/${AI_GATEWAY_ID}/${AUTHORING_PROVIDER}/openai/v1/chat/completions`;
+  private endpoint(): string {
+    return `${this.env.AUTHORING_BASE_URL.replace(/\/$/, "")}/chat/completions`;
   }
 
   async respond(messages: ChatMessage[], form: DraftFormConfig): Promise<AuthoringTurn> {
-    const res = await fetch(this.url(), {
+    const headers: Record<string, string> = { "content-type": "application/json" };
+    if (this.env.AUTHORING_API_KEY) headers.authorization = `Bearer ${this.env.AUTHORING_API_KEY}`;
+    const res = await fetch(this.endpoint(), {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${this.env.AUTHORING_API_KEY}`,
-      },
+      headers,
       body: JSON.stringify({
         model: this.env.AUTHORING_MODEL,
         temperature: 0.3,
@@ -75,7 +73,7 @@ export class LLMAuthoringBrain implements AuthoringBrain {
         ],
       }),
     });
-    if (!res.ok) throw new Error(`AI Gateway ${res.status}`);
+    if (!res.ok) throw new Error(`LLM ${res.status}`);
 
     const data = (await res.json()) as {
       choices?: { message?: { content?: string; tool_calls?: any[] } }[];
