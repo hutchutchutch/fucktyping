@@ -61,6 +61,31 @@
     }
   ],
 
+  "queues": {
+    "producers": [
+      { "binding": "CALLBACK_QUEUE", "queue": "fucktyping-callbacks" }
+    ],
+    "consumers": [
+      {
+        "queue": "fucktyping-callbacks",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 5,
+        "retry_delay": 60,
+        "dead_letter_queue": "fucktyping-callbacks-dlq"
+      },
+      {
+        "queue": "fucktyping-callbacks-dlq",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5
+      }
+    ]
+  },
+
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  },
+
   "d1_databases": [
     {
       "binding": "DB",
@@ -100,6 +125,26 @@
           "simple": { "limit": 60, "period": 60 }
         }
       ],
+      "queues": {
+        "producers": [
+          { "binding": "CALLBACK_QUEUE", "queue": "fucktyping-callbacks-staging" }
+        ],
+        "consumers": [
+          {
+            "queue": "fucktyping-callbacks-staging",
+            "max_batch_size": 10,
+            "max_batch_timeout": 5,
+            "max_retries": 5,
+            "retry_delay": 60,
+            "dead_letter_queue": "fucktyping-callbacks-staging-dlq"
+          },
+          {
+            "queue": "fucktyping-callbacks-staging-dlq",
+            "max_batch_size": 10,
+            "max_batch_timeout": 5
+          }
+        ]
+      },
       "d1_databases": [
         {
           "binding": "DB",

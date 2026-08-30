@@ -2,6 +2,16 @@ import type { Env } from "../env";
 import { SAMPLE_FORM } from "../seed/sample-form";
 import { FormConfigSchema, type FormConfig } from "./types";
 
+export interface CallbackDelivery {
+  id: string;
+  responseId: string;
+  formId: string;
+  callbackUrl: string;
+  payload: string;
+  status: "pending" | "queued" | "processing" | "retrying" | "delivered" | "failed";
+  attempts: number;
+}
+
 /** Loads FormConfigs and persists collected structured output to D1. */
 export class FormRepository {
   constructor(private env: Env) {}
@@ -85,12 +95,106 @@ export class FormRepository {
     ownerId: string,
     sessionId: string,
     answers: Record<string, unknown>,
-  ): Promise<boolean> {
-    const result = await this.env.DB.prepare(
+    callback?: { url: string; payload: unknown },
+  ): Promise<{ inserted: boolean; deliveryId?: string }> {
+    const responseId = crypto.randomUUID();
+    const createdAt = new Date().toISOString();
+    const responseStatement = this.env.DB.prepare(
       "INSERT OR IGNORE INTO responses (id, form_id, owner_id, session_id, answers, created_at) VALUES (?, ?, ?, ?, ?, ?)",
     )
-      .bind(crypto.randomUUID(), formId, ownerId, sessionId, JSON.stringify(answers), new Date().toISOString())
-      .run();
-    return (result.meta.changes ?? 0) === 1;
+      .bind(responseId, formId, ownerId, sessionId, JSON.stringify(answers), createdAt);
+
+    if (!callback) {
+      const result = await responseStatement.run();
+      return { inserted: (result.meta.changes ?? 0) === 1 };
+    }
+
+    const deliveryId = crypto.randomUUID();
+    const deliveryStatement = this.env.DB.prepare(
+      `INSERT OR IGNORE INTO callback_deliveries
+       (id, response_id, form_id, callback_url, payload, status, attempts, created_at, updated_at)
+       SELECT ?, ?, ?, ?, ?, 'pending', 0, ?, ?
+       WHERE EXISTS (SELECT 1 FROM responses WHERE id = ?)`,
+    ).bind(
+      deliveryId,
+      responseId,
+      formId,
+      callback.url,
+      JSON.stringify(callback.payload),
+      createdAt,
+      createdAt,
+      responseId,
+    );
+    const [responseResult] = await this.env.DB.batch([responseStatement, deliveryStatement]);
+    const inserted = (responseResult.meta.changes ?? 0) === 1;
+    return { inserted, deliveryId: inserted ? deliveryId : undefined };
+  }
+
+  async claimCallbackDelivery(id: string): Promise<CallbackDelivery | null> {
+    const now = new Date().toISOString();
+    const staleBefore = new Date(Date.now() - 30_000).toISOString();
+    const result = await this.env.DB.prepare(
+      `UPDATE callback_deliveries
+       SET status = 'processing', attempts = attempts + 1, updated_at = ?
+       WHERE id = ? AND (
+         status IN ('pending', 'queued', 'retrying')
+         OR (status = 'processing' AND updated_at < ?)
+       )`,
+    ).bind(now, id, staleBefore).run();
+    if ((result.meta.changes ?? 0) !== 1) return null;
+    const row = await this.env.DB.prepare(
+      "SELECT id, response_id, form_id, callback_url, payload, status, attempts FROM callback_deliveries WHERE id = ?",
+    ).bind(id).first<{
+      id: string; response_id: string; form_id: string; callback_url: string;
+      payload: string; status: CallbackDelivery["status"]; attempts: number;
+    }>();
+    return row ? {
+      id: row.id,
+      responseId: row.response_id,
+      formId: row.form_id,
+      callbackUrl: row.callback_url,
+      payload: row.payload,
+      status: row.status,
+      attempts: row.attempts,
+    } : null;
+  }
+
+  async listPendingCallbackIds(limit: number): Promise<string[]> {
+    const { results } = await this.env.DB.prepare(
+      "SELECT id FROM callback_deliveries WHERE status = 'pending' ORDER BY created_at LIMIT ?",
+    ).bind(limit).all<{ id: string }>();
+    return (results ?? []).map((row) => row.id);
+  }
+
+  async markCallbackQueued(id: string): Promise<void> {
+    await this.updateCallbackStatus(id, "queued", null, ["pending"]);
+  }
+
+  async markCallbackDelivered(id: string): Promise<void> {
+    await this.updateCallbackStatus(id, "delivered", null, ["processing"]);
+  }
+
+  async markCallbackRetrying(id: string, error: string): Promise<void> {
+    await this.updateCallbackStatus(id, "retrying", error.slice(0, 1000), ["processing"]);
+  }
+
+  async markCallbackFailed(id: string, error: string): Promise<void> {
+    await this.updateCallbackStatus(id, "failed", error.slice(0, 1000), ["queued", "processing", "retrying"]);
+  }
+
+  private async updateCallbackStatus(
+    id: string,
+    status: CallbackDelivery["status"],
+    error: string | null,
+    fromStatuses?: CallbackDelivery["status"][],
+  ): Promise<void> {
+    const condition = fromStatuses?.length
+      ? ` AND status IN (${fromStatuses.map(() => "?").join(", ")})`
+      : "";
+    const statement = this.env.DB.prepare(
+      `UPDATE callback_deliveries SET status = ?, last_error = ?, updated_at = ? WHERE id = ?${condition}`,
+    );
+    const values = [status, error, new Date().toISOString(), id, ...(fromStatuses ?? [])];
+    await statement.bind(...values).run();
   }
 }

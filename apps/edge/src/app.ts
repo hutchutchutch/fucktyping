@@ -22,7 +22,19 @@ app.use("/auth/*", devCors);
 app.use("/transcribe", devCors);
 app.use("/forms", devCors);
 
-app.get("/health", (c) => c.text("ok"));
+app.get("/health", (c) => c.json({ status: "ok", env: c.env.APP_ENV }));
+
+app.onError((error, c) => {
+  console.error(JSON.stringify({
+    event: "request_failed",
+    env: c.env.APP_ENV,
+    method: c.req.method,
+    path: new URL(c.req.url).pathname,
+    rayId: c.req.header("CF-Ray") ?? null,
+    error: error.message,
+  }));
+  return c.json({ error: "internal error" }, 500);
+});
 
 function clientKey(c: { req: { header: (name: string) => string | undefined } }, prefix: string): string {
   return `${prefix}:${c.req.header("CF-Connecting-IP") ?? "local"}`;

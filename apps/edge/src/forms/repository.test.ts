@@ -32,6 +32,9 @@ function fakeEnv(changes = 1) {
       };
       return statement;
     },
+    async batch(statements: { run: () => Promise<{ meta: { changes: number } }> }[]) {
+      return Promise.all(statements.map((statement) => statement.run()));
+    },
   };
   return { env: { DB } as unknown as Env, calls };
 }
@@ -54,11 +57,26 @@ describe("FormRepository writes", () => {
 
   it("deduplicates completed sessions using INSERT OR IGNORE", async () => {
     const inserted = fakeEnv(1);
-    expect(await new FormRepository(inserted.env).saveResponse("form-1", "private-beta", "session-1", { q1: "ok" })).toBe(true);
+    expect(await new FormRepository(inserted.env).saveResponse("form-1", "private-beta", "session-1", { q1: "ok" })).toEqual({ inserted: true });
     expect(inserted.calls[0].sql).toContain("INSERT OR IGNORE");
     expect(inserted.calls[0].values.slice(1, 4)).toEqual(["form-1", "private-beta", "session-1"]);
 
     const duplicate = fakeEnv(0);
-    expect(await new FormRepository(duplicate.env).saveResponse("form-1", "private-beta", "session-1", {})).toBe(false);
+    expect(await new FormRepository(duplicate.env).saveResponse("form-1", "private-beta", "session-1", {})).toEqual({ inserted: false });
+  });
+
+  it("creates the response and callback outbox row in one D1 batch", async () => {
+    const { env, calls } = fakeEnv(1);
+    const result = await new FormRepository(env).saveResponse(
+      "form-1",
+      "private-beta",
+      "session-1",
+      { q1: "ok" },
+      { url: "https://hooks.example.com/complete", payload: { formId: "form-1" } },
+    );
+    expect(result.inserted).toBe(true);
+    expect(result.deliveryId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(calls[1].sql).toContain("INSERT OR IGNORE INTO callback_deliveries");
+    expect(calls[1].sql).toContain("WHERE EXISTS (SELECT 1 FROM responses WHERE id = ?)");
   });
 });

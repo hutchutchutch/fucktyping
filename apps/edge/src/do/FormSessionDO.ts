@@ -1,5 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 
+import { buildCallbackPayload } from "../callbacks";
 import type { Env } from "../env";
 import { FormRepository } from "../forms/repository";
 import type { ConversationState, FormConfig } from "../forms/types";
@@ -14,24 +15,6 @@ interface PersistedSession {
   state: ConversationState;
   callbackUrl?: string;
   meta?: unknown;
-}
-
-function formatAnswer(v: unknown): string {
-  if (v == null || v === "") return "(skipped)";
-  return String(v);
-}
-
-/** Hex HMAC-SHA256 (for X-Hub-Signature-256). */
-async function hmacHex(secret: string, message: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
-  return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /** One instance per voice-form response session. Holds conversation state, runs the
@@ -122,57 +105,33 @@ export class FormSessionDO extends DurableObject<Env> {
     this.session.state = state;
     await this.ctx.storage.put("session", this.session);
     if (reply.done) {
-      const inserted = await new FormRepository(this.env).saveResponse(
+      const repository = new FormRepository(this.env);
+      const callback = this.session.callbackUrl ? {
+        url: this.session.callbackUrl,
+        payload: buildCallbackPayload(this.session.config, state.responses, this.session.meta),
+      } : undefined;
+      const completion = await repository.saveResponse(
         this.session.config.id,
         this.session.ownerId,
         this.session.sessionId,
         state.responses,
+        callback,
       );
-      if (inserted && this.session.callbackUrl) {
-        this.ctx.waitUntil(
-          this.fireCallback(this.session.callbackUrl, this.session.config, state.responses, this.session.meta),
-        );
+      if (completion.deliveryId) {
+        try {
+          await this.env.CALLBACK_QUEUE.send({ deliveryId: completion.deliveryId });
+          await repository.markCallbackQueued(completion.deliveryId);
+        } catch (cause) {
+          // The D1 outbox remains pending and the scheduled sweep will enqueue it.
+          console.error(JSON.stringify({
+            event: "callback_enqueue_failed",
+            deliveryId: completion.deliveryId,
+            error: cause instanceof Error ? cause.message : "queue send failed",
+          }));
+        }
       }
     }
     this.send(ws, reply);
-  }
-
-  /** POST the collected structured output to the form's callback (e.g. a Hermes webhook
-   *  that delivers it to Discord). Signs the body with X-Hub-Signature-256 when a signing
-   *  secret is configured, and sets a User-Agent (some WAFs block UA-less requests). */
-  private async fireCallback(
-    url: string,
-    config: FormConfig,
-    responses: Record<string, unknown>,
-    meta: unknown,
-  ): Promise<void> {
-    try {
-      const summary = config.questions
-        .map((q) => `• ${q.prompt} → ${formatAnswer(responses[q.id])}`)
-        .join("\n");
-      // Surface the target Discord channel id at top level so one Hermes webhook route
-      // can template `--deliver-chat-id "{discordChatId}"` and route per channel.
-      const discordChatId = (meta as { discordChatId?: string } | null)?.discordChatId;
-      const body = JSON.stringify({
-        formId: config.id,
-        formName: config.name,
-        responses,
-        summary,
-        discordChatId,
-        meta,
-        completedAt: new Date().toISOString(),
-      });
-      const headers: Record<string, string> = {
-        "content-type": "application/json",
-        "user-agent": "fucktyping-voice-callback/1.0",
-      };
-      if (this.env.WEBHOOK_SIGNING_SECRET) {
-        headers["X-Hub-Signature-256"] = "sha256=" + (await hmacHex(this.env.WEBHOOK_SIGNING_SECRET, body));
-      }
-      await fetch(url, { method: "POST", headers, body });
-    } catch (err) {
-      console.error("fireCallback failed", err);
-    }
   }
 
   private send(ws: WebSocket, msg: ServerMessage): void {
