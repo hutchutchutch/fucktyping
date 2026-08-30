@@ -3,7 +3,7 @@ import { cors } from "hono/cors";
 
 import { signSessionToken, verifySessionToken } from "./auth";
 import type { Env } from "./env";
-import { createFormFromBrief } from "./forms/create";
+import { formConfigFromCreateBody } from "./forms/create-request";
 import { FormRepository } from "./forms/repository";
 
 // Durable Object classes must be exported from the Worker entrypoint.
@@ -41,24 +41,25 @@ app.get("/forms", async (c) => {
 });
 
 /**
- * Programmatic form creation (called by Hermes voice-ask). Turns a free-text brief
- * into a voice form, records a completion callback + meta, and returns a responder URL
- * with a runtime token baked in. Auth: Bearer CREATE_TOKEN.
+ * Programmatic form creation (called by Hermes voice-ask). Accepts either an explicit
+ * FormConfig or a free-text brief, records a completion callback + meta, and returns a
+ * responder URL with a runtime token baked in. Auth: Bearer CREATE_TOKEN.
  *
- *   POST /forms  { brief, callbackUrl?, meta?, ttlDays? }  ->  { formId, responderUrl }
+ *   POST /forms  { config?, brief?, callbackUrl?, meta?, ttlDays? }  ->  { formId, responderUrl }
  */
 app.post("/forms", async (c) => {
   if (!c.env.CREATE_TOKEN || c.req.header("authorization") !== `Bearer ${c.env.CREATE_TOKEN}`) {
     return c.json({ error: "unauthorized" }, 401);
   }
   const body = await c.req.json().catch(() => null);
-  if (!body || typeof body.brief !== "string" || !body.brief.trim()) {
-    return c.json({ error: "brief required" }, 400);
-  }
-  const config = await createFormFromBrief(c.env, body.brief);
-  await new FormRepository(c.env).saveForm(config, { callbackUrl: body.callbackUrl, meta: body.meta });
+  const parsed = await formConfigFromCreateBody(c.env, body);
+  if (!parsed.ok) return c.json({ error: parsed.error, issues: parsed.issues }, parsed.status as 400);
+  const config = parsed.config;
+  const createBody = body as { callbackUrl?: string; meta?: unknown; ttlDays?: unknown };
 
-  const exp = Math.floor(Date.now() / 1000) + (Number(body.ttlDays) || 7) * 86400;
+  await new FormRepository(c.env).saveForm(config, { callbackUrl: createBody.callbackUrl, meta: createBody.meta });
+
+  const exp = Math.floor(Date.now() / 1000) + (Number(createBody.ttlDays) || 7) * 86400;
   const token = await signSessionToken(c.env.SESSION_SECRET ?? "", { sub: config.id, exp });
   const studio = (c.env.STUDIO_BASE_URL ?? "https://fucktyping-studio.pages.dev").replace(/\/$/, "");
   const responderUrl = `${studio}/respond/${config.id}?token=${encodeURIComponent(token)}`;
