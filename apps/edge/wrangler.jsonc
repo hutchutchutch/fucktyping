@@ -2,8 +2,35 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "fucktyping-edge",
   "main": "src/index.ts",
-  "compatibility_date": "2026-06-01",
+  "compatibility_date": "2026-08-30",
   "compatibility_flags": ["nodejs_compat"],
+
+  // Serve the Studio SPA and API from one Worker/origin. API and WebSocket paths
+  // always execute Worker code; every other path falls back to the SPA.
+  "assets": {
+    "directory": "../studio/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": [
+      "/health",
+      "/transcribe",
+      "/forms",
+      "/forms/*",
+      "/authoring/*"
+    ]
+  },
+
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 0.05
+    }
+  },
 
   // Durable Objects: per-session runtime "brain" + per-session authoring agent.
   "durable_objects": {
@@ -31,6 +58,7 @@
   ],
 
   "vars": {
+    "APP_ENV": "production",
     // OpenAI-compatible LLM endpoints. Default = local Ollama (Gemma 4 31B MLX).
     // NOTE: localhost is reachable only under `wrangler dev` (local mode); a deployed
     // worker needs a Cloudflare Tunnel to the Mac, or a hosted endpoint here.
@@ -38,6 +66,36 @@
     "LLM_MODEL": "gemma4:31b-mlx",
     "AUTHORING_BASE_URL": "https://qwen.hutchgpt.com/v1",
     "AUTHORING_MODEL": "gemma4:31b-mlx"
+  },
+
+  // Staging is a separate Worker with isolated Durable Objects and D1 data. Binding
+  // configuration is intentionally repeated because Wrangler does not inherit it.
+  "env": {
+    "staging": {
+      "name": "fucktyping-edge-staging",
+      "durable_objects": {
+        "bindings": [
+          { "name": "FORM_SESSION", "class_name": "FormSessionDO" },
+          { "name": "FORM_AUTHORING", "class_name": "FormAuthoringDO" }
+        ]
+      },
+      "ai": { "binding": "AI" },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "fucktyping-staging",
+          "database_id": "3ec19b20-f105-43f5-8b02-c1b1d74e89fa",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "vars": {
+        "APP_ENV": "staging",
+        "LLM_BASE_URL": "https://qwen.hutchgpt.com/v1",
+        "LLM_MODEL": "gemma4:31b-mlx",
+        "AUTHORING_BASE_URL": "https://qwen.hutchgpt.com/v1",
+        "AUTHORING_MODEL": "gemma4:31b-mlx"
+      }
+    }
   }
   // Optional secrets (do NOT commit):
   //   `wrangler secret put SESSION_SECRET`   (enables WS auth)

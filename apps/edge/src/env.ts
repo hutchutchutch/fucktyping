@@ -1,31 +1,12 @@
-export interface Env {
-  /** Per-session runtime brain. */
-  FORM_SESSION: DurableObjectNamespace;
-  /** D1: forms + collected responses. */
-  DB: D1Database;
-  /** Workers AI — used for Whisper STT on form-creation push-to-talk. */
-  AI: Ai;
-
-  // Validation LLM — any OpenAI-compatible endpoint. Defaults to local Ollama
-  // (reachable from the worker only in `wrangler dev` local mode, or via a tunnel).
-  LLM_BASE_URL: string; // e.g. "http://localhost:11434/v1"
-  LLM_MODEL: string;    // e.g. "gemma4:31b-mlx"
+/** Wrangler generates resource bindings in worker-configuration.d.ts. This extension
+ * only describes secrets, which are intentionally absent from wrangler.jsonc. */
+export interface Env extends Cloudflare.Env {
   LLM_API_KEY?: string; // optional; unused for Ollama
-  // Cloudflare Access service token, to reach an Access-gated tunnel (qwen.hutchgpt.com).
-  LLM_CF_ACCESS_CLIENT_ID?: string;
-  LLM_CF_ACCESS_CLIENT_SECRET?: string;
-
-  // Authoring agent (tool-calling LLM; OpenAI-compatible).
-  FORM_AUTHORING: DurableObjectNamespace;
-  AUTHORING_BASE_URL: string; // e.g. "http://localhost:11434/v1"
-  AUTHORING_MODEL: string;    // e.g. "gemma4:31b-mlx"
   AUTHORING_API_KEY?: string; // optional
-  AUTHORING_CF_ACCESS_CLIENT_ID?: string;
-  AUTHORING_CF_ACCESS_CLIENT_SECRET?: string;
 
   /** HMAC secret for signing/verifying session tokens. When unset, WS auth is
    *  skipped (local dev). Secret: `wrangler secret put SESSION_SECRET`. */
-  SESSION_SECRET: string;
+  SESSION_SECRET?: string;
 
   /** Bearer token required to POST /forms (programmatic form creation by Hermes). */
   CREATE_TOKEN?: string;

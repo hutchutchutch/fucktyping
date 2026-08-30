@@ -7,8 +7,11 @@ import { ChatPane } from "./components/ChatPane";
 import { GraphPane } from "./components/GraphPane";
 import { LeftSidebar } from "./components/LeftSidebar";
 
-// Base URL of the apps/edge Worker (http/https; converted to ws/wss internally).
-const EDGE_URL = (import.meta as any).env?.VITE_EDGE_URL ?? "http://localhost:8787";
+// Production is served by the Edge Worker, so APIs and WebSockets are same-origin.
+// Local Vite development still talks to `wrangler dev` unless explicitly overridden.
+const EDGE_URL =
+  (import.meta as any).env?.VITE_EDGE_URL ??
+  ((import.meta as any).env?.DEV ? "http://localhost:8787" : window.location.origin);
 // Optional WS auth token (only needed once SESSION_SECRET is set on the edge).
 const SESSION_TOKEN = (import.meta as any).env?.VITE_SESSION_TOKEN as string | undefined;
 

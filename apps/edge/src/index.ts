@@ -61,7 +61,7 @@ app.post("/forms", async (c) => {
 
   const exp = Math.floor(Date.now() / 1000) + (Number(createBody.ttlDays) || 7) * 86400;
   const token = await signSessionToken(c.env.SESSION_SECRET ?? "", { sub: config.id, exp });
-  const studio = (c.env.STUDIO_BASE_URL ?? "https://fucktyping-studio.pages.dev").replace(/\/$/, "");
+  const studio = (c.env.STUDIO_BASE_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
   const responderUrl = `${studio}/respond/${config.id}?token=${encodeURIComponent(token)}`;
   return c.json({ formId: config.id, responderUrl, questions: config.questions.map((q) => q.prompt) });
 });

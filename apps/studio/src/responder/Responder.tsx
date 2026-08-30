@@ -4,7 +4,9 @@ import { blobToWav16k } from "../authoring/audio";
 import { transcribeAudio } from "../authoring/transcribe";
 import { useResponderSession } from "./useResponderSession";
 
-const EDGE_URL = (import.meta as any).env?.VITE_EDGE_URL ?? "http://localhost:8787";
+const EDGE_URL =
+  (import.meta as any).env?.VITE_EDGE_URL ??
+  ((import.meta as any).env?.DEV ? "http://localhost:8787" : window.location.origin);
 
 /** Voice form-filling page opened from a Discord link: the agent speaks each question
  *  (browser TTS), you answer by voice (MediaRecorder -> Whisper -> answer), and the
