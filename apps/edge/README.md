@@ -1,101 +1,92 @@
 # @fucktyping/edge
 
-The Cloudflare runtime "brain" for voice forms. A **Durable Object per response session**
-interprets a `FormConfig` as a state machine, validates spoken answers through **AI
-Gateway**, persists collected structured output to **D1**, and speaks the WebSocket
-protocol that the Mac voice pipeline (`voice-pipeline/voice_pipeline/agent/do_client.py`)
-expects.
+The production Cloudflare Worker for FuckTyping. It serves the Studio SPA and API from
+one origin, runs creator and respondent sessions in Durable Objects, calls Workers AI,
+stores forms/responses/callback state in D1, and delivers completion callbacks through
+Cloudflare Queues.
 
-```
-do_client.py  ──WS──▶  Worker (Hono)  ──▶  FormSessionDO  ──▶  D1 (responses)
-                       /forms/:id/session      │
-                                               ├─ FormInterpreter (opening→ask→validate→rephrase→close)
-                                               └─ Validator ──▶ AI Gateway ──▶ LLM
+```text
+browser ──HTTPS/WS──▶ Worker + static assets
+                          ├── Durable Objects (authoring and response sessions)
+                          ├── Workers AI (GLM authoring/validation and Whisper STT)
+                          ├── D1 (forms, responses, callback outbox)
+                          └── Queue consumer (signed completion callbacks)
 ```
 
-## WS protocol (matches do_client.py)
-```
-client → {"type":"start","form_id":"sample"}
-server ← {"type":"assistant","text":"<greeting + first question>","done":false}
-client → {"type":"user_answer","text":"<transcript>"}
-server ← {"type":"assistant","text":"<next question | rephrase | closing>","done":<bool>}
-```
-`done:true` ⇒ the FormConfig is fully collected; the row is written to `responses`.
+## Security model
 
-## Files
-| File | Role |
-|------|------|
-| `src/index.ts` | Hono Worker; WS upgrade → routes to a DO per `(formId, sessionId)` |
-| `src/do/FormSessionDO.ts` | the DO; WebSocket Hibernation API + state in DO storage |
-| `src/do/interpreter.ts` | fixed-shape state machine (ported from the legacy LangGraph nodes) |
-| `src/do/validator.ts` | AI Gateway LLM validation + deterministic heuristic fallback |
-| `src/do/protocol.ts` | client/server message types |
-| `src/forms/types.ts` | `FormConfig` / `Question` (Zod) |
-| `src/forms/repository.ts` | D1 load FormConfig / save responses (falls back to sample form) |
-| `src/seed/sample-form.ts` | runnable sample so the DO works before any form is authored |
+- `POST /auth/creator` exchanges the private-beta access key for a short-lived,
+  HMAC-signed creator token.
+- Creator routes require an `authoring` token; response routes require a form-bound
+  `respond` token.
+- Respondent bearer material is placed in the URL fragment and removed by the client
+  immediately after loading.
+- Native Worker rate limits protect authentication and public endpoints.
+- Completion callbacks accept only public HTTPS targets and are signed when
+  `WEBHOOK_SIGNING_SECRET` is configured.
 
-## Run locally
+## Local development
+
 ```bash
 cd apps/edge
-npm install
-npm test                              # interpreter unit tests (no network)
-wrangler d1 create fucktyping         # paste the id into wrangler.jsonc
+npm ci
 npm run db:migrate:local
-npm run dev                           # http://localhost:8787
+npm run dev
 ```
-Smoke-test the socket against the sample form (e.g. with websocat):
+
+Wrangler may use `.dev.vars` for local-only values. Never commit that file.
+
+```dotenv
+SESSION_SECRET=replace-with-a-long-random-value
+CREATE_TOKEN=your-private-beta-access-key
+WEBHOOK_SIGNING_SECRET=replace-with-a-different-random-value
+```
+
+The deterministic validator remains available if an AI request fails, but both
+authoring and validation normally call the configured Workers AI binding directly.
+
+## Verification
+
 ```bash
-websocat "ws://localhost:8787/forms/sample/session"
-{"type":"start","form_id":"sample"}
-{"type":"user_answer","text":"Hutch"}
-{"type":"user_answer","text":"five"}
-{"type":"user_answer","text":"yes"}
-{"type":"user_answer","text":"great service"}
+npm test
+npm run typecheck
+npm run types:worker -- --check
+npm run build:studio
+npx wrangler deploy --dry-run --env=""
+npx wrangler deploy --dry-run --env staging
 ```
-Then point the pipeline at it:
+
+The browser suite lives in `apps/studio` and starts this Worker locally:
+
 ```bash
-python -m voice_pipeline.agent.run_agent --stt parakeet-mlx \
-    --do-url ws://localhost:8787/forms/sample/session
+npm --prefix ../studio run test:e2e
 ```
 
-## AI Gateway
-Without `AI_GATEWAY_ACCOUNT_ID` + `LLM_API_KEY`, the validator uses the heuristic
-fallback (good enough for yes/no, numbers, email, choices). To enable the LLM:
+## Deployments
+
+Staging is a separate Worker with isolated D1, Durable Objects, queues, rate-limit
+namespaces, and secrets.
+
 ```bash
-# set AI_GATEWAY_ACCOUNT_ID / AI_GATEWAY_ID / LLM_PROVIDER / LLM_MODEL in wrangler.jsonc
-wrangler secret put LLM_API_KEY
+# Configure each environment once (commands prompt without printing the value).
+npx wrangler secret put SESSION_SECRET --env staging
+npx wrangler secret put CREATE_TOKEN --env staging
+npx wrangler secret put WEBHOOK_SIGNING_SECRET --env staging
+
+# Then migrate and deploy.
+npm run db:migrate:staging
+npm run deploy:staging
 ```
 
-## Authoring DO (form creation)
+Production uses the same commands without `--env staging`. The GitHub deployment
+workflow records the current Worker deployment and D1 Time Travel bookmark before it
+applies additive migrations. Production can only be dispatched manually from `main`
+with the exact confirmation `deploy-production`.
 
-The other half: a per-session `FormAuthoringDO` where the creator chats and an LLM
-tool-calling loop builds a **draft FormConfig**. On every change the DO broadcasts the
-full state — that broadcast drives both the chat pane and the **live graph pane**.
+Required GitHub environment secrets for both `staging` and `production`:
 
-```
-creator browser ─WS─▶ /authoring/:sessionId/session ─▶ FormAuthoringDO
-                                                          ├─ LLMAuthoringBrain ─▶ AI Gateway (tool calls)
-                                                          ├─ reducer (applyMutations) → draft FormConfig
-                                                          └─ on publish: validate → D1 `forms`
-```
+- `CLOUDFLARE_API_TOKEN`: scoped to Workers Scripts, D1, Queues, and Workers Tail read.
+- `CLOUDFLARE_ACCOUNT_ID`: the account containing the configured resource IDs.
 
-WS protocol:
-```
-client → {"type":"init"}                          server ← {"type":"snapshot","form":<draft>,"messages":[...],"ready":<bool>}
-client → {"type":"user_message","text":"..."}      server ← {"type":"thinking"} then {"type":"snapshot",...}
-client → {"type":"publish"}                        server ← {"type":"published","formId":"..."}  | {"type":"error","message":"..."}
-```
-
-The model never writes code — it calls tools (`add_question`, `update_question`,
-`reorder_questions`, `set_opening`, …) that mutate the draft via a pure reducer
-(`authoring/reducer.ts`). A published form lands in D1 and is immediately runnable at
-`/forms/<formId>/session`. Authoring uses a stronger tool-calling model
-(`AUTHORING_PROVIDER`/`AUTHORING_MODEL`, key via `wrangler secret put AUTHORING_API_KEY`).
-
-The frontend renders the snapshot's `messages` in the center pane and `form` (questions
-as nodes, order as edges) in the right pane — re-rendering on each broadcast.
-
-## Not here yet
-- The **frontend** three-pane UI that consumes the authoring snapshots.
-- The **Cloudflare Realtime** media transport (see `voice-pipeline/.../cloudflare_realtime.py`).
-- Auth on both session endpoints (add a signed token before exposing publicly).
+Runtime secrets (`SESSION_SECRET`, `CREATE_TOKEN`, and `WEBHOOK_SIGNING_SECRET`) live in
+Cloudflare, not GitHub. Rotate creator/session secrets independently per environment.

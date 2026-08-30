@@ -30,12 +30,11 @@ it calls tools that mutate the draft, and each mutation re-draws the graph.
 ## Run
 ```bash
 # 1) start the edge worker (apps/edge): npm run dev   → http://localhost:8787
-# 2) here:
+# 2) start Vite for fast UI development:
 cd apps/studio
-npm install
-echo "VITE_EDGE_URL=http://localhost:8787" > .env.local   # default already points here
+npm ci
 npm run dev          # http://localhost:5173
-npm test             # snapshotToGraph unit tests
+npm test
 npm run typecheck
 ```
 Talk to it: "Build a 3-question customer feedback form." Watch the graph fill in, then
@@ -48,10 +47,16 @@ fills the chat input. The realtime WebRTC/Cloudflare-Realtime path is for *form 
 (the respondent side), handled by `voice-pipeline` + `apps/edge`'s runtime DO.
 
 ## Deploy (Cloudflare)
-`npm run build` → `dist/`. Serve via Cloudflare Pages or Workers static assets. Set
-`VITE_EDGE_URL` to the deployed edge worker's URL at build time.
+
+The Studio is built into `dist/` and deployed by `apps/edge` as Worker static assets.
+Production deliberately uses the browser origin for HTTP and WebSocket APIs; it does
+not depend on a separate Pages project or a baked API hostname.
+
+```bash
+npm run build
+npm run test:e2e    # starts a local Worker and exercises the packaged app in Chromium
+```
 
 ## Not here yet
 - Resumable drafts (persist `sessionId`, list "My forms" from D1).
 - Inline node editing in the graph (today it's a read-only projection; edits go through chat).
-- Auth (a signed token before the WS connects).
