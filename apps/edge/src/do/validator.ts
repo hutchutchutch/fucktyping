@@ -1,5 +1,4 @@
 import type { Env } from "../env";
-import { llmHeaders } from "../llm-headers";
 import type { Question } from "../forms/types";
 
 export interface ValidationResult {
@@ -44,37 +43,19 @@ function buildValidationPrompt(q: Question, userResponse: string): string {
     .join("\n");
 }
 
-/** LLM-backed validator routed through Cloudflare AI Gateway, with a heuristic fallback
- *  so the agent keeps working if the gateway/model is unavailable. */
+/** Workers-AI-backed validator with a deterministic fallback so form completion is not
+ * coupled to inference availability. */
 export class Validator implements AnswerValidator {
   constructor(private env: Env) {}
 
-  private endpoint(): string {
-    return `${this.env.LLM_BASE_URL.replace(/\/$/, "")}/chat/completions`;
-  }
-
   async validate(q: Question, userResponse: string): Promise<ValidationResult> {
-    if (!this.env.LLM_BASE_URL) {
-      return heuristicValidate(q, userResponse);
-    }
     try {
-      const headers = llmHeaders({
-        apiKey: this.env.LLM_API_KEY,
-        cfAccessClientId: this.env.LLM_CF_ACCESS_CLIENT_ID,
-        cfAccessClientSecret: this.env.LLM_CF_ACCESS_CLIENT_SECRET,
-      });
-      const res = await fetch(this.endpoint(), {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          model: this.env.LLM_MODEL,
-          temperature: 0,
-          response_format: { type: "json_object" },
-          messages: [{ role: "system", content: buildValidationPrompt(q, userResponse) }],
-        }),
-      });
-      if (!res.ok) throw new Error(`LLM ${res.status}`);
-      const data = (await res.json()) as {
+      const data = await this.env.AI.run(this.env.AI_TEXT_MODEL as "@cf/zai-org/glm-4.7-flash", {
+        temperature: 0,
+        max_completion_tokens: 300,
+        response_format: { type: "json_object" },
+        messages: [{ role: "system", content: buildValidationPrompt(q, userResponse) }],
+      }) as {
         choices?: { message?: { content?: string } }[];
       };
       const content = data.choices?.[0]?.message?.content ?? "{}";

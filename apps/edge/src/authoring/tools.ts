@@ -63,7 +63,12 @@ export const AUTHORING_TOOLS = [
   ),
 ];
 
-function fn(name: string, description: string, properties: Record<string, unknown>, required: string[] = []) {
+function fn(
+  name: string,
+  description: string,
+  properties: Record<string, unknown>,
+  required: string[] = [],
+): ChatCompletionFunctionTool {
   return { type: "function", function: { name, description, parameters: { type: "object", properties, required } } };
 }
 

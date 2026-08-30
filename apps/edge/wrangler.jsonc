@@ -72,13 +72,8 @@
 
   "vars": {
     "APP_ENV": "production",
-    // OpenAI-compatible LLM endpoints. Default = local Ollama (Gemma 4 31B MLX).
-    // NOTE: localhost is reachable only under `wrangler dev` (local mode); a deployed
-    // worker needs a Cloudflare Tunnel to the Mac, or a hosted endpoint here.
-    "LLM_BASE_URL": "https://qwen.hutchgpt.com/v1",
-    "LLM_MODEL": "gemma4:31b-mlx",
-    "AUTHORING_BASE_URL": "https://qwen.hutchgpt.com/v1",
-    "AUTHORING_MODEL": "gemma4:31b-mlx"
+    // Cloudflare-hosted, function-calling model used by authoring and validation.
+    "AI_TEXT_MODEL": "@cf/zai-org/glm-4.7-flash"
   },
 
   // Staging is a separate Worker with isolated Durable Objects and D1 data. Binding
@@ -115,20 +110,11 @@
       ],
       "vars": {
         "APP_ENV": "staging",
-        "LLM_BASE_URL": "https://qwen.hutchgpt.com/v1",
-        "LLM_MODEL": "gemma4:31b-mlx",
-        "AUTHORING_BASE_URL": "https://qwen.hutchgpt.com/v1",
-        "AUTHORING_MODEL": "gemma4:31b-mlx"
+        "AI_TEXT_MODEL": "@cf/zai-org/glm-4.7-flash"
       }
     }
   }
   // Optional secrets (do NOT commit):
   //   `wrangler secret put SESSION_SECRET`   (enables WS auth)
-  //   `wrangler secret put LLM_API_KEY` / `AUTHORING_API_KEY`  (only for hosted LLM providers)
-  //
-  // To DEPLOY against the Access-gated Ollama tunnel: set the BASE_URLs above to
-  // https://qwen.hutchgpt.com/v1 and add the reused hutchgpt service token as secrets:
-  //   `wrangler secret put LLM_CF_ACCESS_CLIENT_ID` / `LLM_CF_ACCESS_CLIENT_SECRET`
-  //   `wrangler secret put AUTHORING_CF_ACCESS_CLIENT_ID` / `AUTHORING_CF_ACCESS_CLIENT_SECRET`
-  // (local dev needs none of this — it hits localhost:11434 directly.)
+  //   `wrangler secret put CREATE_TOKEN` / `SESSION_SECRET`
 }

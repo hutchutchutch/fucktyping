@@ -1,5 +1,4 @@
 import type { Env } from "../env";
-import { llmHeaders } from "../llm-headers";
 import type { ChatMessage, DraftFormConfig } from "./draft";
 import { AUTHORING_TOOLS, toolCallsToMutations, type Mutation } from "./tools";
 
@@ -50,36 +49,20 @@ export function summarizeMutations(mutations: Mutation[]): string {
   return `Done — ${parts.join(", ")}.`;
 }
 
-/** LLM authoring brain, routed through Cloudflare AI Gateway (OpenAI-compatible). */
+/** LLM authoring brain running on the bound, Cloudflare-hosted Workers AI model. */
 export class LLMAuthoringBrain implements AuthoringBrain {
   constructor(private env: Env) {}
 
-  private endpoint(): string {
-    return `${this.env.AUTHORING_BASE_URL.replace(/\/$/, "")}/chat/completions`;
-  }
-
   async respond(messages: ChatMessage[], form: DraftFormConfig): Promise<AuthoringTurn> {
-    const headers = llmHeaders({
-      apiKey: this.env.AUTHORING_API_KEY,
-      cfAccessClientId: this.env.AUTHORING_CF_ACCESS_CLIENT_ID,
-      cfAccessClientSecret: this.env.AUTHORING_CF_ACCESS_CLIENT_SECRET,
-    });
-    const res = await fetch(this.endpoint(), {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        model: this.env.AUTHORING_MODEL,
-        temperature: 0.3,
-        tools: AUTHORING_TOOLS,
-        messages: [
-          { role: "system", content: systemPrompt(form) },
-          ...messages.map((m) => ({ role: m.role, content: m.content })),
-        ],
-      }),
-    });
-    if (!res.ok) throw new Error(`LLM ${res.status}`);
-
-    const data = (await res.json()) as {
+    const data = await this.env.AI.run(this.env.AI_TEXT_MODEL as "@cf/zai-org/glm-4.7-flash", {
+      temperature: 0.3,
+      max_completion_tokens: 800,
+      tools: AUTHORING_TOOLS,
+      messages: [
+        { role: "system", content: systemPrompt(form) },
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+      ],
+    }) as {
       choices?: { message?: { content?: string; tool_calls?: any[] } }[];
     };
     const message = data.choices?.[0]?.message ?? {};
@@ -94,6 +77,7 @@ export class LLMAuthoringBrain implements AuthoringBrain {
 }
 
 function safeParse(s: unknown): Record<string, any> {
+  if (s && typeof s === "object" && !Array.isArray(s)) return s as Record<string, any>;
   if (typeof s !== "string") return {};
   try {
     return JSON.parse(s);

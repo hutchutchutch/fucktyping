@@ -1,9 +1,6 @@
 /** Wrangler generates resource bindings in worker-configuration.d.ts. This extension
  * only describes secrets, which are intentionally absent from wrangler.jsonc. */
 export interface Env extends Cloudflare.Env {
-  LLM_API_KEY?: string; // optional; unused for Ollama
-  AUTHORING_API_KEY?: string; // optional
-
   /** HMAC secret for signing/verifying session tokens. When unset, WS auth is
    *  skipped (local dev). Secret: `wrangler secret put SESSION_SECRET`. */
   SESSION_SECRET?: string;
