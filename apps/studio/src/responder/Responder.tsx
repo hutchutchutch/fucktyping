@@ -14,7 +14,16 @@ const EDGE_URL =
 export function Responder() {
   const { formId, token } = useMemo(() => {
     const m = window.location.pathname.match(/\/respond\/([^/]+)/);
-    return { formId: m?.[1] ?? "", token: new URLSearchParams(window.location.search).get("token") ?? undefined };
+    const searchToken = new URLSearchParams(window.location.search).get("token");
+    const fragmentToken = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("token");
+    return { formId: m?.[1] ?? "", token: fragmentToken ?? searchToken ?? undefined };
+  }, []);
+
+  // Remove bearer material from the visible/shareable URL after capturing it.
+  useEffect(() => {
+    if (window.location.hash || window.location.search.includes("token=")) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
   }, []);
 
   const session = useResponderSession(EDGE_URL, formId, token);
@@ -47,7 +56,8 @@ export function Responder() {
         setBusy(true);
         try {
           const wav = await blobToWav16k(new Blob(chunks.current, { type: rec.mimeType || "audio/webm" }));
-          const text = await transcribeAudio(EDGE_URL, wav);
+          if (!token) throw new Error("missing response token");
+          const text = await transcribeAudio(EDGE_URL, wav, token);
           if (text.trim()) session.sendAnswer(text.trim());
         } catch (err) {
           console.error("answer transcription failed", err);

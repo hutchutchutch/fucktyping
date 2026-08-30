@@ -12,6 +12,8 @@ export interface SessionClaims {
   sub: string;
   /** Expiry, unix seconds. */
   exp: number;
+  /** Prevents a creator token from being reused as a respondent token, or vice versa. */
+  scope: "authoring" | "respond";
 }
 
 const encoder = new TextEncoder();
@@ -41,14 +43,6 @@ async function importKey(secret: string): Promise<CryptoKey> {
   );
 }
 
-/** Constant-time-ish comparison to avoid leaking the signature via timing. */
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
-
 /** Mints a compact `payload.signature` token. */
 export async function signSessionToken(secret: string, claims: SessionClaims): Promise<string> {
   const payload = base64urlEncode(encoder.encode(JSON.stringify(claims)));
@@ -69,8 +63,13 @@ export async function verifySessionToken(
   const sig = token.slice(dot + 1);
 
   const key = await importKey(secret);
-  const expected = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
-  if (!timingSafeEqual(sig, base64urlEncode(new Uint8Array(expected)))) return null;
+  let signature: Uint8Array;
+  try {
+    signature = base64urlDecode(sig);
+  } catch {
+    return null;
+  }
+  if (!(await crypto.subtle.verify("HMAC", key, signature, encoder.encode(payload)))) return null;
 
   let claims: SessionClaims;
   try {
@@ -78,7 +77,22 @@ export async function verifySessionToken(
   } catch {
     return null;
   }
-  if (!claims || typeof claims.sub !== "string" || typeof claims.exp !== "number") return null;
+  if (
+    !claims ||
+    typeof claims.sub !== "string" ||
+    typeof claims.exp !== "number" ||
+    (claims.scope !== "authoring" && claims.scope !== "respond")
+  ) return null;
   if (claims.exp <= Math.floor(Date.now() / 1000)) return null;
   return claims;
+}
+
+/** Compares access keys without an early-exit string comparison. */
+export async function verifySecret(expected: string, candidate: string): Promise<boolean> {
+  if (!expected || !candidate || candidate.length > 1024) return false;
+  const message = encoder.encode("fucktyping access-key verification");
+  const expectedKey = await importKey(expected);
+  const candidateKey = await importKey(candidate);
+  const candidateMac = await crypto.subtle.sign("HMAC", candidateKey, message);
+  return crypto.subtle.verify("HMAC", expectedKey, candidateMac, message);
 }

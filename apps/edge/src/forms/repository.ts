@@ -11,7 +11,7 @@ export class FormRepository {
     const row = await this.env.DB.prepare("SELECT config FROM forms WHERE id = ?")
       .bind(formId)
       .first<{ config: string }>();
-    if (!row) return SAMPLE_FORM; // graceful fallback for local dev
+    if (!row) throw new Error(`form not found: ${formId}`);
     return FormConfigSchema.parse(JSON.parse(row.config));
   }
 
@@ -21,6 +21,14 @@ export class FormRepository {
       "SELECT id, name, created_at FROM forms ORDER BY created_at DESC LIMIT 100",
     ).all<{ id: string; name: string; created_at: string }>();
     return results ?? [];
+  }
+
+  async formExists(formId: string): Promise<boolean> {
+    if (formId === "sample") return true;
+    const row = await this.env.DB.prepare("SELECT 1 AS found FROM forms WHERE id = ?")
+      .bind(formId)
+      .first<{ found: number }>();
+    return row?.found === 1;
   }
 
   /** Upsert a published form so the runtime DO can serve it by id. Optionally records a
@@ -51,7 +59,7 @@ export class FormRepository {
     )
       .bind(formId)
       .first<{ config: string; callback_url: string | null; meta: string | null }>();
-    if (!row) return { config: SAMPLE_FORM };
+    if (!row) throw new Error(`form not found: ${formId}`);
     return {
       config: FormConfigSchema.parse(JSON.parse(row.config)),
       callbackUrl: row.callback_url ?? undefined,

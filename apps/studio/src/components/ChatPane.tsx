@@ -10,11 +10,12 @@ interface Props {
   ready: boolean;
   publishedFormId: string | null;
   edgeUrl: string;
+  sessionToken: string;
   onSend: (text: string) => void;
   onPublish: () => void;
 }
 
-export function ChatPane({ messages, status, ready, publishedFormId, edgeUrl, onSend, onPublish }: Props) {
+export function ChatPane({ messages, status, ready, publishedFormId, edgeUrl, sessionToken, onSend, onPublish }: Props) {
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -56,7 +57,7 @@ export function ChatPane({ messages, status, ready, publishedFormId, edgeUrl, on
       </div>
 
       <div className="composer">
-        <MicButton httpBase={edgeUrl} onTranscript={(t) => setDraft((d) => (d ? `${d} ${t}` : t))} />
+        <MicButton httpBase={edgeUrl} token={sessionToken} onTranscript={(t) => setDraft((d) => (d ? `${d} ${t}` : t))} />
         <textarea
           value={draft}
           placeholder="Describe your form, or refine a question…"

@@ -1,8 +1,8 @@
 /** POST WAV bytes to the edge /transcribe endpoint (Workers AI Whisper) → text. */
-export async function transcribeAudio(httpBase: string, wav: Blob): Promise<string> {
+export async function transcribeAudio(httpBase: string, wav: Blob, token: string): Promise<string> {
   const res = await fetch(`${httpBase.replace(/\/$/, "")}/transcribe`, {
     method: "POST",
-    headers: { "content-type": "audio/wav" },
+    headers: { "content-type": "audio/wav", authorization: `Bearer ${token}` },
     body: wav,
   });
   if (!res.ok) throw new Error(`transcribe failed: ${res.status}`);

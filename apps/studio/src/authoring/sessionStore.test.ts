@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { getOrCreateSessionId, type StorageLike } from "./sessionStore";
+import {
+  clearCreatorToken,
+  getOrCreateSessionId,
+  getStoredCreatorToken,
+  storeCreatorToken,
+  type StorageLike,
+} from "./sessionStore";
 
 function fakeStorage(): StorageLike {
   const map = new Map<string, string>();
@@ -29,5 +35,38 @@ describe("getOrCreateSessionId", () => {
     const storage = fakeStorage();
     storage.setItem("fucktyping.authoring.sessionId", "preset-id");
     expect(getOrCreateSessionId(storage)).toBe("preset-id");
+  });
+});
+
+function unsignedToken(claims: object): string {
+  const payload = btoa(JSON.stringify(claims)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return `${payload}.signature`;
+}
+
+describe("creator token storage", () => {
+  it("returns a current authoring token for the matching session", () => {
+    const storage = fakeStorage();
+    const token = unsignedToken({ sub: "session-1", scope: "authoring", exp: 2_000_000_000 });
+    storeCreatorToken(storage, token);
+    expect(getStoredCreatorToken(storage, "session-1", 1_900_000_000_000)).toBe(token);
+  });
+
+  it("rejects expired, wrong-session, and respondent tokens", () => {
+    const storage = fakeStorage();
+    storeCreatorToken(storage, unsignedToken({ sub: "session-1", scope: "authoring", exp: 10 }));
+    expect(getStoredCreatorToken(storage, "session-1", 11_000)).toBeNull();
+
+    storeCreatorToken(storage, unsignedToken({ sub: "session-2", scope: "authoring", exp: 2_000_000_000 }));
+    expect(getStoredCreatorToken(storage, "session-1")).toBeNull();
+
+    storeCreatorToken(storage, unsignedToken({ sub: "session-1", scope: "respond", exp: 2_000_000_000 }));
+    expect(getStoredCreatorToken(storage, "session-1")).toBeNull();
+  });
+
+  it("clears the stored token", () => {
+    const storage = fakeStorage();
+    storeCreatorToken(storage, unsignedToken({ sub: "session-1", scope: "authoring", exp: 2_000_000_000 }));
+    clearCreatorToken(storage);
+    expect(getStoredCreatorToken(storage, "session-1")).toBeNull();
   });
 });

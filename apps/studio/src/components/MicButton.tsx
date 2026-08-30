@@ -20,7 +20,7 @@ const MIN_NEW_SEC = 0.6;
  *  overlap). Each segment's *novel* text is handed to onTranscript, which the
  *  composer appends — so the input fills in progressively. On stop we flush the
  *  final tail. The realtime WebRTC path is for form *filling*. */
-export function MicButton({ httpBase, onTranscript }: { httpBase: string; onTranscript: (text: string) => void }) {
+export function MicButton({ httpBase, token, onTranscript }: { httpBase: string; token: string; onTranscript: (text: string) => void }) {
   const [supported, setSupported] = useState(true);
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -62,7 +62,7 @@ export function MicButton({ httpBase, onTranscript }: { httpBase: string; onTran
       if (!seg) return;
 
       const slice = samples.subarray(seg.start, seg.end);
-      const text = await transcribeAudio(httpBase, samples16kToWav(slice));
+      const text = await transcribeAudio(httpBase, samples16kToWav(slice), token);
       // Advance the cursor regardless of dedup outcome so we don't re-send audio.
       cursorRef.current = seg.end;
 

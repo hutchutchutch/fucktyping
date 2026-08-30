@@ -1,7 +1,7 @@
 import type { FormConfig } from "../forms/types";
 
 /** A ready-to-run FormConfig so the DO works locally before any form is authored.
- *  Used when form_id is "sample" or a requested form isn't in D1 yet. */
+ *  Used only when form_id is explicitly "sample" during local development. */
 export const SAMPLE_FORM: FormConfig = {
   id: "sample",
   name: "Customer Feedback (sample)",

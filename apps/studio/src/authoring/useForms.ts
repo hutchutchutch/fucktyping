@@ -13,7 +13,7 @@ export interface UseForms {
 }
 
 /** Fetches the published-forms list (`GET ${httpBase}/forms`) for the "My forms" sidebar. */
-export function useForms(httpBase: string): UseForms {
+export function useForms(httpBase: string, token: string): UseForms {
   const [forms, setForms] = useState<FormSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,9 @@ export function useForms(httpBase: string): UseForms {
     setLoading(true);
     setError(null);
 
-    fetch(`${httpBase.replace(/\/$/, "")}/forms`)
+    fetch(`${httpBase.replace(/\/$/, "")}/forms`, {
+      headers: { authorization: `Bearer ${token}` },
+    })
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return (await res.json()) as FormSummary[];
@@ -41,7 +43,7 @@ export function useForms(httpBase: string): UseForms {
     return () => {
       cancelled = true;
     };
-  }, [httpBase]);
+  }, [httpBase, token]);
 
   return { forms, loading, error };
 }
