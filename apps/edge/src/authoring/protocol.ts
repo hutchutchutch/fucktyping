@@ -14,6 +14,7 @@ export type AuthoringServerMessage =
   | { type: "error"; message: string };
 
 export function parseAuthoringClientMessage(raw: string): AuthoringClientMessage | null {
+  if (raw.length > 64 * 1024) return null;
   let data: unknown;
   try {
     data = JSON.parse(raw);
@@ -25,7 +26,8 @@ export function parseAuthoringClientMessage(raw: string): AuthoringClientMessage
   if (obj.type === "init") return { type: "init" };
   if (obj.type === "publish") return { type: "publish" };
   if (obj.type === "user_message" && typeof obj.text === "string") {
-    return { type: "user_message", text: obj.text };
+    const text = obj.text.trim();
+    return text && text.length <= 5000 ? { type: "user_message", text } : null;
   }
   return null;
 }

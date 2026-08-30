@@ -4,7 +4,7 @@ import { cors } from "hono/cors";
 import { signSessionToken, verifySecret, verifySessionToken } from "./auth";
 import type { SessionClaims } from "./auth";
 import type { Env } from "./env";
-import { formConfigFromCreateBody } from "./forms/create-request";
+import { formConfigFromCreateBody, formOptionsFromCreateBody } from "./forms/create-request";
 import { FormRepository } from "./forms/repository";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -63,7 +63,12 @@ app.post("/auth/creator", async (c) => {
   }
 
   const exp = Math.floor(Date.now() / 1000) + 12 * 60 * 60;
-  const token = await signSessionToken(c.env.SESSION_SECRET, { sub: sessionId, exp, scope: "authoring" });
+  const token = await signSessionToken(c.env.SESSION_SECRET, {
+    sub: sessionId,
+    exp,
+    scope: "authoring",
+    owner: "private-beta",
+  });
   return c.json({ token, expiresAt: new Date(exp * 1000).toISOString() });
 });
 
@@ -95,8 +100,8 @@ app.post("/transcribe", async (c) => {
 /** Published-forms list for the studio's "My forms" sidebar. */
 app.get("/forms", async (c) => {
   const claims = await bearerClaims(c);
-  if (claims?.scope !== "authoring") return c.json({ error: "unauthorized" }, 401);
-  const forms = await new FormRepository(c.env).listForms();
+  if (claims?.scope !== "authoring" || !claims.owner) return c.json({ error: "unauthorized" }, 401);
+  const forms = await new FormRepository(c.env).listForms(claims.owner);
   return c.json(forms);
 });
 
@@ -122,13 +127,18 @@ app.post("/forms", async (c) => {
   const body = await c.req.json().catch(() => null);
   const parsed = await formConfigFromCreateBody(c.env, body);
   if (!parsed.ok) return c.json({ error: parsed.error, issues: parsed.issues }, parsed.status as 400);
+  const parsedOptions = formOptionsFromCreateBody(body);
+  if (!parsedOptions.ok) return c.json({ error: "invalid form options", issues: parsedOptions.issues }, 400);
   const config = parsed.config;
-  const createBody = body as { callbackUrl?: string; meta?: unknown; ttlDays?: unknown };
+  const createOptions = parsedOptions.options;
 
-  await new FormRepository(c.env).saveForm(config, { callbackUrl: createBody.callbackUrl, meta: createBody.meta });
+  await new FormRepository(c.env).saveForm(config, {
+    ownerId: "private-beta",
+    callbackUrl: createOptions.callbackUrl,
+    meta: createOptions.meta,
+  });
 
-  const ttlDays = Math.min(30, Math.max(1, Number(createBody.ttlDays) || 7));
-  const exp = Math.floor(Date.now() / 1000) + ttlDays * 86400;
+  const exp = Math.floor(Date.now() / 1000) + createOptions.ttlDays * 86400;
   const token = await signSessionToken(c.env.SESSION_SECRET, { sub: config.id, exp, scope: "respond" });
   const studio = (c.env.STUDIO_BASE_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
   // Keep bearer material in the URL fragment so it is not sent in the initial HTTP
@@ -145,11 +155,11 @@ async function authorized(
   c: { env: Env; req: { query: (k: string) => string | undefined } },
   sub: string,
   scope: SessionClaims["scope"],
-): Promise<boolean> {
+): Promise<SessionClaims | null> {
   const secret = c.env.SESSION_SECRET;
-  if (!secret) return false;
+  if (!secret) return null;
   const claims = await verifySessionToken(secret, c.req.query("token") ?? "");
-  return !!claims && claims.sub === sub && claims.scope === scope;
+  return claims?.sub === sub && claims.scope === scope ? claims : null;
 }
 
 /**
@@ -187,12 +197,15 @@ app.get("/authoring/:sessionId/session", async (c) => {
   }
   const sessionId = c.req.param("sessionId");
   if (!SESSION_ID_RE.test(sessionId)) return c.text("invalid session", 400);
-  if (!(await authorized(c, sessionId, "authoring"))) return c.text("unauthorized", 401);
+  const claims = await authorized(c, sessionId, "authoring");
+  if (!claims?.owner) return c.text("unauthorized", 401);
   if (await isRateLimited(c.env.PUBLIC_RATE_LIMITER, clientKey(c, "authoring-session"))) {
     return c.text("rate limit exceeded", 429);
   }
   const id = c.env.FORM_AUTHORING.idFromName(sessionId);
-  return c.env.FORM_AUTHORING.get(id).fetch(c.req.raw);
+  const headers = new Headers(c.req.raw.headers);
+  headers.set("X-FuckTyping-Owner", claims.owner);
+  return c.env.FORM_AUTHORING.get(id).fetch(new Request(c.req.raw, { headers }));
 });
 
 export default app;

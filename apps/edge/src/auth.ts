@@ -14,6 +14,8 @@ export interface SessionClaims {
   exp: number;
   /** Prevents a creator token from being reused as a respondent token, or vice versa. */
   scope: "authoring" | "respond";
+  /** Stable private-beta tenant. Authoring session IDs remain browser-specific. */
+  owner?: string;
 }
 
 const encoder = new TextEncoder();

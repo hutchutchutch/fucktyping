@@ -39,6 +39,7 @@ describe("POST /auth/creator", () => {
     const claims = await verifySessionToken(SESSION_SECRET, body.token);
     expect(claims?.sub).toBe("browser-session_1");
     expect(claims?.scope).toBe("authoring");
+    expect(claims?.owner).toBe("private-beta");
     expect(Date.parse(body.expiresAt)).toBeGreaterThan(Date.now());
   });
 

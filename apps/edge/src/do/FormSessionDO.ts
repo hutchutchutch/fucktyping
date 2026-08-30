@@ -9,6 +9,8 @@ import { Validator } from "./validator";
 
 interface PersistedSession {
   config: FormConfig;
+  ownerId: string;
+  sessionId: string;
   state: ConversationState;
   callbackUrl?: string;
   meta?: unknown;
@@ -38,6 +40,7 @@ async function hmacHex(secret: string, message: string): Promise<string> {
 export class FormSessionDO extends DurableObject<Env> {
   private session?: PersistedSession;
   private urlFormId?: string;
+  private urlSessionId?: string;
 
   override async fetch(req: Request): Promise<Response> {
     if (req.headers.get("Upgrade") !== "websocket") {
@@ -45,8 +48,10 @@ export class FormSessionDO extends DurableObject<Env> {
     }
     // The worker forwards the original request, so the path carries the formId — use it
     // as the authoritative source even if the client's start message omits form_id.
-    const m = new URL(req.url).pathname.match(/\/forms\/([^/]+)\/session/);
+    const url = new URL(req.url);
+    const m = url.pathname.match(/\/forms\/([^/]+)\/session/);
     if (m) this.urlFormId = decodeURIComponent(m[1]);
+    this.urlSessionId = url.searchParams.get("session") ?? undefined;
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server); // hibernatable
@@ -81,11 +86,18 @@ export class FormSessionDO extends DurableObject<Env> {
   }
 
   private async onStart(ws: WebSocket, formId?: string): Promise<void> {
-    const { config, callbackUrl, meta } = await new FormRepository(this.env).getForm(
+    const { config, ownerId, callbackUrl, meta } = await new FormRepository(this.env).getForm(
       formId ?? this.urlFormId ?? "sample",
     );
     const { state, reply } = this.interpreterFor(config).begin();
-    this.session = { config, state, callbackUrl, meta };
+    this.session = {
+      config,
+      ownerId,
+      sessionId: this.urlSessionId ?? crypto.randomUUID(),
+      state,
+      callbackUrl,
+      meta,
+    };
     await this.ctx.storage.put("session", this.session);
     this.send(ws, reply);
   }
@@ -97,6 +109,12 @@ export class FormSessionDO extends DurableObject<Env> {
     if (!this.session) {
       return this.send(ws, { type: "assistant", text: "Let's start over — say start to begin.", done: false });
     }
+    // Sessions persisted before migration 0003 did not carry these fields.
+    if (!this.session.ownerId || !this.session.sessionId) {
+      const form = await new FormRepository(this.env).getForm(this.session.config.id);
+      this.session.ownerId = form.ownerId;
+      this.session.sessionId = this.urlSessionId ?? crypto.randomUUID();
+    }
     const { state, reply } = await this.interpreterFor(this.session.config).handleAnswer(
       this.session.state,
       userText,
@@ -104,8 +122,13 @@ export class FormSessionDO extends DurableObject<Env> {
     this.session.state = state;
     await this.ctx.storage.put("session", this.session);
     if (reply.done) {
-      await new FormRepository(this.env).saveResponse(this.session.config.id, state.responses);
-      if (this.session.callbackUrl) {
+      const inserted = await new FormRepository(this.env).saveResponse(
+        this.session.config.id,
+        this.session.ownerId,
+        this.session.sessionId,
+        state.responses,
+      );
+      if (inserted && this.session.callbackUrl) {
         this.ctx.waitUntil(
           this.fireCallback(this.session.callbackUrl, this.session.config, state.responses, this.session.meta),
         );

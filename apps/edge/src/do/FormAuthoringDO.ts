@@ -24,6 +24,7 @@ const GREETING =
 export class FormAuthoringDO extends DurableObject<Env> {
   private state?: AuthoringState;
   private brain: AuthoringBrain;
+  private ownerId?: string;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -34,6 +35,7 @@ export class FormAuthoringDO extends DurableObject<Env> {
     if (req.headers.get("Upgrade") !== "websocket") {
       return new Response("expected websocket", { status: 426 });
     }
+    this.ownerId = req.headers.get("X-FuckTyping-Owner") ?? undefined;
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server);
@@ -103,7 +105,8 @@ export class FormAuthoringDO extends DurableObject<Env> {
       });
     }
     const published = toPublished(state.form);
-    await new FormRepository(this.env).saveForm(published);
+    if (!this.ownerId) return this.send(ws, { type: "error", message: "authoring session is unauthorized" });
+    await new FormRepository(this.env).saveForm(published, { ownerId: this.ownerId });
     this.broadcast({ type: "published", formId: published.id });
   }
 

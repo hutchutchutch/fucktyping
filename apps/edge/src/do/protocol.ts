@@ -11,6 +11,7 @@ export interface ServerMessage {
 }
 
 export function parseClientMessage(raw: string): ClientMessage | null {
+  if (raw.length > 64 * 1024) return null;
   let data: unknown;
   try {
     data = JSON.parse(raw);
@@ -23,7 +24,8 @@ export function parseClientMessage(raw: string): ClientMessage | null {
     return { type: "start", form_id: typeof obj.form_id === "string" ? obj.form_id : undefined };
   }
   if (obj.type === "user_answer" && typeof obj.text === "string") {
-    return { type: "user_answer", text: obj.text };
+    const text = obj.text.trim();
+    return text && text.length <= 5000 ? { type: "user_answer", text } : null;
   }
   return null;
 }

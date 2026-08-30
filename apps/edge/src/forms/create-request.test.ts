@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formConfigFromCreateBody } from "./create-request";
+import { formConfigFromCreateBody, formOptionsFromCreateBody } from "./create-request";
 
 const config = {
   id: "gtky-test",
@@ -37,5 +37,29 @@ describe("formConfigFromCreateBody", () => {
       expect(result.status).toBe(400);
       expect(result.error).toBe("invalid config");
     }
+  });
+});
+
+describe("formOptionsFromCreateBody", () => {
+  it("normalizes a bounded response-link TTL and accepts HTTPS callbacks", () => {
+    const result = formOptionsFromCreateBody({
+      callbackUrl: "https://hooks.example.com/complete",
+      ttlDays: "14",
+      meta: { channel: "test" },
+    });
+    expect(result).toEqual({
+      ok: true,
+      options: {
+        callbackUrl: "https://hooks.example.com/complete",
+        ttlDays: 14,
+        meta: { channel: "test" },
+      },
+    });
+  });
+
+  it("rejects insecure callbacks, excessive TTLs, and oversized metadata", () => {
+    expect(formOptionsFromCreateBody({ callbackUrl: "http://localhost/hook" }).ok).toBe(false);
+    expect(formOptionsFromCreateBody({ ttlDays: 31 }).ok).toBe(false);
+    expect(formOptionsFromCreateBody({ meta: "x".repeat(17_000) }).ok).toBe(false);
   });
 });
