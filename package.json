@@ -10,7 +10,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "prepare": "pnpm run build",
     "typecheck": "npm --prefix apps/edge run typecheck && npm --prefix apps/studio run typecheck",
-    "test": "npm --prefix apps/edge test && npm --prefix apps/studio test"
+    "test": "npm --prefix apps/edge test && npm --prefix apps/studio test",
+    "test:e2e": "npm --prefix apps/studio run test:e2e"
   },
   "dependencies": {
     "@copilotkit/react-core": "^1.8.6",

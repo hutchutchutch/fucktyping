@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
+    "dev:e2e": "wrangler dev --local --port 18999 --var SESSION_SECRET:e2e-session-secret --var CREATE_TOKEN:e2e-creator-key --show-interactive-dev-session false",
+    "e2e:server": "npm run db:migrate:local && npm run build:studio && npm run dev:e2e",
     "build:studio": "npm --prefix ../studio run build",
     "deploy": "npm run build:studio && wrangler deploy --env=\"\"",
     "deploy:staging": "npm run build:studio && wrangler deploy --env staging",
