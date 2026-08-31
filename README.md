@@ -1,4 +1,27 @@
-# FuckTyping: Voice-First Form Platform - Turbo Monorepo with pnpm, React, Express, LangGraph, and Groq
+# FuckTyping
+
+> **Current private-beta application:** `apps/studio` + `apps/edge`, deployed together
+> as one Cloudflare Worker. The older Express/Groq application below is retained as
+> historical source and is not part of the launch build.
+
+The active application is a same-origin React Studio and Cloudflare Worker architecture:
+
+- Worker Static Assets serve the creator and respondent UI.
+- Durable Objects own authoring and response WebSocket sessions.
+- Workers AI handles form authoring, ambiguous answer validation, and Whisper speech
+  transcription.
+- D1 stores forms, idempotent responses, ownership, and the callback outbox.
+- Queues deliver signed completion callbacks with retries and a dead-letter queue.
+- Scoped HMAC tokens, native rate limits, payload limits, and security headers protect
+  the private beta.
+
+Start with [`apps/edge/README.md`](apps/edge/README.md) for local development and
+deployment. The production rollback and cutover procedure is in
+[`docs/cloudflare-launch-runbook.md`](docs/cloudflare-launch-runbook.md).
+
+---
+
+# Legacy prototype: Voice-First Form Platform - React, Express, LangGraph, and Groq
 
 This repository demonstrates a revolutionary **voice-first form platform** that transforms tedious form-filling into natural conversations. It's built as a **Turborepo**-style monorepo, using **pnpm** for package management and **Docker** for both development and production builds. It integrates with **Groq** for fast AI inference, uses **LangGraph** for multi-step conversational logic in the **backend**, and features a **React/TypeScript** frontend for creating and responding to voice-based forms.
 

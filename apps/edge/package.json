@@ -1,0 +1,30 @@
+{
+  "name": "@fucktyping/edge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "dev:e2e": "wrangler dev --local --port 18999 --var SESSION_SECRET:e2e-session-secret --var CREATE_TOKEN:e2e-creator-key --show-interactive-dev-session false",
+    "e2e:server": "npm run db:migrate:local && npm run build:studio && npm run dev:e2e",
+    "build:studio": "npm --prefix ../studio run build && test ! -e ../studio/dist/_redirects",
+    "deploy": "npm run build:studio && wrangler deploy --env=\"\"",
+    "deploy:staging": "npm run build:studio && wrangler deploy --env staging",
+    "types:worker": "wrangler types --env-file /dev/null",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:migrate:local": "wrangler d1 migrations apply fucktyping --local",
+    "db:migrate": "wrangler d1 migrations apply fucktyping --remote --env=\"\"",
+    "db:migrate:staging": "wrangler d1 migrations apply fucktyping-staging --remote --env staging"
+  },
+  "dependencies": {
+    "hono": "^4.12.34",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.127.1"
+  }
+}

@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate launch build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            apps/edge/package-lock.json
+            apps/studio/package-lock.json
+
+      - name: Install Edge dependencies
+        run: npm ci
+        working-directory: apps/edge
+
+      - name: Install Studio dependencies
+        run: npm ci
+        working-directory: apps/studio
+
+      - name: Check generated Worker types
+        run: npm run types:worker -- --check
+        working-directory: apps/edge
+
+      - name: Typecheck and unit test
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Build same-origin Studio assets
+        run: npm run build
+        working-directory: apps/studio
+
+      - name: Validate production and staging bundles
+        run: |
+          npx wrangler deploy --dry-run --env=""
+          npx wrangler deploy --dry-run --env staging
+        working-directory: apps/edge
+
+      - name: Audit launch packages
+        run: |
+          npm audit --audit-level=high
+          npm --prefix ../studio audit --audit-level=high
+        working-directory: apps/edge
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/studio
+
+      - name: Run browser launch smoke tests
+        run: npm run test:e2e
+        working-directory: apps/studio
+
+      - name: Upload browser failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/studio/playwright-report/
+            apps/studio/test-results/
+          if-no-files-found: ignore
+          retention-days: 7

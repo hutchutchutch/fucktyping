@@ -1,0 +1,329 @@
+#!/usr/bin/env python3
+"""Create a contextual FuckTyping voice form for a canonical GTKY check-in."""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+import uuid
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+HERMES_ROOT = Path("/Users/home/.hermes")
+SCRIPTS = HERMES_ROOT / "scripts"
+JOBS_PATH = HERMES_ROOT / "cron" / "jobs.json"
+VOICE_ASK = SCRIPTS / "voice-ask"
+
+SLOTS: dict[str, dict[str, Any]] = {
+    "goals": {
+        "job_name": "Argus: GTKY Goals & Aspirations Check-in",
+        "prompt_file": SCRIPTS / "lifeos-goals-checkin-prompt.md",
+        "target": "discord:#goals",
+        "title": "GTKY Goals and Aspirations Check-in",
+        "max_questions": 5,
+    },
+    "morning": {
+        "job_name": "Argus: GTKY Morning Check-in",
+        "prompt_file": SCRIPTS / "lifeos-morning-checkin-prompt.md",
+        "target": "discord:#gtky",
+        "title": "GTKY Morning Check-in",
+        "gate_slot": "morning",
+        "max_questions": 5,
+    },
+    "noon": {
+        "job_name": "Argus: GTKY Noon Check-in",
+        "prompt_file": SCRIPTS / "lifeos-noon-checkin-prompt.md",
+        "target": "discord:#gtky",
+        "title": "GTKY Noon Check-in",
+        "gate_slot": "noon",
+        "max_questions": 4,
+    },
+    "evening": {
+        "job_name": "Argus: GTKY Evening Check-in",
+        "prompt_file": SCRIPTS / "lifeos-evening-checkin-prompt.md",
+        "target": "discord:#gtky",
+        "title": "GTKY Evening Check-in",
+        "gate_slot": "evening",
+        "max_questions": 5,
+    },
+    "weekly": {
+        "job_name": "Argus: GTKY Weekly Life Review",
+        "target": "discord:#gtky",
+        "title": "GTKY Weekly Life Review",
+        "pre_run_script": SCRIPTS / "gtky-weekly-life-review.py",
+        "max_questions": 3,
+    },
+}
+
+FORMATS = {"text", "multiple_choice", "yes_no", "number", "date", "email", "phone"}
+
+
+def load_job(job_name: str) -> dict[str, Any]:
+    data = json.loads(JOBS_PATH.read_text(encoding="utf-8"))
+    for job in data.get("jobs", []):
+        if job.get("name") == job_name:
+            return job
+    raise SystemExit(f"could not find canonical cron job: {job_name}")
+
+
+def run_gate(slot: str) -> dict[str, Any]:
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPTS / "gtky_checkin_gate_import.py"), slot],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        return {"action": "block", "reason": (proc.stderr or proc.stdout or "gate failed").strip()}
+    try:
+        return json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return {"action": "block", "reason": f"gate returned non-JSON output: {proc.stdout[:500]}"}
+
+
+def run_pre_script(path: Path) -> str:
+    proc = subprocess.run([sys.executable, str(path)], text=True, capture_output=True, check=False)
+    if proc.returncode != 0:
+        return f"[pre-run script failed]\n{(proc.stderr or proc.stdout).strip()}"
+    return proc.stdout.strip()
+
+
+def extract_json(text: str) -> dict[str, Any]:
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        stripped = re.sub(r"^```(?:json)?\s*", "", stripped)
+        stripped = re.sub(r"\s*```$", "", stripped)
+    try:
+        return json.loads(stripped)
+    except json.JSONDecodeError:
+        pass
+
+    start = stripped.find("{")
+    end = stripped.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        raise ValueError("agent response did not contain a JSON object")
+    return json.loads(stripped[start : end + 1])
+
+
+def normalize_config(raw: dict[str, Any], slot: str, form_id: str, title: str) -> dict[str, Any]:
+    config_candidate = raw.get("config") if isinstance(raw.get("config"), dict) else raw
+    # Some planners return metadata in `config` and the actual questions at
+    # top-level. Accept that shape and normalize it into FuckTyping's schema.
+    config = dict(config_candidate)
+    if not isinstance(config.get("questions"), list) and isinstance(raw.get("questions"), list):
+        config["questions"] = raw["questions"]
+    if not config.get("openingActivity") and raw.get("prefaceText"):
+        config["openingActivity"] = {"prompt": raw["prefaceText"]}
+
+    questions = config.get("questions")
+    if not isinstance(questions, list) or not questions:
+        raise ValueError("form config has no questions")
+
+    normalized_questions = []
+    for idx, question in enumerate(questions, start=1):
+        if not isinstance(question, dict):
+            raise ValueError(f"question {idx} is not an object")
+        prompt = str(question.get("prompt") or "").strip()
+        if not prompt:
+            prompt_context = str(question.get("promptContext") or "").strip()
+            question_text = str(question.get("questionText") or "").strip()
+            prompt = " ".join(part for part in [prompt_context, question_text] if part).strip()
+        if not prompt:
+            raise ValueError(f"question {idx} has no prompt")
+        fmt = str(question.get("expectedResponseFormat") or "text")
+        if fmt not in FORMATS:
+            fmt = "text"
+        normalized_questions.append(
+            {
+                "id": str(question.get("id") or f"q{idx}"),
+                "prompt": prompt,
+                "expectedResponseFormat": fmt,
+                "options": question.get("options") if isinstance(question.get("options"), list) else None,
+                "required": bool(question.get("required", True)),
+                "maxAttempts": int(question.get("maxAttempts") or 3),
+                "validResponseExample": question.get("validResponseExample"),
+                "invalidResponseExample": question.get("invalidResponseExample"),
+                "rephrasePrompt": question.get("rephrasePrompt"),
+            }
+        )
+
+    for question in normalized_questions:
+        for key in [key for key, value in question.items() if value is None]:
+            del question[key]
+
+    return {
+        "id": str(config.get("id") or config.get("formId") or form_id),
+        "name": str(config.get("name") or title),
+        "openingActivity": {
+            "prompt": str(
+                (config.get("openingActivity") or {}).get("prompt")
+                or f"{title}. I will ask one contextual question at a time."
+            ).strip()
+        },
+        "questions": normalized_questions,
+        "closingActivity": {
+            "prompt": str(
+                (config.get("closingActivity") or {}).get("prompt")
+                or "Got it. I will send this back to Hermes for ingestion."
+            ).strip()
+        },
+    }
+
+
+def planner_prompt(slot: str, form_id: str, spec: dict[str, Any], job: dict[str, Any], pre_run: str) -> str:
+    prompt_file = spec.get("prompt_file")
+    prompt_file_line = f"Canonical prompt file path: {prompt_file}" if prompt_file else "Canonical prompt file path: none"
+    max_questions = int(spec["max_questions"])
+    today = datetime.now().strftime("%Y-%m-%d")
+    return f"""
+You are preparing a spoken FuckTyping voice form for a canonical Hermes GTKY check-in.
+
+Return ONLY valid minified JSON. Do not wrap it in markdown. Do not add commentary.
+
+Hard requirements:
+- The form id must be "{form_id}".
+- The form name must be "{spec['title']}".
+- Build the voice form from the canonical check-in below, not from a generic check-in template.
+- Load the read-only context requested by the canonical prompt before choosing questions.
+- Do not write to Obsidian, do not send Discord messages, and do not perform ingestion.
+- Ask no more than {max_questions} questions.
+- Each question.prompt must contain a short context sentence before exactly one spoken question.
+- Each question.prompt must be under 500 characters.
+- Use expectedResponseFormat values from: text, multiple_choice, yes_no, number, date, email, phone.
+- The closing prompt should say that Hermes will ingest the answers after completion.
+- Use exactly this top-level schema and no extra top-level keys:
+  {{"id":"{form_id}","name":"{spec['title']}","openingActivity":{{"prompt":"..."}}, "questions":[{{"id":"q1","prompt":"Context: ... Question?","expectedResponseFormat":"text","required":true,"maxAttempts":3}}], "closingActivity":{{"prompt":"..."}}}}
+- Do not use keys named formId, prefaceText, promptContext, or questionText.
+
+Today is {today}. Slot: {slot}.
+
+Canonical cron job:
+Name: {job.get('name')}
+Prompt:
+{job.get('prompt') or ''}
+
+{prompt_file_line}
+
+Pre-run context, if any:
+{pre_run}
+""".strip()
+
+
+def call_hermes(prompt: str, timeout: int) -> str:
+    cmd = [os.environ.get("HERMES_BIN", "hermes"), "--oneshot", prompt, "--skills", "gtky", "--toolsets", "file"]
+    model = os.environ.get("GTKY_VOICE_MODEL", "qwen3.6:35b")
+    provider = os.environ.get("GTKY_VOICE_PROVIDER", "custom:ollama-local")
+    if model:
+        cmd.extend(["--model", model])
+    if provider:
+        cmd.extend(["--provider", provider])
+    proc = subprocess.run(cmd, text=True, capture_output=True, timeout=timeout, check=False)
+    if proc.returncode != 0:
+        raise RuntimeError((proc.stderr or proc.stdout or "hermes planner failed").strip())
+    return proc.stdout
+
+
+def build_static_config(slot: str, form_id: str, spec: dict[str, Any]) -> dict[str, Any]:
+    """Test-only fallback. Production wrappers use the Hermes planner by default."""
+    questions = {
+        "goals": [
+            "Context: This is the daily intent anchor. Which active aspiration does today's work serve?",
+            "Context: Hermes needs concrete targets that can be checked tonight. What are your top 2-3 goals for today?",
+            "Context: The evening check-in will compare plan against reality. What is one visible accountability marker for tonight?",
+        ],
+        "morning": [
+            "Context: This check-in tests attention and execution after goals are declared. What is occupying your attention right now?",
+            "Context: Hermes needs a baseline for today's plan. What is your energy level from 1 to 10?",
+            "Context: Practices and blockers shape execution. What is most likely to interfere with today's intent?",
+        ],
+        "noon": [
+            "Context: This is the midday reality check against today's plan. What has actually moved so far?",
+            "Context: Hermes is looking for friction early enough to correct course. What is the main blocker or drag right now?",
+            "Context: The afternoon needs one clear adjustment. What should get your focus next?",
+        ],
+        "evening": [
+            "Context: This closes the loop between declared goals and actual behavior. What actually got done today?",
+            "Context: Hermes is checking value and goal alignment. Where did your actions match or drift from your intent?",
+            "Context: Tomorrow improves only if the lesson is explicit. What should change tomorrow?",
+        ],
+        "weekly": [
+            "Context: This is the weekly ontology-driven life review. What pattern from this week matters most?",
+            "Context: Hermes is looking for gaps, stale objects, and recurring friction. What needs a decision or cleanup?",
+            "Context: Next week needs one priority. What should Hermes pay closest attention to?",
+        ],
+    }[slot]
+    return {
+        "id": form_id,
+        "name": spec["title"],
+        "openingActivity": {"prompt": f"{spec['title']}. I will ask one contextual question at a time."},
+        "questions": [
+            {"id": f"q{i}", "prompt": prompt, "expectedResponseFormat": "text", "required": True, "maxAttempts": 3}
+            for i, prompt in enumerate(questions, start=1)
+        ],
+        "closingActivity": {"prompt": "Got it. I will send this back to Hermes for ingestion."},
+    }
+
+
+def submit_config(config: dict[str, Any], target: str) -> int:
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".json", delete=False) as f:
+        json.dump(config, f)
+        temp_path = f.name
+    try:
+        proc = subprocess.run([str(VOICE_ASK), "--config-file", temp_path, target], check=False)
+        return proc.returncode
+    finally:
+        try:
+            Path(temp_path).unlink()
+        except OSError:
+            pass
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("slot", choices=sorted(SLOTS))
+    parser.add_argument("--print-config", action="store_true")
+    parser.add_argument("--static", action="store_true", help="use deterministic test config instead of invoking Hermes")
+    parser.add_argument("--skip-gate", action="store_true", help="skip canonical gate checks for offline validation")
+    parser.add_argument("--timeout", type=int, default=int(os.environ.get("GTKY_VOICE_PLANNER_TIMEOUT", "300")))
+    args = parser.parse_args()
+
+    spec = SLOTS[args.slot]
+    gate_slot = spec.get("gate_slot")
+    if gate_slot and not args.skip_gate:
+        gate = run_gate(gate_slot)
+        if gate.get("action") == "block":
+            print(f"Voice check-in held: {gate.get('reason') or 'canonical GTKY gate blocked this slot'}")
+            return 0
+
+    form_id = f"gtky-{args.slot}-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:8]}"
+    if args.static:
+        config = build_static_config(args.slot, form_id, spec)
+    else:
+        job = load_job(spec["job_name"])
+        pre_run = run_pre_script(spec["pre_run_script"]) if spec.get("pre_run_script") else ""
+        try:
+            raw = call_hermes(planner_prompt(args.slot, form_id, spec, job, pre_run), args.timeout)
+            config = normalize_config(extract_json(raw), args.slot, form_id, spec["title"])
+        except Exception as exc:
+            raw_preview = locals().get("raw", "")
+            preview = str(raw_preview).strip().replace("\n", " ")[:1200]
+            print(f"gtky-voice-checkin: planner failed for {args.slot}: {exc}. Preview: {preview}", file=sys.stderr)
+            print(
+                "Voice check-in held: I could not generate contextual questions from the canonical GTKY check-in. "
+                "I did not create a generic fallback form."
+            )
+            return 0
+
+    if args.print_config:
+        print(json.dumps(config, indent=2))
+        return 0
+    return submit_config(config, spec["target"])
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
