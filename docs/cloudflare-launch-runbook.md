@@ -25,6 +25,7 @@ stage_creator_token=$(security find-generic-password \
 E2E_BASE_URL=https://fucktyping-edge-staging.hutchenbach.workers.dev \
 E2E_ENV=staging \
 E2E_CREATOR_KEY="$stage_creator_token" \
+E2E_FULL_FLOW=1 \
 npm run test:e2e
 ```
 
@@ -61,12 +62,18 @@ npx wrangler d1 time-travel restore fucktyping \
 1. Require a green `CI / Validate launch build` check on `main`.
 2. Confirm production has `SESSION_SECRET`, `CREATE_TOKEN`, and
    `WEBHOOK_SIGNING_SECRET` in `wrangler secret list`.
-3. Dispatch `Deploy Cloudflare Worker` with environment `production` and confirmation
-   `deploy-production`; approve the protected `production` environment.
-4. Confirm `/health` returns `{"status":"ok","env":"production"}` and run the browser
-   suite against the production URL with the production creator key.
-5. Verify form/response counts and callback state in D1.
-6. Observe errors, latency, and Queue/DLQ state before removing the old Pages project.
+3. Record `wrangler deployments status` and a fresh D1 Time Travel bookmark.
+4. From `apps/edge`, run `npm run db:migrate` and `npm run deploy` using the local
+   authenticated Wrangler session.
+5. Confirm `/health` returns `{"status":"ok","env":"production"}` and run the browser
+   suite against the production URL with the production creator key. Do not set
+   `E2E_FULL_FLOW`; production smoke tests must not create launch-test records.
+6. Verify form/response counts and callback state in D1.
+7. Observe errors, latency, and Queue/DLQ state before removing the old Pages project.
+
+The optional GitHub deployment workflow is dispatch-only. It remains available if a
+scoped Cloudflare API token is added later, but merging to `main` never deploys by
+itself.
 
 Do not restore D1 merely to roll back code. Worker rollback and D1 Time Travel are
 separate operations because schema migrations 0003 and 0004 are additive and compatible

@@ -1,8 +1,6 @@
-name: Deploy Cloudflare Worker
+name: Optional GitHub Cloudflare deploy
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       environment:
@@ -23,7 +21,7 @@ permissions:
   deployments: write
 
 concurrency:
-  group: cloudflare-${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'staging' }}
+  group: cloudflare-${{ inputs.environment }}
   cancel-in-progress: false
 
 jobs:
@@ -54,7 +52,7 @@ jobs:
 
   deploy-staging:
     name: Deploy staging
-    if: github.event_name == 'push' || inputs.environment == 'staging'
+    if: inputs.environment == 'staging'
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 15

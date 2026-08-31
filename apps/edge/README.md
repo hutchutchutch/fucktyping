@@ -78,12 +78,14 @@ npm run db:migrate:staging
 npm run deploy:staging
 ```
 
-Production uses the same commands without `--env staging`. The GitHub deployment
-workflow records the current Worker deployment and D1 Time Travel bookmark before it
-applies additive migrations. Production can only be dispatched manually from `main`
-with the exact confirmation `deploy-production`.
+Production uses the same commands without `--env staging`. The primary private-beta
+cutover is intentionally manual through an authenticated local Wrangler session; see
+`docs/cloudflare-launch-runbook.md`. The optional GitHub deployment workflow is
+dispatch-only and records the current Worker deployment and D1 Time Travel bookmark
+before it applies additive migrations.
 
-Required GitHub environment secrets for both `staging` and `production`:
+If GitHub deployment is enabled later, configure these environment secrets for both
+`staging` and `production`:
 
 - `CLOUDFLARE_API_TOKEN`: scoped to Workers Scripts, D1, Queues, and Workers Tail read.
 - `CLOUDFLARE_ACCOUNT_ID`: the account containing the configured resource IDs.

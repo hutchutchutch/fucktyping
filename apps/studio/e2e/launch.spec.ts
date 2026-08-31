@@ -44,7 +44,10 @@ test("responder captures then removes bearer material from its URL", async ({ pa
 });
 
 test("staging authors and publishes a form with Workers AI", async ({ page }) => {
-  test.skip(!process.env.E2E_CREATOR_KEY, "requires a deployed environment creator key");
+  test.skip(
+    !process.env.E2E_CREATOR_KEY || process.env.E2E_FULL_FLOW !== "1",
+    "requires an explicit deployed-environment full-flow opt in",
+  );
   test.setTimeout(90_000);
 
   await page.goto("/");
@@ -67,7 +70,10 @@ test("staging authors and publishes a form with Workers AI", async ({ page }) =>
 });
 
 test("staging completes a signed respondent WebSocket session", async ({ page, request }) => {
-  test.skip(!process.env.E2E_CREATOR_KEY, "requires a deployed environment creator key");
+  test.skip(
+    !process.env.E2E_CREATOR_KEY || process.env.E2E_FULL_FLOW !== "1",
+    "requires an explicit deployed-environment full-flow opt in",
+  );
 
   const id = `launch-${Date.now()}`;
   const created = await request.post("/forms", {
