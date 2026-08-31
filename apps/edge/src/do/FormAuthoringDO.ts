@@ -51,7 +51,10 @@ export class FormAuthoringDO extends DurableObject<Env> {
       if (msg.type === "user_message") return await this.onUserMessage(ws, msg.text);
       if (msg.type === "publish") return await this.onPublish(ws);
     } catch (err) {
-      console.error("FormAuthoringDO error", err);
+      console.error(JSON.stringify({
+        event: "authoring_session_error",
+        error: err instanceof Error ? err.message : "unknown error",
+      }));
       this.send(ws, { type: "error", message: "the assistant hit an error; please try again" });
     }
   }

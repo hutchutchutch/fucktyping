@@ -1,8 +1,8 @@
 /** Wrangler generates resource bindings in worker-configuration.d.ts. This extension
  * only describes secrets, which are intentionally absent from wrangler.jsonc. */
 export interface Env extends Cloudflare.Env {
-  /** HMAC secret for signing/verifying session tokens. When unset, WS auth is
-   *  skipped (local dev). Secret: `wrangler secret put SESSION_SECRET`. */
+  /** Required HMAC secret for signing/verifying scoped session tokens. Routes fail
+   *  closed when it is absent. Secret: `wrangler secret put SESSION_SECRET`. */
   SESSION_SECRET?: string;
 
   /** Bearer token required to POST /forms (programmatic form creation by Hermes). */

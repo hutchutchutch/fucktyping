@@ -18,7 +18,7 @@ interface PersistedSession {
 }
 
 /** One instance per voice-form response session. Holds conversation state, runs the
- *  interpreter, validates via AI Gateway, and persists collected output to D1.
+ *  interpreter, validates through Workers AI when needed, and persists output to D1.
  *  Uses the WebSocket Hibernation API so idle sessions don't bill compute. */
 export class FormSessionDO extends DurableObject<Env> {
   private session?: PersistedSession;
@@ -51,7 +51,12 @@ export class FormSessionDO extends DurableObject<Env> {
       if (msg.type === "start") return await this.onStart(ws, msg.form_id);
       return await this.onAnswer(ws, msg.text);
     } catch (err) {
-      console.error("FormSessionDO error", err);
+      console.error(JSON.stringify({
+        event: "response_session_error",
+        formId: this.urlFormId ?? null,
+        sessionId: this.urlSessionId ?? null,
+        error: err instanceof Error ? err.message : "unknown error",
+      }));
       this.send(ws, { type: "assistant", text: "Something went wrong — let's try that again.", done: false });
     }
   }

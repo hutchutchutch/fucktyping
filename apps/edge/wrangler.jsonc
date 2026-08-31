@@ -4,6 +4,8 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-08-30",
   "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
 
   // Serve the Studio SPA and API from one Worker/origin. API and WebSocket paths
   // always execute Worker code; every other path falls back to the SPA.
@@ -160,7 +162,6 @@
       }
     }
   }
-  // Optional secrets (do NOT commit):
-  //   `wrangler secret put SESSION_SECRET`   (enables WS auth)
-  //   `wrangler secret put CREATE_TOKEN` / `SESSION_SECRET`
+  // Required runtime secrets (do NOT commit): SESSION_SECRET, CREATE_TOKEN,
+  // WEBHOOK_SIGNING_SECRET. Configure each environment independently.
 }

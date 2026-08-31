@@ -15,7 +15,10 @@ export async function createFormFromBrief(env: Env, brief: string): Promise<Form
     draft = applyMutations(draft, turn.mutations);
   } catch (err) {
     // If the LLM is unreachable, fall back to a single open-ended question below.
-    console.error("createFormFromBrief: authoring brain failed", err);
+    console.error(JSON.stringify({
+      event: "brief_authoring_failed",
+      error: err instanceof Error ? err.message : "unknown error",
+    }));
   }
 
   if (draft.questions.length === 0) {
