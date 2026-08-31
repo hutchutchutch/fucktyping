@@ -56,7 +56,9 @@ export async function deliverCallback(env: Env, delivery: CallbackDelivery): Pro
     method: "POST",
     headers,
     body: delivery.payload,
-    redirect: "error",
+    // Workers supports `follow` and `manual` (not the browser-only `error`). Keeping
+    // redirects manual plus the non-2xx check below prevents callback target hopping.
+    redirect: "manual",
     signal: AbortSignal.timeout(15_000),
   });
   if (!response.ok) throw new Error(`callback returned HTTP ${response.status}`);

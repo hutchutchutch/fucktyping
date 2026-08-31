@@ -53,7 +53,7 @@ describe("deliverCallback", () => {
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe(DELIVERY.callbackUrl);
     expect(init.body).toBe(DELIVERY.payload);
-    expect(init.redirect).toBe("error");
+    expect(init.redirect).toBe("manual");
     expect(init.headers).toMatchObject({
       "content-type": "application/json",
       "idempotency-key": "delivery-1",
@@ -64,5 +64,10 @@ describe("deliverCallback", () => {
   it("treats non-success responses as retryable failures", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 503 })));
     await expect(deliverCallback({} as Env, DELIVERY)).rejects.toThrow("HTTP 503");
+  });
+
+  it("does not follow callback redirects", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 302 })));
+    await expect(deliverCallback({} as Env, DELIVERY)).rejects.toThrow("HTTP 302");
   });
 });
