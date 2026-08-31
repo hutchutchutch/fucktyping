@@ -49,6 +49,13 @@ export class Validator implements AnswerValidator {
   constructor(private env: Env) {}
 
   async validate(q: Question, userResponse: string): Promise<ValidationResult> {
+    // Do not put a network model in the critical path when a constrained answer can
+    // already be parsed unambiguously. Ambiguous inputs still get the model's natural-
+    // language handling, and the same result remains the outage fallback below.
+    const heuristic = heuristicValidate(q, userResponse);
+    if (FAST_PATH_FORMATS.has(q.expectedResponseFormat) && heuristic.isValid) {
+      return heuristic;
+    }
     try {
       const data = await this.env.AI.run(this.env.AI_TEXT_MODEL as "@cf/zai-org/glm-4.7-flash", {
         temperature: 0,
@@ -67,10 +74,18 @@ export class Validator implements AnswerValidator {
         reason: typeof parsed.reason === "string" ? parsed.reason : "",
       };
     } catch (err) {
-      return heuristicValidate(q, userResponse);
+      return heuristic;
     }
   }
 }
+
+const FAST_PATH_FORMATS = new Set<Question["expectedResponseFormat"]>([
+  "yes_no",
+  "number",
+  "email",
+  "phone",
+  "multiple_choice",
+]);
 
 const YES = /\b(yes|yeah|yep|yup|sure|of course|definitely|correct|affirmative)\b/i;
 const NO = /\b(no|nope|nah|never|negative|not really)\b/i;

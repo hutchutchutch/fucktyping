@@ -50,9 +50,23 @@ describe("Validator", () => {
       },
     } as unknown as Env;
 
-    const result = await new Validator(env).validate(q("number"), "seven");
+    const result = await new Validator(env).validate(q("number"), "a baker's dozen");
     expect(models).toEqual(["@cf/zai-org/glm-4.7-flash"]);
     expect(result).toEqual({ isValid: true, extractedValue: 7, confidence: 0.92, reason: "number" });
+  });
+
+  it("skips Workers AI for an unambiguous constrained answer", async () => {
+    let calls = 0;
+    const env = {
+      AI_TEXT_MODEL: "@cf/zai-org/glm-4.7-flash",
+      AI: { run: async () => { calls += 1; throw new Error("should not run"); } },
+    } as unknown as Env;
+    expect(await new Validator(env).validate(q("yes_no"), "yep")).toMatchObject({
+      isValid: true,
+      extractedValue: true,
+      reason: "heuristic match",
+    });
+    expect(calls).toBe(0);
   });
 
   it("falls back deterministically when Workers AI is unavailable", async () => {
@@ -60,9 +74,9 @@ describe("Validator", () => {
       AI_TEXT_MODEL: "@cf/zai-org/glm-4.7-flash",
       AI: { run: async () => { throw new Error("unavailable"); } },
     } as unknown as Env;
-    expect(await new Validator(env).validate(q("yes_no"), "yep")).toMatchObject({
+    expect(await new Validator(env).validate(q("date"), "next Tuesday")).toMatchObject({
       isValid: true,
-      extractedValue: true,
+      extractedValue: "next Tuesday",
       reason: "heuristic match",
     });
   });
