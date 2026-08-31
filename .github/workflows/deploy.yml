@@ -118,7 +118,7 @@ jobs:
       - name: Record rollback points
         run: |
           npx wrangler deployments status --env=""
-          npx wrangler d1 time-travel info fucktyping --remote --env=""
+          npx wrangler d1 time-travel info fucktyping --env=""
         working-directory: apps/edge
       - name: Apply additive production D1 migrations
         run: npm run db:migrate
