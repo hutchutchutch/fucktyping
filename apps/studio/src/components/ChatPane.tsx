@@ -25,7 +25,7 @@ export function ChatPane({ messages, status, ready, publishedFormId, edgeUrl, se
 
   const submit = () => {
     const text = draft.trim();
-    if (!text) return;
+    if (!text || status !== "open") return;
     onSend(text);
     setDraft("");
   };
@@ -33,7 +33,7 @@ export function ChatPane({ messages, status, ready, publishedFormId, edgeUrl, se
   return (
     <main className="chat-pane">
       <header className="chat-head">
-        <span className={`dot ${status}`} />
+        <span className={`dot ${status}`} role="status" aria-label={`Authoring session ${status}`} />
         <span>Build a voice form</span>
         <button className="publish-btn" disabled={!ready} onClick={onPublish} title={ready ? "Publish form" : "Add a name, opening, closing, and a question first"}>
           Publish
@@ -70,7 +70,7 @@ export function ChatPane({ messages, status, ready, publishedFormId, edgeUrl, se
             }
           }}
         />
-        <button className="send-btn" onClick={submit} disabled={!draft.trim()}>
+        <button className="send-btn" onClick={submit} disabled={!draft.trim() || status !== "open"}>
           Send
         </button>
       </div>

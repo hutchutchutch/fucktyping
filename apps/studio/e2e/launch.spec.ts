@@ -45,15 +45,19 @@ test("responder captures then removes bearer material from its URL", async ({ pa
 
 test("staging authors and publishes a form with Workers AI", async ({ page }) => {
   test.skip(!process.env.E2E_CREATOR_KEY, "requires a deployed environment creator key");
+  test.setTimeout(90_000);
 
   await page.goto("/");
   await page.getByLabel("Creator access key").fill(process.env.E2E_CREATOR_KEY!);
   await page.getByRole("button", { name: "Enter studio" }).click();
 
-  await page.getByPlaceholder("Describe your form, or refine a question…").fill(
+  const composer = page.getByPlaceholder("Describe your form, or refine a question…");
+  await composer.fill(
     "Create a form named Launch AI Smoke. Open with 'Thanks for testing.' Ask one required yes or no question: 'Did the launch check work?' Close with 'Validation complete.'",
   );
-  await page.getByRole("button", { name: "Send" }).click();
+  const send = page.getByRole("button", { name: "Send" });
+  await expect(send).toBeEnabled({ timeout: 15_000 });
+  await send.click();
 
   const publish = page.getByRole("button", { name: "Publish" });
   await expect(publish).toBeEnabled({ timeout: 60_000 });
