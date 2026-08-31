@@ -9,10 +9,14 @@ test("creator gate authenticates, opens the same-origin studio, and locks again"
   await page.getByRole("button", { name: "Enter studio" }).click();
   await expect(page.getByRole("alert")).toHaveText("invalid access key");
 
-  await accessKey.fill("e2e-creator-key");
+  await accessKey.fill(process.env.E2E_CREATOR_KEY ?? "e2e-creator-key");
   await page.getByRole("button", { name: "Enter studio" }).click();
   await expect(page.getByText("Build a voice form", { exact: true })).toBeVisible();
   await expect(page.getByText("New form", { exact: true })).toBeVisible();
+
+  if (process.env.E2E_SCREENSHOT_PATH) {
+    await page.screenshot({ path: process.env.E2E_SCREENSHOT_PATH, fullPage: true });
+  }
 
   await page.getByRole("button", { name: "Lock studio" }).click();
   await expect(page.getByRole("heading", { name: "FuckTyping Studio" })).toBeVisible();
@@ -27,11 +31,14 @@ test("static shell has launch security headers and health identifies the environ
 
   const health = await request.get("/health");
   expect(health.status()).toBe(200);
-  expect(await health.json()).toEqual({ status: "ok", env: "production" });
+  expect(await health.json()).toEqual({
+    status: "ok",
+    env: process.env.E2E_ENV ?? "production",
+  });
 });
 
 test("responder captures then removes bearer material from its URL", async ({ page }) => {
   await page.goto("/respond/form-1#token=not-a-real-token");
-  await expect(page).toHaveURL("http://127.0.0.1:18999/respond/form-1");
+  await expect(page).toHaveURL(/\/respond\/form-1$/);
   await expect(page.getByText("Connecting…", { exact: true })).toBeVisible();
 });
