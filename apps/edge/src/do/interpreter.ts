@@ -32,6 +32,16 @@ export class FormInterpreter {
     return { state: base, reply: { type: "assistant", text, done: false } };
   }
 
+  /** Reconstruct the prompt for a persisted session without replaying its opening or
+   * mutating progress. Used when a browser reconnects to the same session DO. */
+  resume(state: ConversationState): ServerMessage {
+    if (state.phase !== "asking") return this.closing();
+    const question = this.config.questions[state.currentQuestionIndex];
+    return question
+      ? { type: "assistant", text: questionText(question), done: false }
+      : this.closing();
+  }
+
   /** Validate the latest answer and decide the next spoken turn. */
   async handleAnswer(state: ConversationState, userText: string): Promise<Turn> {
     if (state.phase !== "asking") {

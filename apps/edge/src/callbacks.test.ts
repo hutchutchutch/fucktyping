@@ -63,11 +63,18 @@ describe("deliverCallback", () => {
 
   it("treats non-success responses as retryable failures", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 503 })));
-    await expect(deliverCallback({} as Env, DELIVERY)).rejects.toThrow("HTTP 503");
+    await expect(deliverCallback({ WEBHOOK_SIGNING_SECRET: "secret" } as Env, DELIVERY)).rejects.toThrow("HTTP 503");
   });
 
   it("does not follow callback redirects", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 302 })));
-    await expect(deliverCallback({} as Env, DELIVERY)).rejects.toThrow("HTTP 302");
+    await expect(deliverCallback({ WEBHOOK_SIGNING_SECRET: "secret" } as Env, DELIVERY)).rejects.toThrow("HTTP 302");
+  });
+
+  it("fails closed when callback signing is not configured", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(deliverCallback({} as Env, DELIVERY)).rejects.toThrow("callback signing unavailable");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

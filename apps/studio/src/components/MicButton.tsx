@@ -12,6 +12,7 @@ const SEGMENT_MS = 3500;
 const OVERLAP_SEC = 0.5;
 /** Don't bother transcribing a tail shorter than this (avoids junk on tiny tics). */
 const MIN_NEW_SEC = 0.6;
+const MAX_RECORDING_MS = 60_000;
 
 /** Push-to-talk for form creation. Workers AI Whisper is one-shot (not a
  *  streaming model), so we approximate streaming: while recording we collect
@@ -24,11 +25,14 @@ export function MicButton({ httpBase, token, onTranscript }: { httpBase: string;
   const [supported, setSupported] = useState(true);
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const recRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const mimeRef = useRef<string>("audio/webm");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const maxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sample cursor + running transcript, kept in refs so the async pump reads
   // live values without re-creating callbacks.
@@ -43,6 +47,14 @@ export function MicButton({ httpBase, token, onTranscript }: { httpBase: string;
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (maxTimerRef.current) clearTimeout(maxTimerRef.current);
+      const recorder = recRef.current;
+      if (recorder && recorder.state !== "inactive") {
+        recorder.ondataavailable = null;
+        recorder.onstop = null;
+        recorder.stop();
+      }
+      streamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
 
@@ -71,6 +83,7 @@ export function MicButton({ httpBase, token, onTranscript }: { httpBase: string;
       if (emit) onTranscript(emit);
     } catch (err) {
       console.error("segment transcription failed", err);
+      setError(err instanceof Error ? err.message : "Transcription failed. Please try again.");
     } finally {
       pumpingRef.current = false;
     }
@@ -78,7 +91,9 @@ export function MicButton({ httpBase, token, onTranscript }: { httpBase: string;
 
   const start = async () => {
     try {
+      setError(null);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
       const rec = new MediaRecorder(stream);
       mimeRef.current = rec.mimeType || "audio/webm";
       chunksRef.current = [];
@@ -94,7 +109,12 @@ export function MicButton({ httpBase, token, onTranscript }: { httpBase: string;
           clearInterval(timerRef.current);
           timerRef.current = null;
         }
+        if (maxTimerRef.current) {
+          clearTimeout(maxTimerRef.current);
+          maxTimerRef.current = null;
+        }
         stream.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
         setBusy(true);
         try {
           // Wait out any in-flight segment, then flush the remaining tail.
@@ -109,9 +129,16 @@ export function MicButton({ httpBase, token, onTranscript }: { httpBase: string;
       rec.start(1000);
       recRef.current = rec;
       timerRef.current = setInterval(() => void pump(false), SEGMENT_MS);
+      maxTimerRef.current = setTimeout(() => {
+        if (rec.state !== "inactive") rec.stop();
+        setRecording(false);
+      }, MAX_RECORDING_MS);
       setRecording(true);
     } catch (err) {
       console.error("microphone unavailable", err);
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      setError("Microphone unavailable. You can type your request instead.");
       setRecording(false);
     }
   };
@@ -124,15 +151,19 @@ export function MicButton({ httpBase, token, onTranscript }: { httpBase: string;
   if (!supported) return null;
 
   return (
-    <button
-      type="button"
-      className={`mic-btn${recording ? " listening" : ""}`}
-      onClick={() => (recording ? stop() : start())}
-      disabled={busy}
-      title={busy ? "Transcribing…" : recording ? "Stop & transcribe" : "Speak"}
-      aria-label="Voice input"
-    >
-      {busy ? "…" : recording ? "● rec" : "🎤"}
-    </button>
+    <div className="mic-control">
+      <button
+        type="button"
+        className={`mic-btn${recording ? " listening" : ""}`}
+        onClick={() => (recording ? stop() : start())}
+        disabled={busy}
+        title={busy ? "Transcribing…" : recording ? "Stop & transcribe" : "Speak"}
+        aria-label="Voice input"
+        aria-describedby={error ? "creator-mic-error" : undefined}
+      >
+        {busy ? "…" : recording ? "● rec" : "🎤"}
+      </button>
+      {error && <span id="creator-mic-error" className="mic-error" role="alert">{error}</span>}
+    </div>
   );
 }

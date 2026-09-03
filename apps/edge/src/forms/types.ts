@@ -20,12 +20,31 @@ export const QuestionSchema = z.object({
   validResponseExample: z.string().max(1000).optional(),
   invalidResponseExample: z.string().max(1000).optional(),
   rephrasePrompt: z.string().max(2000).optional(),
+}).superRefine((question, ctx) => {
+  if (question.expectedResponseFormat === "multiple_choice" && (!question.options || question.options.length < 2)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["options"],
+      message: "multiple-choice questions need at least two options",
+    });
+  }
+  if (question.options) {
+    const normalized = question.options.map((option) => option.trim().toLowerCase());
+    if (new Set(normalized).size !== normalized.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["options"],
+        message: "question options must be unique",
+      });
+    }
+  }
 });
 export type Question = z.infer<typeof QuestionSchema>;
 
 export const FormConfigSchema = z.object({
   id: z.string().regex(/^[A-Za-z0-9_-]{1,128}$/),
   name: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(2000).optional(),
   openingActivity: z.object({ prompt: z.string().trim().min(1).max(2000) }),
   questions: z.array(QuestionSchema).min(1).max(50),
   closingActivity: z.object({ prompt: z.string().trim().min(1).max(2000) }),

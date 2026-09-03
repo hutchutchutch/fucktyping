@@ -6,6 +6,11 @@ export async function transcribeAudio(httpBase: string, wav: Blob, token: string
     body: wav,
   });
   if (!res.ok) throw new Error(`transcribe failed: ${res.status}`);
-  const data = (await res.json()) as { text?: string };
-  return data.text ?? "";
+  const value: unknown = await res.json();
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("invalid transcription response");
+  }
+  const text = (value as Record<string, unknown>).text;
+  if (typeof text !== "string") throw new Error("invalid transcription response");
+  return text;
 }

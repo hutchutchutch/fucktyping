@@ -10,6 +10,8 @@ export interface DraftQuestion {
   required: boolean;
   maxAttempts: number;
   validResponseExample?: string;
+  invalidResponseExample?: string;
+  rephrasePrompt?: string;
 }
 
 export interface DraftFormConfig {

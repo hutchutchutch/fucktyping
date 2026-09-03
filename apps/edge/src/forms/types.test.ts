@@ -41,4 +41,23 @@ describe("FormConfigSchema limits", () => {
       })),
     }).success).toBe(false);
   });
+
+  it("requires usable choices for multiple-choice questions", () => {
+    const multipleChoice = {
+      ...form(),
+      questions: [{
+        ...form().questions[0],
+        expectedResponseFormat: "multiple_choice",
+      }],
+    };
+    expect(FormConfigSchema.safeParse(multipleChoice).success).toBe(false);
+    expect(FormConfigSchema.safeParse({
+      ...multipleChoice,
+      questions: [{ ...multipleChoice.questions[0], options: ["Good", "Bad"] }],
+    }).success).toBe(true);
+    expect(FormConfigSchema.safeParse({
+      ...multipleChoice,
+      questions: [{ ...multipleChoice.questions[0], options: ["Good", " good "] }],
+    }).success).toBe(false);
+  });
 });

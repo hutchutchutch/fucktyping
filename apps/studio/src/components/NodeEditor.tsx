@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   buildQuestionEdits,
@@ -38,6 +38,18 @@ export function NodeEditor({
   );
   const [required, setRequired] = useState(node.meta?.required ?? true);
   const [options, setOptions] = useState((node.meta?.options ?? []).join("\n"));
+  const titleId = `node-editor-title-${node.id}`;
+  const promptId = `node-editor-prompt-${node.id}`;
+  const formatId = `node-editor-format-${node.id}`;
+  const optionsId = `node-editor-options-${node.id}`;
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
 
   const emit = (instruction: string) => {
     onEdit(instruction);
@@ -65,9 +77,9 @@ export function NodeEditor({
   };
 
   return (
-    <div className="node-editor" onClick={(e) => e.stopPropagation()}>
+    <div className="node-editor" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()}>
       <div className="node-editor-head">
-        <span>Edit {node.kind === "question" ? node.title : node.kind}</span>
+        <span id={titleId}>Edit {node.kind === "question" ? node.title : node.kind}</span>
         <button className="node-editor-x" type="button" onClick={onClose} aria-label="Close">
           ×
         </button>
@@ -75,8 +87,9 @@ export function NodeEditor({
 
       {node.kind === "opening" || node.kind === "closing" ? (
         <>
-          <label className="node-editor-label">Message</label>
+          <label className="node-editor-label" htmlFor={promptId}>Message</label>
           <textarea
+            id={promptId}
             className="node-editor-input"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -96,8 +109,9 @@ export function NodeEditor({
         </>
       ) : (
         <>
-          <label className="node-editor-label">Prompt</label>
+          <label className="node-editor-label" htmlFor={promptId}>Prompt</label>
           <textarea
+            id={promptId}
             className="node-editor-input"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -105,8 +119,9 @@ export function NodeEditor({
             autoFocus
           />
 
-          <label className="node-editor-label">Response format</label>
+          <label className="node-editor-label" htmlFor={formatId}>Response format</label>
           <select
+            id={formatId}
             className="node-editor-input"
             value={format}
             onChange={(e) => setFormat(e.target.value as ResponseFormat)}
@@ -120,8 +135,9 @@ export function NodeEditor({
 
           {format === "multiple_choice" ? (
             <>
-              <label className="node-editor-label">Options (one per line)</label>
+              <label className="node-editor-label" htmlFor={optionsId}>Options (one per line)</label>
               <textarea
+                id={optionsId}
                 className="node-editor-input"
                 value={options}
                 onChange={(e) => setOptions(e.target.value)}

@@ -52,7 +52,7 @@ async def run(args) -> None:
 
     stt = LocalSTTService(build_stt(args.stt))
     tts = LocalTTSService(MisoTTS(force_cpu=args.force_cpu))
-    do = DurableObjectClient(args.do_url, args.form_id) if args.do_url else EchoDOClient()
+    do = DurableObjectClient(args.do_url, args.do_token) if args.do_url else EchoDOClient()
     agent = FormAgentProcessor(do)
 
     transport = _build_transport(args.transport)
@@ -63,7 +63,10 @@ async def run(args) -> None:
     async def _on_connected(_transport, _client):  # noqa: ANN001
         await agent.kickoff()
 
-    await PipelineRunner().run(task)
+    try:
+        await PipelineRunner().run(task)
+    finally:
+        await do.close()
 
 
 def main() -> None:
@@ -71,7 +74,7 @@ def main() -> None:
     ap.add_argument("--stt", default="parakeet-mlx", help="STT adapter name")
     ap.add_argument("--transport", default="small-webrtc")
     ap.add_argument("--do-url", default=None, help="wss:// URL of the form Durable Object")
-    ap.add_argument("--form-id", default=None)
+    ap.add_argument("--do-token", default=None, help="signed respondent token (kept out of the URL)")
     ap.add_argument("--force-cpu", action="store_true", help="force MisoTTS onto CPU")
     args = ap.parse_args()
     asyncio.run(run(args))

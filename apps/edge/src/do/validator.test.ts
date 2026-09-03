@@ -80,4 +80,36 @@ describe("Validator", () => {
       reason: "heuristic match",
     });
   });
+
+  it("rejects incorrectly typed model output instead of coercing it", async () => {
+    const env = {
+      AI_TEXT_MODEL: "@cf/zai-org/glm-4.7-flash",
+      AI: {
+        run: async () => ({
+          choices: [{ message: { content: JSON.stringify({
+            isValid: "false",
+            extractedValue: "wrong",
+            confidence: 2,
+            reason: "malformed",
+          }) } }],
+        }),
+      },
+    } as unknown as Env;
+
+    expect(await new Validator(env).validate(q("text"), "real answer")).toMatchObject({
+      isValid: true,
+      extractedValue: "real answer",
+      reason: "heuristic match",
+    });
+  });
+
+  it("treats mixed yes and no language as ambiguous", () => {
+    expect(heuristicValidate(q("yes_no"), "yes, but actually no").isValid).toBe(false);
+  });
+
+  it("does not substring-match short multiple-choice options", () => {
+    const question = { ...q("multiple_choice"), options: ["no", "yes"] };
+    expect(heuristicValidate(question, "not sure").isValid).toBe(false);
+    expect(heuristicValidate(question, "NO").extractedValue).toBe("no");
+  });
 });

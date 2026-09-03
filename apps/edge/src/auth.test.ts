@@ -32,6 +32,23 @@ describe("session tokens", () => {
   it("rejects malformed tokens", async () => {
     expect(await verifySessionToken(SECRET, "not-a-token")).toBeNull();
     expect(await verifySessionToken(SECRET, ".")).toBeNull();
+    expect(await verifySessionToken(SECRET, "a.b.c")).toBeNull();
+    expect(await verifySessionToken(SECRET, "x".repeat(4097))).toBeNull();
+  });
+
+  it("rejects signed tokens whose claims do not match the session contract", async () => {
+    const invalidSubject = await signSessionToken(SECRET, {
+      sub: "bad/subject",
+      exp: future,
+      scope: "respond",
+    });
+    const invalidExpiry = await signSessionToken(SECRET, {
+      sub: "form-1",
+      exp: Number.NaN,
+      scope: "respond",
+    });
+    expect(await verifySessionToken(SECRET, invalidSubject)).toBeNull();
+    expect(await verifySessionToken(SECRET, invalidExpiry)).toBeNull();
   });
 });
 

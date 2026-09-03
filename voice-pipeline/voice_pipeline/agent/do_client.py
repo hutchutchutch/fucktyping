@@ -3,7 +3,7 @@
 The Mac dials OUT to the DO (no inbound, no port-forwarding) — matching the
 connectivity design. Protocol (JSON frames):
 
-    -> {"type": "start", "form_id": "..."}
+    -> {"type": "start"}
     <- {"type": "assistant", "text": "<opening question>", "done": false}
     -> {"type": "user_answer", "text": "<transcript>"}
     <- {"type": "assistant", "text": "<next question | closing>", "done": <bool>}
@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 
 
 @dataclass
@@ -23,17 +24,26 @@ class AgentReply:
 
 
 class DurableObjectClient:
-    def __init__(self, url: str, form_id: str | None = None) -> None:
-        self.url = url
-        self.form_id = form_id
+    def __init__(self, url: str, token: str | None = None) -> None:
+        parts = urlsplit(url)
+        query = parse_qs(parts.query)
+        self.token = token or query.pop("token", [None])[0]
+        self.url = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query, doseq=True), ""))
         self._ws = None
 
     async def connect(self) -> None:
         import websockets  # type: ignore
-        self._ws = await websockets.connect(self.url)
+        if not self.token:
+            raise ValueError("a respondent token is required for the Durable Object connection")
+        self._ws = await websockets.connect(
+            self.url,
+            subprotocols=["fucktyping", f"fucktyping-auth.{self.token}"],
+            open_timeout=10,
+            close_timeout=5,
+        )
 
     async def start(self) -> AgentReply:
-        await self._send({"type": "start", "form_id": self.form_id})
+        await self._send({"type": "start"})
         return await self._recv()
 
     async def send_answer(self, text: str) -> AgentReply:
@@ -49,7 +59,14 @@ class DurableObjectClient:
 
     async def _recv(self) -> AgentReply:
         msg = json.loads(await self._ws.recv())
-        return AgentReply(text=msg.get("text", ""), done=bool(msg.get("done", False)))
+        if (
+            not isinstance(msg, dict)
+            or msg.get("type") != "assistant"
+            or not isinstance(msg.get("text"), str)
+            or not isinstance(msg.get("done"), bool)
+        ):
+            raise ValueError("invalid Durable Object response")
+        return AgentReply(text=msg["text"], done=msg["done"])
 
 
 class EchoDOClient(DurableObjectClient):

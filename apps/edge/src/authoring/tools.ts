@@ -35,7 +35,7 @@ export const AUTHORING_TOOLS = [
     {
       prompt: { type: "string" },
       expectedResponseFormat: { type: "string", enum: RESPONSE_FORMATS },
-      options: { type: "array", items: { type: "string" } },
+      options: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 50 },
       required: { type: "boolean" },
       position: { type: "integer", description: "0-based insert index; omit to append" },
     },
@@ -48,9 +48,9 @@ export const AUTHORING_TOOLS = [
       id: { type: "string" },
       prompt: { type: "string" },
       expectedResponseFormat: { type: "string", enum: RESPONSE_FORMATS },
-      options: { type: "array", items: { type: "string" } },
+      options: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 50 },
       required: { type: "boolean" },
-      maxAttempts: { type: "integer" },
+      maxAttempts: { type: "integer", minimum: 1, maximum: 5 },
     },
     ["id"],
   ),
@@ -84,19 +84,24 @@ export function nextQuestionId(form: DraftFormConfig): string {
 
 /** Translate one LLM tool call into a resolved Mutation against the current draft.
  *  Returns null for malformed calls (the caller skips them). */
-export function translateToolCall(name: string, args: Record<string, any>, form: DraftFormConfig): Mutation | null {
+export function translateToolCall(name: string, args: Record<string, unknown>, form: DraftFormConfig): Mutation | null {
   switch (name) {
     case "set_form_meta":
       return { kind: "set_meta", name: str(args.name), description: str(args.description) };
-    case "set_opening":
-      return str(args.prompt) != null ? { kind: "set_opening", prompt: args.prompt } : null;
-    case "set_closing":
-      return str(args.prompt) != null ? { kind: "set_closing", prompt: args.prompt } : null;
+    case "set_opening": {
+      const prompt = str(args.prompt);
+      return prompt != null ? { kind: "set_opening", prompt } : null;
+    }
+    case "set_closing": {
+      const prompt = str(args.prompt);
+      return prompt != null ? { kind: "set_closing", prompt } : null;
+    }
     case "add_question": {
-      if (str(args.prompt) == null || !RESPONSE_FORMATS.includes(args.expectedResponseFormat)) return null;
+      const prompt = str(args.prompt);
+      if (prompt == null || !isResponseFormat(args.expectedResponseFormat)) return null;
       const question: DraftQuestion = {
         id: nextQuestionId(form),
-        prompt: args.prompt,
+        prompt,
         expectedResponseFormat: args.expectedResponseFormat,
         options: Array.isArray(args.options) ? args.options.map(String) : undefined,
         required: args.required !== false,
@@ -105,17 +110,21 @@ export function translateToolCall(name: string, args: Record<string, any>, form:
       return { kind: "add_question", question, position: typeof args.position === "number" ? args.position : undefined };
     }
     case "update_question": {
-      if (str(args.id) == null) return null;
+      const id = str(args.id);
+      if (id == null) return null;
       const patch: Partial<DraftQuestion> = {};
-      if (str(args.prompt) != null) patch.prompt = args.prompt;
-      if (RESPONSE_FORMATS.includes(args.expectedResponseFormat)) patch.expectedResponseFormat = args.expectedResponseFormat;
+      const prompt = str(args.prompt);
+      if (prompt != null) patch.prompt = prompt;
+      if (isResponseFormat(args.expectedResponseFormat)) patch.expectedResponseFormat = args.expectedResponseFormat;
       if (Array.isArray(args.options)) patch.options = args.options.map(String);
       if (typeof args.required === "boolean") patch.required = args.required;
       if (typeof args.maxAttempts === "number") patch.maxAttempts = args.maxAttempts;
-      return { kind: "update_question", id: args.id, patch };
+      return { kind: "update_question", id, patch };
     }
-    case "remove_question":
-      return str(args.id) != null ? { kind: "remove_question", id: args.id } : null;
+    case "remove_question": {
+      const id = str(args.id);
+      return id != null ? { kind: "remove_question", id } : null;
+    }
     case "reorder_questions":
       return Array.isArray(args.order) ? { kind: "reorder_questions", order: args.order.map(String) } : null;
     default:
@@ -126,7 +135,7 @@ export function translateToolCall(name: string, args: Record<string, any>, form:
 /** Fold a batch of tool calls into mutations, applying each against the evolving draft
  *  so generated ids stay unique within the turn. Returns mutations to apply downstream. */
 export function toolCallsToMutations(
-  calls: { name: string; args: Record<string, any> }[],
+  calls: { name: string; args: Record<string, unknown> }[],
   form: DraftFormConfig,
 ): Mutation[] {
   let working = form;
@@ -143,4 +152,8 @@ export function toolCallsToMutations(
 
 function str(v: unknown): string | undefined {
   return typeof v === "string" && v.length > 0 ? v : undefined;
+}
+
+function isResponseFormat(value: unknown): value is DraftQuestion["expectedResponseFormat"] {
+  return typeof value === "string" && (RESPONSE_FORMATS as readonly string[]).includes(value);
 }

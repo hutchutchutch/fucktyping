@@ -44,10 +44,27 @@ jobs:
         working-directory: apps/studio
       - name: Check types and unit tests
         run: |
+          npm --prefix apps/edge run types:worker -- --check
           npm run typecheck
           npm test
       - name: Build Studio
         run: npm run build
+        working-directory: apps/studio
+      - name: Validate deploy packages
+        run: |
+          npx wrangler deploy --dry-run --env=""
+          npx wrangler deploy --dry-run --env staging
+        working-directory: apps/edge
+      - name: Audit launch dependencies
+        run: |
+          npm audit --audit-level=high
+          npm --prefix ../studio audit --audit-level=high
+        working-directory: apps/edge
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/studio
+      - name: Run browser launch smoke tests
+        run: npm run test:e2e
         working-directory: apps/studio
 
   deploy-staging:
@@ -115,9 +132,15 @@ jobs:
         working-directory: apps/studio
       - name: Record rollback points
         run: |
-          npx wrangler deployments status --env=""
-          npx wrangler d1 time-travel info fucktyping --env=""
+          npx wrangler deployments status --env="" > rollback-points.txt
+          npx wrangler d1 time-travel info fucktyping --env="" >> rollback-points.txt
         working-directory: apps/edge
+      - name: Retain rollback points
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-rollback-points-${{ github.sha }}
+          path: apps/edge/rollback-points.txt
+          retention-days: 30
       - name: Apply additive production D1 migrations
         run: npm run db:migrate
         working-directory: apps/edge

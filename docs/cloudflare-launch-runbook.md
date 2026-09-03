@@ -15,9 +15,9 @@ is complete.
 ## Verified staging baseline
 
 The launch suite exercises creator authentication, security headers, URL-fragment token
-scrubbing, a real Workers AI authoring turn, D1 publication, a signed respondent URL,
-the Durable Object WebSocket conversation, response persistence, and Queue callback
-delivery.
+scrubbing, WebSocket subprotocol authentication, a real Workers AI authoring turn, D1
+publication, a signed respondent URL, the Durable Object WebSocket conversation,
+response persistence, and Queue callback delivery.
 
 ```bash
 stage_creator_token=$(security find-generic-password \
@@ -64,8 +64,11 @@ npx wrangler d1 time-travel restore fucktyping \
    `WEBHOOK_SIGNING_SECRET` in `wrangler secret list`.
 3. Record `wrangler deployments status` and a fresh D1 Time Travel bookmark.
 4. From `apps/edge`, run `npm run db:migrate` and `npm run deploy` using the local
-   authenticated Wrangler session.
-5. Confirm `/health` returns `{"status":"ok","env":"production"}` and run the browser
+   authenticated Wrangler session. The deploy command automatically runs generated-type,
+   typecheck, unit-test, Studio-build, and production dry-run preflight checks.
+5. Confirm `/health` returns HTTP 200, `status: ok`, `env: production`, and a non-empty
+   `versionId`. A missing required runtime secret makes this endpoint return HTTP 503
+   with `status: degraded`. Then run the browser
    suite against the production URL with the production creator key. Do not set
    `E2E_FULL_FLOW`; production smoke tests must not create launch-test records.
 6. Verify form/response counts and callback state in D1.
@@ -74,6 +77,21 @@ npx wrangler d1 time-travel restore fucktyping \
 The optional GitHub deployment workflow is dispatch-only. It remains available if a
 scoped Cloudflare API token is added later, but merging to `main` never deploys by
 itself.
+
+## Private-beta operating policy
+
+- Use the shared creator key only with the small approved beta team; rotate
+  `CREATE_TOKEN` when access changes. Creator sessions expire after 12 hours.
+- Respondent links are bearer links. Share them only with intended respondents and
+  mint a fresh link from Studio when needed. Links expire after the configured TTL.
+- Do not collect regulated, medical, financial, authentication, or other high-risk
+  data in this beta. There is no self-service deletion or configurable retention yet.
+- Review D1 response volume weekly and perform any requested deletion through an
+  explicitly reviewed D1 statement with a current Time Travel bookmark first.
+- Watch structured Worker events (`request_failed`, validation fallbacks, session
+  completion, callback retries/failures) and the callback DLQ during beta operation.
+- Revisit creator identity, per-tenant authorization, retention/deletion UI, response
+  export, and accessibility/mobile QA before widening access beyond the private beta.
 
 Do not restore D1 merely to roll back code. Worker rollback and D1 Time Travel are
 separate operations because schema migrations 0003 and 0004 are additive and compatible

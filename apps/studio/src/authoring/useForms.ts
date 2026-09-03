@@ -13,7 +13,7 @@ export interface UseForms {
 }
 
 /** Fetches the published-forms list (`GET ${httpBase}/forms`) for the "My forms" sidebar. */
-export function useForms(httpBase: string, token: string): UseForms {
+export function useForms(httpBase: string, token: string, refreshKey = 0): UseForms {
   const [forms, setForms] = useState<FormSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,10 +28,12 @@ export function useForms(httpBase: string, token: string): UseForms {
     })
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return (await res.json()) as FormSummary[];
+        return await res.json() as unknown;
       })
-      .then((data) => {
-        if (!cancelled) setForms(Array.isArray(data) ? data : []);
+      .then((value) => {
+        const data = parseFormSummaries(value);
+        if (!data) throw new Error("invalid forms data");
+        if (!cancelled) setForms(data);
       })
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : "failed to load forms");
@@ -43,7 +45,24 @@ export function useForms(httpBase: string, token: string): UseForms {
     return () => {
       cancelled = true;
     };
-  }, [httpBase, token]);
+  }, [httpBase, token, refreshKey]);
 
   return { forms, loading, error };
+}
+
+export function parseFormSummaries(value: unknown): FormSummary[] | null {
+  if (!Array.isArray(value)) return null;
+  const forms: FormSummary[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+    const form = item as Record<string, unknown>;
+    if (
+      typeof form.id !== "string"
+      || typeof form.name !== "string"
+      || typeof form.created_at !== "string"
+      || !Number.isFinite(Date.parse(form.created_at))
+    ) return null;
+    forms.push({ id: form.id, name: form.name, created_at: form.created_at });
+  }
+  return forms;
 }

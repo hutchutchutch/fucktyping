@@ -1,7 +1,7 @@
 /** WebSocket message contract between the voice pipeline (do_client.py) and the DO. */
 
 export type ClientMessage =
-  | { type: "start"; form_id?: string }
+  | { type: "start" }
   | { type: "user_answer"; text: string };
 
 export interface ServerMessage {
@@ -21,7 +21,9 @@ export function parseClientMessage(raw: string): ClientMessage | null {
   if (!data || typeof data !== "object") return null;
   const obj = data as Record<string, unknown>;
   if (obj.type === "start") {
-    return { type: "start", form_id: typeof obj.form_id === "string" ? obj.form_id : undefined };
+    // Route authorization establishes form identity. Ignore the legacy form_id field
+    // so a client message can never switch an authorized socket to another form.
+    return { type: "start" };
   }
   if (obj.type === "user_answer" && typeof obj.text === "string") {
     const text = obj.text.trim();

@@ -7,15 +7,30 @@ import { MicButton } from "./MicButton";
 interface Props {
   messages: ChatMessage[];
   status: SessionStatus;
+  connectionError: string | null;
   ready: boolean;
   publishedFormId: string | null;
+  publishedResponderUrl: string | null;
+  publishedExpiresAt: string | null;
   edgeUrl: string;
   sessionToken: string;
   onSend: (text: string) => void;
   onPublish: () => void;
 }
 
-export function ChatPane({ messages, status, ready, publishedFormId, edgeUrl, sessionToken, onSend, onPublish }: Props) {
+export function ChatPane({
+  messages,
+  status,
+  connectionError,
+  ready,
+  publishedFormId,
+  publishedResponderUrl,
+  publishedExpiresAt,
+  edgeUrl,
+  sessionToken,
+  onSend,
+  onPublish,
+}: Props) {
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -40,9 +55,19 @@ export function ChatPane({ messages, status, ready, publishedFormId, edgeUrl, se
         </button>
       </header>
 
-      {publishedFormId && (
+      {connectionError && <div className="connection-error" role="alert">{connectionError}</div>}
+
+      {publishedFormId && publishedResponderUrl && (
         <div className="published-banner">
-          Published ✓ — runnable at <code>/forms/{publishedFormId}/session</code>
+          <span>Published ✓</span>
+          <a href={publishedResponderUrl} target="_blank" rel="noreferrer">
+            Open respondent form ↗
+          </a>
+          {publishedExpiresAt && (
+            <span className="published-expiry">
+              Link expires {new Date(publishedExpiresAt).toLocaleDateString()}
+            </span>
+          )}
         </div>
       )}
 

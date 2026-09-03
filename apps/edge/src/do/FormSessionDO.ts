@@ -4,9 +4,18 @@ import { buildCallbackPayload } from "../callbacks";
 import type { Env } from "../env";
 import { FormRepository } from "../forms/repository";
 import type { ConversationState, FormConfig } from "../forms/types";
+import {
+  parseResponseConnection,
+  type ResponseConnection,
+  TRUSTED_EXPIRY_HEADER,
+  TRUSTED_FORM_HEADER,
+  TRUSTED_SESSION_HEADER,
+} from "../session-context";
 import { FormInterpreter } from "./interpreter";
 import { parseClientMessage, type ServerMessage } from "./protocol";
+import { SerialTaskQueue } from "./serial";
 import { Validator } from "./validator";
+import { webSocketResponseHeaders } from "../websocket-auth";
 
 interface PersistedSession {
   config: FormConfig;
@@ -22,39 +31,50 @@ interface PersistedSession {
  *  Uses the WebSocket Hibernation API so idle sessions don't bill compute. */
 export class FormSessionDO extends DurableObject<Env> {
   private session?: PersistedSession;
-  private urlFormId?: string;
-  private urlSessionId?: string;
+  private readonly operations = new SerialTaskQueue();
 
   override async fetch(req: Request): Promise<Response> {
     if (req.headers.get("Upgrade") !== "websocket") {
       return new Response("expected websocket", { status: 426 });
     }
-    // The worker forwards the original request, so the path carries the formId — use it
-    // as the authoritative source even if the client's start message omits form_id.
-    const url = new URL(req.url);
-    const m = url.pathname.match(/\/forms\/([^/]+)\/session/);
-    if (m) this.urlFormId = decodeURIComponent(m[1]);
-    this.urlSessionId = url.searchParams.get("session") ?? undefined;
+    const connection = parseResponseConnection({
+      kind: "response",
+      formId: req.headers.get(TRUSTED_FORM_HEADER),
+      sessionId: req.headers.get(TRUSTED_SESSION_HEADER),
+      expiresAt: Number(req.headers.get(TRUSTED_EXPIRY_HEADER)),
+    });
+    if (!connection) return new Response("missing trusted session context", { status: 400 });
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server); // hibernatable
-    return new Response(null, { status: 101, webSocket: client });
+    server.serializeAttachment(connection);
+    return new Response(null, { status: 101, webSocket: client, headers: webSocketResponseHeaders(req) });
   }
 
   async webSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
+    return this.operations.run(() => this.handleWebSocketMessage(ws, raw));
+  }
+
+  private async handleWebSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
+    const trusted = this.connection(ws);
+    if (!trusted || trusted.expiresAt <= Math.floor(Date.now() / 1000)) {
+      ws.close(1008, "session expired");
+      return;
+    }
     const text = typeof raw === "string" ? raw : new TextDecoder().decode(raw);
     const msg = parseClientMessage(text);
     if (!msg) {
       return this.send(ws, { type: "assistant", text: "Sorry, I didn't understand that.", done: false });
     }
     try {
-      if (msg.type === "start") return await this.onStart(ws, msg.form_id);
+      if (msg.type === "start") return await this.onStart(ws);
       return await this.onAnswer(ws, msg.text);
     } catch (err) {
+      const connection = this.connection(ws);
       console.error(JSON.stringify({
         event: "response_session_error",
-        formId: this.urlFormId ?? null,
-        sessionId: this.urlSessionId ?? null,
+        formId: connection?.formId ?? null,
+        sessionId: connection?.sessionId ?? null,
         error: err instanceof Error ? err.message : "unknown error",
       }));
       this.send(ws, { type: "assistant", text: "Something went wrong — let's try that again.", done: false });
@@ -73,21 +93,37 @@ export class FormSessionDO extends DurableObject<Env> {
     return new FormInterpreter(config, new Validator(this.env));
   }
 
-  private async onStart(ws: WebSocket, formId?: string): Promise<void> {
-    const { config, ownerId, callbackUrl, meta } = await new FormRepository(this.env).getForm(
-      formId ?? this.urlFormId ?? "sample",
-    );
+  private connection(ws: WebSocket): ResponseConnection | null {
+    return parseResponseConnection(ws.deserializeAttachment());
+  }
+
+  private async onStart(ws: WebSocket): Promise<void> {
+    const connection = this.connection(ws);
+    if (!connection) throw new Error("trusted response context unavailable");
+    if (!this.session) this.session = await this.ctx.storage.get<PersistedSession>("session");
+    if (this.session) {
+      if (this.session.config.id !== connection.formId || this.session.sessionId !== connection.sessionId) {
+        throw new Error("persisted response context mismatch");
+      }
+      return this.send(ws, this.interpreterFor(this.session.config).resume(this.session.state));
+    }
+    const { config, ownerId, callbackUrl, meta } = await new FormRepository(this.env).getForm(connection.formId);
     const { state, reply } = this.interpreterFor(config).begin();
     this.session = {
       config,
       ownerId,
-      sessionId: this.urlSessionId ?? crypto.randomUUID(),
+      sessionId: connection.sessionId,
       state,
       callbackUrl,
       meta,
     };
     await this.ctx.storage.put("session", this.session);
     this.send(ws, reply);
+    console.log(JSON.stringify({
+      event: "response_session_started",
+      formId: config.id,
+      sessionId: connection.sessionId,
+    }));
   }
 
   private async onAnswer(ws: WebSocket, userText: string): Promise<void> {
@@ -99,9 +135,11 @@ export class FormSessionDO extends DurableObject<Env> {
     }
     // Sessions persisted before migration 0003 did not carry these fields.
     if (!this.session.ownerId || !this.session.sessionId) {
+      const connection = this.connection(ws);
+      if (!connection) throw new Error("trusted response context unavailable");
       const form = await new FormRepository(this.env).getForm(this.session.config.id);
       this.session.ownerId = form.ownerId;
-      this.session.sessionId = this.urlSessionId ?? crypto.randomUUID();
+      this.session.sessionId = connection.sessionId;
     }
     const { state, reply } = await this.interpreterFor(this.session.config).handleAnswer(
       this.session.state,
@@ -122,6 +160,13 @@ export class FormSessionDO extends DurableObject<Env> {
         state.responses,
         callback,
       );
+      console.log(JSON.stringify({
+        event: "response_session_completed",
+        formId: this.session.config.id,
+        sessionId: this.session.sessionId,
+        inserted: completion.inserted,
+        answerCount: Object.keys(state.responses).length,
+      }));
       if (completion.deliveryId) {
         try {
           await this.env.CALLBACK_QUEUE.send({ deliveryId: completion.deliveryId });

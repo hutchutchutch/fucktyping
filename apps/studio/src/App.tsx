@@ -7,29 +7,23 @@ import {
   getOrCreateSessionId,
   getStoredCreatorToken,
   storeCreatorToken,
-  subFromToken,
 } from "./authoring/sessionStore";
 import { useAuthoringSession } from "./authoring/useAuthoringSession";
 import { useForms } from "./authoring/useForms";
 import { ChatPane } from "./components/ChatPane";
 import { GraphPane } from "./components/GraphPane";
 import { LeftSidebar } from "./components/LeftSidebar";
+import { ResponsesPane } from "./components/ResponsesPane";
 
 // Production is served by the Edge Worker, so APIs and WebSockets are same-origin.
 // Local Vite development still talks to `wrangler dev` unless explicitly overridden.
 const EDGE_URL =
-  (import.meta as any).env?.VITE_EDGE_URL ??
-  ((import.meta as any).env?.DEV ? "http://localhost:8787" : window.location.origin);
-// Optional WS auth token (only needed once SESSION_SECRET is set on the edge).
-const BUILD_SESSION_TOKEN = (import.meta as any).env?.VITE_SESSION_TOKEN as string | undefined;
-
+  import.meta.env.VITE_EDGE_URL ??
+  (import.meta.env.DEV ? "http://localhost:8787" : window.location.origin);
 export function App() {
-  const sessionId = useMemo(
-    () => (BUILD_SESSION_TOKEN && subFromToken(BUILD_SESSION_TOKEN)) || getOrCreateSessionId(window.localStorage),
-    [],
-  );
+  const sessionId = useMemo(() => getOrCreateSessionId(window.localStorage), []);
   const [sessionToken, setSessionToken] = useState<string | null>(
-    () => BUILD_SESSION_TOKEN || getStoredCreatorToken(window.sessionStorage, sessionId),
+    () => getStoredCreatorToken(window.sessionStorage, sessionId),
   );
 
   if (!sessionToken) {
@@ -58,22 +52,56 @@ export function App() {
 
 function AuthoringStudio({ sessionId, sessionToken, onLock }: { sessionId: string; sessionToken: string; onLock: () => void }) {
   const session = useAuthoringSession(EDGE_URL, sessionId, sessionToken);
-  const { forms } = useForms(EDGE_URL, sessionToken);
+  const { forms, loading: formsLoading, error: formsError } = useForms(EDGE_URL, sessionToken, session.publishRevision);
+  const [view, setView] = useState<"builder" | "responses">("builder");
+  const [selectedFormId, setSelectedFormId] = useState<string | null>(null);
 
   return (
     <div className="app">
-      <LeftSidebar forms={forms} />
-      <ChatPane
-        messages={session.messages}
-        status={session.status}
-        ready={session.ready}
-        publishedFormId={session.publishedFormId}
-        edgeUrl={EDGE_URL}
-        sessionToken={sessionToken}
-        onSend={session.sendMessage}
-        onPublish={session.publish}
+      <LeftSidebar
+        forms={forms}
+        formsLoading={formsLoading}
+        formsError={formsError}
+        selectedFormId={selectedFormId}
+        onNewForm={() => {
+          session.newForm();
+          setView("builder");
+          setSelectedFormId(null);
+        }}
+        onShowResponses={() => {
+          if (!selectedFormId && forms[0]) setSelectedFormId(forms[0].id);
+          setView("responses");
+        }}
+        onSelectForm={(formId) => {
+          setSelectedFormId(formId);
+          setView("responses");
+        }}
+        onEditForm={(formId) => {
+          session.loadForm(formId);
+          setSelectedFormId(formId);
+          setView("builder");
+        }}
       />
-      <GraphPane form={session.form} onEdit={session.sendMessage} />
+      {view === "builder" ? (
+        <>
+          <ChatPane
+            messages={session.messages}
+            status={session.status}
+            connectionError={session.connectionError}
+            ready={session.ready}
+            publishedFormId={session.publishedFormId}
+            publishedResponderUrl={session.publishedResponderUrl}
+            publishedExpiresAt={session.publishedExpiresAt}
+            edgeUrl={EDGE_URL}
+            sessionToken={sessionToken}
+            onSend={session.sendMessage}
+            onPublish={session.publish}
+          />
+          <GraphPane form={session.form} onEdit={session.sendMessage} />
+        </>
+      ) : (
+        <ResponsesPane httpBase={EDGE_URL} token={sessionToken} formId={selectedFormId} />
+      )}
       <button className="lock-studio" type="button" onClick={onLock}>Lock studio</button>
     </div>
   );

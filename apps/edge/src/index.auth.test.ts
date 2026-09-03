@@ -11,8 +11,10 @@ function authEnv(options: { allowed?: boolean; configured?: boolean } = {}): Env
   const configured = options.configured ?? true;
   return {
     APP_ENV: "staging",
+    CF_VERSION_METADATA: { id: "test-version", tag: "", timestamp: "" },
     CREATE_TOKEN: configured ? CREATE_TOKEN : undefined,
     SESSION_SECRET: configured ? SESSION_SECRET : undefined,
+    WEBHOOK_SIGNING_SECRET: configured ? "webhook-signing-secret" : undefined,
     AUTH_RATE_LIMITER: {
       limit: async () => ({ success: options.allowed ?? true }),
     },
@@ -72,5 +74,29 @@ describe("protected APIs", () => {
       body: new Uint8Array([1, 2, 3]),
     }, env);
     expect(transcribe.status).toBe(401);
+  });
+
+  it("allows the local Studio origin to call nested form APIs", async () => {
+    const response = await app.request("/forms/form-1/responses", {
+      method: "OPTIONS",
+      headers: {
+        Origin: "http://localhost:5173",
+        "Access-Control-Request-Method": "GET",
+      },
+    }, authEnv());
+    expect(response.status).toBe(204);
+    expect(response.headers.get("access-control-allow-origin")).toBe("http://localhost:5173");
+  });
+});
+
+describe("GET /health", () => {
+  it("reports readiness only when required runtime secrets exist", async () => {
+    const healthy = await app.request("/health", {}, authEnv());
+    expect(healthy.status).toBe(200);
+    expect(await healthy.json()).toMatchObject({ status: "ok", env: "staging", versionId: "test-version" });
+
+    const degraded = await app.request("/health", {}, authEnv({ configured: false }));
+    expect(degraded.status).toBe(503);
+    expect(await degraded.json()).toMatchObject({ status: "degraded" });
   });
 });

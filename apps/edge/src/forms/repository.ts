@@ -12,6 +12,14 @@ export interface CallbackDelivery {
   attempts: number;
 }
 
+export interface StoredResponse {
+  id: string;
+  formId: string;
+  sessionId: string | null;
+  answers: Record<string, unknown>;
+  createdAt: string;
+}
+
 /** Loads FormConfigs and persists collected structured output to D1. */
 export class FormRepository {
   constructor(private env: Env) {}
@@ -39,6 +47,45 @@ export class FormRepository {
       .bind(formId)
       .first<{ found: number }>();
     return row?.found === 1;
+  }
+
+  async formOwnedBy(formId: string, ownerId: string): Promise<boolean> {
+    const row = await this.env.DB.prepare(
+      "SELECT 1 AS found FROM forms WHERE id = ? AND owner_id = ?",
+    ).bind(formId, ownerId).first<{ found: number }>();
+    return row?.found === 1;
+  }
+
+  /** Loads a published form only when it belongs to the authenticated creator. */
+  async getOwnedFormConfig(formId: string, ownerId: string): Promise<FormConfig | null> {
+    const row = await this.env.DB.prepare(
+      "SELECT config FROM forms WHERE id = ? AND owner_id = ?",
+    ).bind(formId, ownerId).first<{ config: string }>();
+    return row ? FormConfigSchema.parse(JSON.parse(row.config)) : null;
+  }
+
+  async listResponses(ownerId: string, formId: string, limit = 100): Promise<StoredResponse[]> {
+    const boundedLimit = Math.max(1, Math.min(100, Math.floor(limit)));
+    const { results } = await this.env.DB.prepare(
+      `SELECT id, form_id, session_id, answers, created_at
+       FROM responses
+       WHERE owner_id = ? AND form_id = ?
+       ORDER BY created_at DESC
+       LIMIT ?`,
+    ).bind(ownerId, formId, boundedLimit).all<{
+      id: string;
+      form_id: string;
+      session_id: string | null;
+      answers: string;
+      created_at: string;
+    }>();
+    return (results ?? []).map((row) => ({
+      id: row.id,
+      formId: row.form_id,
+      sessionId: row.session_id,
+      answers: parseAnswers(row.answers),
+      createdAt: row.created_at,
+    }));
   }
 
   /** Upsert a published form so the runtime DO can serve it by id. Optionally records a
@@ -197,4 +244,12 @@ export class FormRepository {
     const values = [status, error, new Date().toISOString(), id, ...(fromStatuses ?? [])];
     await statement.bind(...values).run();
   }
+}
+
+function parseAnswers(serialized: string): Record<string, unknown> {
+  const value: unknown = JSON.parse(serialized);
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("stored response answers are invalid");
+  }
+  return value as Record<string, unknown>;
 }

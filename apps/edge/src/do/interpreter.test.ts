@@ -45,6 +45,13 @@ describe("FormInterpreter", () => {
     expect(t.state.responses).toEqual({ name: "Hutch" });
   });
 
+  it("resumes at the current question without replaying the opening", async () => {
+    const i = new FormInterpreter(CONFIG, accept);
+    const start = i.begin();
+    const secondQuestion = await i.handleAnswer(start.state, "Hutch");
+    expect(i.resume(secondQuestion.state)).toEqual({ type: "assistant", text: "Rating?", done: false });
+  });
+
   it("completes (done=true) and collects all answers after the last question", async () => {
     const i = new FormInterpreter(CONFIG, accept);
     let t = i.begin();

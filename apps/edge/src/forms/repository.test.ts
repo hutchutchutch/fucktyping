@@ -79,4 +79,36 @@ describe("FormRepository writes", () => {
     expect(calls[1].sql).toContain("INSERT OR IGNORE INTO callback_deliveries");
     expect(calls[1].sql).toContain("WHERE EXISTS (SELECT 1 FROM responses WHERE id = ?)");
   });
+
+  it("scopes response reads to both owner and form", async () => {
+    const { env, calls } = fakeEnv();
+    await new FormRepository(env).listResponses("private-beta", "form-1");
+    expect(calls[0].sql).toContain("owner_id = ? AND form_id = ?");
+    expect(calls[0].values).toEqual(["private-beta", "form-1", 100]);
+  });
+
+  it("scopes form details used by the response viewer to the owner", async () => {
+    const calls: { sql: string; values: unknown[] }[] = [];
+    const statement = {
+      bind(...values: unknown[]) {
+        calls[0].values = values;
+        return statement;
+      },
+      async first() {
+        return { config: JSON.stringify(FORM) };
+      },
+    };
+    const env = {
+      DB: {
+        prepare(sql: string) {
+          calls.push({ sql, values: [] });
+          return statement;
+        },
+      },
+    } as unknown as Env;
+
+    expect(await new FormRepository(env).getOwnedFormConfig("form-1", "private-beta")).toEqual(FORM);
+    expect(calls[0].sql).toContain("id = ? AND owner_id = ?");
+    expect(calls[0].values).toEqual(["form-1", "private-beta"]);
+  });
 });

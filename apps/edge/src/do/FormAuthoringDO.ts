@@ -3,12 +3,23 @@ import { DurableObject } from "cloudflare:workers";
 import type { Env } from "../env";
 import { LLMAuthoringBrain, type AuthoringBrain } from "../authoring/agent";
 import { emptyDraft, isPublishable, toPublished, type ChatMessage, type DraftFormConfig } from "../authoring/draft";
+import { appendBoundedMessage } from "../authoring/history";
 import {
   parseAuthoringClientMessage,
   type AuthoringServerMessage,
 } from "../authoring/protocol";
 import { applyMutations } from "../authoring/reducer";
 import { FormRepository } from "../forms/repository";
+import { createResponderLink } from "../respondent-link";
+import {
+  parseAuthoringConnection,
+  type AuthoringConnection,
+  TRUSTED_EXPIRY_HEADER,
+  TRUSTED_OWNER_HEADER,
+  TRUSTED_RESPONDER_BASE_HEADER,
+} from "../session-context";
+import { SerialTaskQueue } from "./serial";
+import { webSocketResponseHeaders } from "../websocket-auth";
 
 interface AuthoringState {
   form: DraftFormConfig;
@@ -24,7 +35,7 @@ const GREETING =
 export class FormAuthoringDO extends DurableObject<Env> {
   private state?: AuthoringState;
   private brain: AuthoringBrain;
-  private ownerId?: string;
+  private readonly operations = new SerialTaskQueue();
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -35,19 +46,37 @@ export class FormAuthoringDO extends DurableObject<Env> {
     if (req.headers.get("Upgrade") !== "websocket") {
       return new Response("expected websocket", { status: 426 });
     }
-    this.ownerId = req.headers.get("X-FuckTyping-Owner") ?? undefined;
+    const connection = parseAuthoringConnection({
+      kind: "authoring",
+      ownerId: req.headers.get(TRUSTED_OWNER_HEADER),
+      responderBaseUrl: req.headers.get(TRUSTED_RESPONDER_BASE_HEADER),
+      expiresAt: Number(req.headers.get(TRUSTED_EXPIRY_HEADER)),
+    });
+    if (!connection) return new Response("missing trusted authoring context", { status: 400 });
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server);
-    return new Response(null, { status: 101, webSocket: client });
+    server.serializeAttachment(connection);
+    return new Response(null, { status: 101, webSocket: client, headers: webSocketResponseHeaders(req) });
   }
 
   async webSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
+    return this.operations.run(() => this.handleWebSocketMessage(ws, raw));
+  }
+
+  private async handleWebSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
+    const trusted = this.connection(ws);
+    if (!trusted || trusted.expiresAt <= Math.floor(Date.now() / 1000)) {
+      ws.close(1008, "session expired");
+      return;
+    }
     const text = typeof raw === "string" ? raw : new TextDecoder().decode(raw);
     const msg = parseAuthoringClientMessage(text);
     if (!msg) return this.send(ws, { type: "error", message: "unrecognized message" });
     try {
       if (msg.type === "init") return await this.onInit(ws);
+      if (msg.type === "new_form") return await this.onNewForm();
+      if (msg.type === "load_form") return await this.onLoadForm(ws, msg.formId);
       if (msg.type === "user_message") return await this.onUserMessage(ws, msg.text);
       if (msg.type === "publish") return await this.onPublish(ws);
     } catch (err) {
@@ -86,17 +115,54 @@ export class FormAuthoringDO extends DurableObject<Env> {
     this.send(ws, this.snapshot());
   }
 
+  private async onNewForm(): Promise<void> {
+    this.state = {
+      form: emptyDraft(crypto.randomUUID()),
+      messages: [{ role: "assistant", content: GREETING }],
+    };
+    await this.persist();
+    this.broadcast(this.snapshot());
+  }
+
+  private async onLoadForm(ws: WebSocket, formId: string): Promise<void> {
+    const connection = this.connection(ws);
+    if (!connection) throw new Error("trusted authoring context unavailable");
+    const form = await new FormRepository(this.env).getOwnedFormConfig(formId, connection.ownerId);
+    if (!form) {
+      return this.send(ws, { type: "error", message: "form not found" });
+    }
+    this.state = {
+      form,
+      messages: [{ role: "assistant", content: `Loaded ${form.name}. What would you like to change?` }],
+    };
+    await this.persist();
+    this.broadcast(this.snapshot());
+  }
+
   private async onUserMessage(ws: WebSocket, text: string): Promise<void> {
+    const startedAt = Date.now();
     const state = await this.load();
-    state.messages.push({ role: "user", content: text });
+    appendBoundedMessage(state.messages, { role: "user", content: text });
+    await this.persist();
     this.broadcast({ type: "thinking" });
 
     const turn = await this.brain.respond(state.messages, state.form);
     state.form = applyMutations(state.form, turn.mutations);
-    state.messages.push({ role: "assistant", content: turn.text });
+    appendBoundedMessage(state.messages, { role: "assistant", content: turn.text });
 
     await this.persist();
     this.broadcast(this.snapshot()); // updates both the chat and the graph pane
+    console.log(JSON.stringify({
+      event: "authoring_turn_completed",
+      formId: state.form.id,
+      durationMs: Date.now() - startedAt,
+      mutationCount: turn.mutations.length,
+      historyLength: state.messages.length,
+    }));
+  }
+
+  private connection(ws: WebSocket): AuthoringConnection | null {
+    return parseAuthoringConnection(ws.deserializeAttachment());
   }
 
   private async onPublish(ws: WebSocket): Promise<void> {
@@ -108,9 +174,23 @@ export class FormAuthoringDO extends DurableObject<Env> {
       });
     }
     const published = toPublished(state.form);
-    if (!this.ownerId) return this.send(ws, { type: "error", message: "authoring session is unauthorized" });
-    await new FormRepository(this.env).saveForm(published, { ownerId: this.ownerId });
-    this.broadcast({ type: "published", formId: published.id });
+    const connection = this.connection(ws);
+    if (!connection || !this.env.SESSION_SECRET) {
+      return this.send(ws, { type: "error", message: "authoring session is unauthorized" });
+    }
+    const link = await createResponderLink(
+      this.env.SESSION_SECRET,
+      published.id,
+      connection.responderBaseUrl,
+    );
+    await new FormRepository(this.env).saveForm(published, { ownerId: connection.ownerId });
+    this.broadcast({ type: "published", formId: published.id, ...link });
+    console.log(JSON.stringify({
+      event: "form_published",
+      formId: published.id,
+      ownerId: connection.ownerId,
+      questionCount: published.questions.length,
+    }));
   }
 
   private snapshot(): AuthoringServerMessage {

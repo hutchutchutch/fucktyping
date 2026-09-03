@@ -18,6 +18,8 @@ export interface DraftQuestion {
   required: boolean;
   maxAttempts: number;
   validResponseExample?: string;
+  invalidResponseExample?: string;
+  rephrasePrompt?: string;
 }
 
 export interface DraftFormConfig {
@@ -36,11 +38,13 @@ export interface ChatMessage {
 
 export type AuthoringClientMessage =
   | { type: "init" }
+  | { type: "new_form" }
+  | { type: "load_form"; formId: string }
   | { type: "user_message"; text: string }
   | { type: "publish" };
 
 export type AuthoringServerMessage =
   | { type: "snapshot"; form: DraftFormConfig; messages: ChatMessage[]; ready: boolean }
   | { type: "thinking" }
-  | { type: "published"; formId: string }
+  | { type: "published"; formId: string; responderUrl: string; expiresAt: string }
   | { type: "error"; message: string };

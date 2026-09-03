@@ -44,14 +44,15 @@ async function hmacHex(secret: string, message: string): Promise<string> {
 }
 
 export async function deliverCallback(env: Env, delivery: CallbackDelivery): Promise<void> {
+  if (!env.WEBHOOK_SIGNING_SECRET) {
+    throw new Error("callback signing unavailable");
+  }
   const headers: Record<string, string> = {
     "content-type": "application/json",
     "user-agent": "fucktyping-voice-callback/1.0",
     "idempotency-key": delivery.id,
   };
-  if (env.WEBHOOK_SIGNING_SECRET) {
-    headers["X-Hub-Signature-256"] = `sha256=${await hmacHex(env.WEBHOOK_SIGNING_SECRET, delivery.payload)}`;
-  }
+  headers["X-Hub-Signature-256"] = `sha256=${await hmacHex(env.WEBHOOK_SIGNING_SECRET, delivery.payload)}`;
   const response = await fetch(delivery.callbackUrl, {
     method: "POST",
     headers,

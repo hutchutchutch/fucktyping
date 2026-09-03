@@ -58,4 +58,26 @@ describe("LLMAuthoringBrain", () => {
     expect(turn.mutations).toEqual([{ kind: "set_meta", name: "Check-in", description: undefined }]);
     expect(turn.text).toContain("updated the form details");
   });
+
+  it("ignores malformed tool calls and non-object arguments", async () => {
+    const env = {
+      AI_TEXT_MODEL: "@cf/zai-org/glm-4.7-flash",
+      AI: {
+        run: async () => ({
+          choices: [{ message: {
+            content: 42,
+            tool_calls: [
+              null,
+              { function: { name: 9, arguments: "{}" } },
+              { function: { name: "add_question", arguments: "[]" } },
+              { function: { name: "add_question", arguments: "not-json" } },
+            ],
+          } }],
+        }),
+      },
+    } as unknown as Env;
+
+    const turn = await new LLMAuthoringBrain(env).respond([], emptyDraft("form-1"));
+    expect(turn).toEqual({ text: "Okay.", mutations: [] });
+  });
 });

@@ -38,13 +38,13 @@ npm test
 npm run typecheck
 ```
 Talk to it: "Build a 3-question customer feedback form." Watch the graph fill in, then
-**Publish** → the form lands in D1 and is immediately runnable at
-`/forms/<formId>/session` (the runtime DO + the Mac voice pipeline).
+**Publish** → the form lands in D1 and Studio returns a signed, expiring respondent link.
 
 ## Voice
-`MicButton` uses the browser Web Speech API (push-to-talk) for *form creation* — it just
-fills the chat input. The realtime WebRTC/Cloudflare-Realtime path is for *form filling*
-(the respondent side), handled by `voice-pipeline` + `apps/edge`'s runtime DO.
+`MicButton` records a bounded browser audio clip and sends it to the Worker for Whisper
+transcription. The browser respondent follows the same Worker-hosted UI and connects to
+the response Durable Object over a signed WebSocket session. `voice-pipeline` is an
+experimental alternate client for local/Mac voice-agent work.
 
 ## Deploy (Cloudflare)
 
@@ -57,6 +57,13 @@ npm run build
 npm run test:e2e    # starts a local Worker and exercises the packaged app in Chromium
 ```
 
-## Not here yet
-- Resumable drafts (persist `sessionId`, list "My forms" from D1).
-- Inline node editing in the graph (today it's a read-only projection; edits go through chat).
+## Private-beta product boundary
+
+Studio supports creating, publishing, reopening, and editing forms; generating fresh
+signed respondent links; completing forms by voice or typed fallback; resuming an
+interrupted respondent tab; and reviewing submitted answers with their question text.
+
+Archiving/deleting forms, exporting responses, creator accounts with multiple tenants,
+and configurable data retention are intentionally deferred beyond the private beta.
+Until deletion and retention controls ship, treat production as a limited-access beta
+and handle participant data according to the operating policy in the launch runbook.

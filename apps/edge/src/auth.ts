@@ -28,6 +28,7 @@ function base64urlEncode(bytes: Uint8Array): string {
 }
 
 function base64urlDecode(s: string): Uint8Array {
+  if (!s || !/^[A-Za-z0-9_-]+$/.test(s)) throw new Error("invalid base64url");
   const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
   const bin = atob(s.replace(/-/g, "+").replace(/_/g, "/") + pad);
   const bytes = new Uint8Array(bin.length);
@@ -58,9 +59,9 @@ export async function verifySessionToken(
   secret: string,
   token: string,
 ): Promise<SessionClaims | null> {
-  if (typeof token !== "string") return null;
+  if (typeof token !== "string" || token.length > 4096) return null;
   const dot = token.indexOf(".");
-  if (dot <= 0 || dot === token.length - 1) return null;
+  if (dot <= 0 || dot === token.length - 1 || token.indexOf(".", dot + 1) !== -1) return null;
   const payload = token.slice(0, dot);
   const sig = token.slice(dot + 1);
 
@@ -73,20 +74,29 @@ export async function verifySessionToken(
   }
   if (!(await crypto.subtle.verify("HMAC", key, signature, encoder.encode(payload)))) return null;
 
-  let claims: SessionClaims;
+  let value: unknown;
   try {
-    claims = JSON.parse(decoder.decode(base64urlDecode(payload)));
+    value = JSON.parse(decoder.decode(base64urlDecode(payload))) as unknown;
   } catch {
     return null;
   }
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const claims = value as Record<string, unknown>;
   if (
-    !claims ||
-    typeof claims.sub !== "string" ||
-    typeof claims.exp !== "number" ||
-    (claims.scope !== "authoring" && claims.scope !== "respond")
+    typeof claims.sub !== "string"
+    || !/^[A-Za-z0-9_-]{1,128}$/.test(claims.sub)
+    || typeof claims.exp !== "number"
+    || !Number.isSafeInteger(claims.exp)
+    || (claims.scope !== "authoring" && claims.scope !== "respond")
+    || (claims.owner !== undefined && (typeof claims.owner !== "string" || claims.owner.length === 0 || claims.owner.length > 256))
   ) return null;
   if (claims.exp <= Math.floor(Date.now() / 1000)) return null;
-  return claims;
+  return {
+    sub: claims.sub,
+    exp: claims.exp,
+    scope: claims.scope,
+    owner: claims.owner as string | undefined,
+  };
 }
 
 /** Compares access keys without an early-exit string comparison. */

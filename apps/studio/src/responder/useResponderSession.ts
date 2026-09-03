@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { toWsUrl } from "../authoring/protocol";
+import { toWsUrl, websocketProtocols } from "../authoring/protocol";
+import { parseResponderMessage } from "./protocol";
 
 export interface ResponderTurn {
   role: "assistant" | "user";
@@ -10,47 +11,81 @@ export type ResponderStatus = "connecting" | "open" | "thinking" | "done" | "clo
 
 /** Drives the runtime form-filling protocol (do/protocol.ts):
  *  client {type:"start"} | {type:"user_answer",text}  <->  server {type:"assistant",text,done}. */
-export function useResponderSession(httpBase: string, formId: string, token?: string) {
+export function useResponderSession(httpBase: string, formId: string, sessionId?: string, token?: string) {
   const [turns, setTurns] = useState<ResponderTurn[]>([]);
   const [question, setQuestion] = useState("");
   const [done, setDone] = useState(false);
   const [status, setStatus] = useState<ResponderStatus>("connecting");
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const doneRef = useRef(false);
 
   useEffect(() => {
-    if (!formId) return;
-    const sessionId = crypto.randomUUID();
-    const q = token ? `&token=${encodeURIComponent(token)}` : "";
-    const url = `${toWsUrl(httpBase)}/forms/${formId}/session?session=${sessionId}${q}`;
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
+    if (!formId || !sessionId || !token) {
+      setStatus("closed");
+      return;
+    }
+    let disposed = false;
+    let attempts = 0;
+    let reconnectTimer: number | undefined;
 
-    ws.onopen = () => {
-      setStatus("open");
-      ws.send(JSON.stringify({ type: "start", form_id: formId }));
-    };
-    ws.onclose = () => setStatus((s) => (s === "done" ? s : "closed"));
-    ws.onerror = () => setStatus((s) => (s === "done" ? s : "closed"));
-    ws.onmessage = (event) => {
-      let m: any;
-      try {
-        m = JSON.parse(event.data);
-      } catch {
-        return;
-      }
-      if (m.type === "assistant") {
-        setTurns((t) => [...t, { role: "assistant", text: m.text }]);
-        setQuestion(m.text);
-        if (m.done) {
+    const connect = () => {
+      if (disposed || doneRef.current) return;
+      setStatus("connecting");
+      const params = new URLSearchParams({ session: sessionId });
+      const url = `${toWsUrl(httpBase)}/forms/${formId}/session?${params}`;
+      const ws = new WebSocket(url, websocketProtocols(token));
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        attempts = 0;
+        setConnectionError(null);
+        setStatus("open");
+        ws.send(JSON.stringify({ type: "start" }));
+      };
+      ws.onmessage = (event) => {
+        const message = parseResponderMessage(event.data);
+        if (!message) return;
+        setTurns((turns) => {
+          const previous = turns[turns.length - 1];
+          return previous?.role === "assistant" && previous.text === message.text
+            ? turns
+            : [...turns, { role: "assistant", text: message.text }];
+        });
+        setQuestion(message.text);
+        if (message.done) {
+          doneRef.current = true;
           setDone(true);
           setStatus("done");
         } else {
           setStatus("open");
         }
-      }
+      };
+      ws.onerror = () => ws.close();
+      ws.onclose = (event) => {
+        if (disposed || doneRef.current) return;
+        setStatus("closed");
+        if (event.code === 1008) {
+          setConnectionError("This response link has expired. Ask the form owner for a new link.");
+          return;
+        }
+        if (attempts >= 6) {
+          setConnectionError("Unable to connect to this form. Check your connection and reload to try again.");
+          return;
+        }
+        const delay = Math.min(1_000 * 2 ** attempts, 10_000);
+        attempts += 1;
+        reconnectTimer = window.setTimeout(connect, delay);
+      };
     };
-    return () => ws.close();
-  }, [httpBase, formId, token]);
+
+    connect();
+    return () => {
+      disposed = true;
+      if (reconnectTimer !== undefined) window.clearTimeout(reconnectTimer);
+      wsRef.current?.close();
+    };
+  }, [httpBase, formId, sessionId, token]);
 
   const sendAnswer = useCallback((text: string) => {
     const ws = wsRef.current;
@@ -60,5 +95,5 @@ export function useResponderSession(httpBase: string, formId: string, token?: st
     ws.send(JSON.stringify({ type: "user_answer", text }));
   }, []);
 
-  return { turns, question, done, status, sendAnswer };
+  return { turns, question, done, status, connectionError, sendAnswer };
 }

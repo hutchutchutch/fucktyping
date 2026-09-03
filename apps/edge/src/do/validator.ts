@@ -1,11 +1,58 @@
 import type { Env } from "../env";
 import type { Question } from "../forms/types";
+import { z } from "zod";
 
 export interface ValidationResult {
   isValid: boolean;
   extractedValue: unknown;
   confidence: number;
   reason: string;
+}
+
+const ModelValidationSchema = z.object({
+  isValid: z.boolean(),
+  extractedValue: z.unknown().nullable(),
+  confidence: z.number().min(0).max(1),
+  reason: z.string().max(1000),
+});
+
+function record(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
+function modelContent(value: unknown): string {
+  const root = record(value);
+  const choices = root?.choices;
+  if (!Array.isArray(choices)) return "{}";
+  const first = record(choices[0]);
+  const message = record(first?.message);
+  return typeof message?.content === "string" ? message.content : "{}";
+}
+
+function normalizeExtractedValue(question: Question, value: unknown): unknown {
+  switch (question.expectedResponseFormat) {
+    case "yes_no":
+      if (typeof value === "boolean") return value;
+      break;
+    case "number":
+      if (typeof value === "number" && Number.isFinite(value)) return value;
+      break;
+    case "multiple_choice":
+      if (typeof value === "string") {
+        const option = question.options?.find((candidate) => candidate.toLowerCase() === value.trim().toLowerCase());
+        if (option) return option;
+      }
+      break;
+    case "text":
+    case "date":
+    case "email":
+    case "phone":
+      if (typeof value === "string" && value.trim()) return value.trim();
+      break;
+  }
+  throw new Error(`invalid extracted value for ${question.expectedResponseFormat}`);
 }
 
 /** Decides whether a spoken answer satisfies a question and extracts a normalized value. */
@@ -57,23 +104,25 @@ export class Validator implements AnswerValidator {
       return heuristic;
     }
     try {
-      const data = await this.env.AI.run(this.env.AI_TEXT_MODEL as "@cf/zai-org/glm-4.7-flash", {
+      const data: unknown = await this.env.AI.run(this.env.AI_TEXT_MODEL as "@cf/zai-org/glm-4.7-flash", {
         temperature: 0,
         max_completion_tokens: 300,
         response_format: { type: "json_object" },
         messages: [{ role: "system", content: buildValidationPrompt(q, userResponse) }],
-      }) as {
-        choices?: { message?: { content?: string } }[];
-      };
-      const content = data.choices?.[0]?.message?.content ?? "{}";
-      const parsed = JSON.parse(extractJson(content)) as Partial<ValidationResult>;
+      });
+      const parsed = ModelValidationSchema.parse(JSON.parse(extractJson(modelContent(data))) as unknown);
       return {
-        isValid: Boolean(parsed.isValid),
-        extractedValue: parsed.extractedValue ?? null,
-        confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0,
-        reason: typeof parsed.reason === "string" ? parsed.reason : "",
+        isValid: parsed.isValid,
+        extractedValue: parsed.isValid ? normalizeExtractedValue(q, parsed.extractedValue) : null,
+        confidence: parsed.confidence,
+        reason: parsed.reason,
       };
     } catch (err) {
+      console.warn(JSON.stringify({
+        event: "answer_validation_fallback",
+        format: q.expectedResponseFormat,
+        error: err instanceof Error ? err.message : "invalid model response",
+      }));
       return heuristic;
     }
   }
@@ -100,8 +149,9 @@ export function heuristicValidate(q: Question, text: string): ValidationResult {
   const lower = t.toLowerCase();
   switch (q.expectedResponseFormat) {
     case "yes_no": {
-      if (YES.test(lower)) return ok(true);
-      if (NO.test(lower)) return ok(false);
+      const yes = YES.test(lower);
+      const no = NO.test(lower);
+      if (yes !== no) return ok(yes);
       return bad("not a yes/no answer");
     }
     case "number": {
@@ -117,7 +167,7 @@ export function heuristicValidate(q: Question, text: string): ValidationResult {
       return m ? ok(m[0]) : bad("no email found");
     }
     case "multiple_choice": {
-      const match = (q.options ?? []).find((o) => lower.includes(o.toLowerCase()));
+      const match = (q.options ?? []).find((o) => lower === o.toLowerCase());
       return match ? ok(match) : bad("no option matched");
     }
     case "phone": {

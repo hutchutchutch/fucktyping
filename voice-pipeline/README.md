@@ -115,7 +115,9 @@ git clone https://github.com/MisoLabsAI/MisoTTS.git ../MisoTTS && pip install -e
 pip install -e ".[agent]" ".[miso]" ".[parakeet]"
 python -m voice_pipeline.agent.run_agent --stt parakeet-mlx --transport small-webrtc
 ```
-Against a real Durable Object: add `--do-url wss://your-worker/forms/<id>/session`.
+Against a real Durable Object: add `--do-url wss://your-worker/forms/<id>/session`
+and `--do-token <signed-respondent-token>`. Authentication is sent as a WebSocket
+subprotocol so bearer material does not appear in the request URL.
 
 > Pipecat import paths drift between versions; if a `pipecat...` import fails, check the
 > installed package layout and adjust `agent/pipecat_stt.py`, `pipecat_tts.py`,
@@ -124,6 +126,7 @@ Against a real Durable Object: add `--do-url wss://your-worker/forms/<id>/sessio
 
 ## How this plugs into the rest of the system
 The Durable Object that `do_client.py` talks to is the same FormConfig-interpreter DO
-from the Cloudflare architecture: it owns conversation state, validates answers (via AI
-Gateway), and decides the next question. This package stays pure models + transport —
+from the Cloudflare architecture: it owns conversation state, validates ambiguous
+answers with Workers AI plus deterministic fallbacks, and decides the next question.
+This package stays pure models + transport —
 no form logic lives here.

@@ -35,7 +35,8 @@ export const TARGET_RATE = 16000;
  *  resample to 16 kHz mono Float32 samples. Browser-only (uses Web Audio). */
 export async function blobToSamples16k(blob: Blob): Promise<Float32Array> {
   const arrayBuffer = await blob.arrayBuffer();
-  const AC: typeof AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
+  const AC = window.AudioContext ?? window.webkitAudioContext;
+  if (!AC) throw new Error("Web Audio is not supported in this browser");
   const ctx = new AC();
   const decoded = await ctx.decodeAudioData(arrayBuffer);
   await ctx.close();
@@ -60,4 +61,9 @@ export function samples16kToWav(samples: Float32Array): Blob {
  *  format Whisper handles most reliably. Browser-only. */
 export async function blobToWav16k(blob: Blob): Promise<Blob> {
   return samples16kToWav(await blobToSamples16k(blob));
+}
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
 }

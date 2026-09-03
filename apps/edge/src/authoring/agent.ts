@@ -19,6 +19,7 @@ function systemPrompt(form: DraftFormConfig): string {
     "Prefer concrete defaults; ask a clarifying question only when truly needed.",
     "Keep spoken replies to 1-2 short sentences, confirm what you changed, and suggest the next step.",
     "Each question needs an expectedResponseFormat (text, multiple_choice, yes_no, number, date, email, phone).",
+    "A multiple_choice question must include at least two distinct options.",
     "",
     "Current form state (JSON):",
     JSON.stringify(form),
@@ -54,7 +55,7 @@ export class LLMAuthoringBrain implements AuthoringBrain {
   constructor(private env: Env) {}
 
   async respond(messages: ChatMessage[], form: DraftFormConfig): Promise<AuthoringTurn> {
-    const data = await this.env.AI.run(this.env.AI_TEXT_MODEL as "@cf/zai-org/glm-4.7-flash", {
+    const result: unknown = await this.env.AI.run(this.env.AI_TEXT_MODEL as "@cf/zai-org/glm-4.7-flash", {
       temperature: 0.3,
       max_completion_tokens: 800,
       tools: AUTHORING_TOOLS,
@@ -62,26 +63,47 @@ export class LLMAuthoringBrain implements AuthoringBrain {
         { role: "system", content: systemPrompt(form) },
         ...messages.map((m) => ({ role: m.role, content: m.content })),
       ],
-    }) as {
-      choices?: { message?: { content?: string; tool_calls?: any[] } }[];
-    };
-    const message = data.choices?.[0]?.message ?? {};
-    const calls = (message.tool_calls ?? []).map((tc: any) => ({
-      name: tc.function?.name,
-      args: safeParse(tc.function?.arguments),
-    }));
+    });
+    const message = firstAssistantMessage(result);
+    const calls = toolCalls(message.tool_calls);
     const mutations = toolCallsToMutations(calls, form);
-    const text = (message.content?.trim() || summarizeMutations(mutations)) || "Okay.";
+    const text = (typeof message.content === "string" ? message.content.trim() : "")
+      || summarizeMutations(mutations)
+      || "Okay.";
     return { text, mutations };
   }
 }
 
-function safeParse(s: unknown): Record<string, any> {
-  if (s && typeof s === "object" && !Array.isArray(s)) return s as Record<string, any>;
-  if (typeof s !== "string") return {};
+function record(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
+function firstAssistantMessage(result: unknown): Record<string, unknown> {
+  const choices = record(result)?.choices;
+  if (!Array.isArray(choices)) return {};
+  return record(record(choices[0])?.message) ?? {};
+}
+
+function toolCalls(value: unknown): { name: string; args: Record<string, unknown> }[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((call) => {
+    const fn = record(record(call)?.function);
+    if (!fn || typeof fn.name !== "string") return [];
+    return [{ name: fn.name, args: safeParse(fn.arguments) }];
+  });
+}
+
+function safeParse(value: unknown): Record<string, unknown> {
+  const objectValue = record(value);
+  if (objectValue) return objectValue;
+  if (typeof value !== "string") return {};
+  let parsed: unknown;
   try {
-    return JSON.parse(s);
+    parsed = JSON.parse(value) as unknown;
   } catch {
     return {};
   }
+  return record(parsed) ?? {};
 }

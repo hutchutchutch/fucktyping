@@ -1,8 +1,0 @@
-
-> backend@0.1.0 build /Users/hutch/Documents/projects/yakyak/case_study/fucktyping/apps/backend
-> esbuild src/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
-
-
-  dist/index.js  96.9kb
-
-⚡ Done in 16ms
