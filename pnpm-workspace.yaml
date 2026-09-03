@@ -1,3 +1,6 @@
 packages:
   - "apps/*"
+  # Edge and Studio are independent npm deployment units with their own locks.
+  - "!apps/edge"
+  - "!apps/studio"
   - "packages/*"
